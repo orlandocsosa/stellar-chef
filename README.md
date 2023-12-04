@@ -1,78 +1,55 @@
-# [Salvia-kit - Beautiful Dashboards built with Tailwind CSS](https://www.salvia-kit.com)
-![Salvia-kit](https://www.salvia-kit.com/images/others/salvia-kit.png)
+# Salvia-kit Dashboard v4 Svelte-kit
 
-Salvia-kit website is built with Tailwind CSS. We took advantage of Tailwind's flexibility to create fully customizable premium and professional dashboards, with documentation designed by a developer for developers.
+![Salvia-kit Dashboard v4](https://www.salvia-kit.com/images/dashboards/dashv4.jpg)
 
-All the dashboards are free to use. We provide dashboards for :
-- [React](https://www.salvia-kit.com/techno/react)
-- [Next.js](https://www.salvia-kit.com/techno/next)
-- [Vue](https://www.salvia-kit.com/techno/vue)
-- [Nuxt](https://www.salvia-kit.com/techno/nuxt)
-- [Solid](https://www.salvia-kit.com/techno/solid)
-- [Svelte](https://www.salvia-kit.com/techno/svelte)
-- [Angular](https://www.salvia-kit.com/techno/angular)
+## 📋 Documentation
+You can see the documentation on [http://localhost:3000/admin/documentation](http://localhost:3000/admin/documentation)
 
-Each dashboard is made for those 7 technos and each variant has a dedicated documentation.
+## Browser Support
 
-## 📦 Dashboard Features
+| Chrome | Firefox | Edge | Safari | Opera |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/chrome-logo.png?raw=true" width="64" height="64"> | <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/firefox-logo.png" width="64" height="64"> | <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/edge-logo.png" width="64" height="64"> | <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/safari-logo.png" width="64" height="64"> | <img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/opera-logo.png" width="64" height="64"> |
 
-- Support of the active route (styled by default).
-- Fully customizable and without external dependencies.
-- No vendor lock-in, you can export it and integrate it in your project.
-- Sidebar aligned left or right according to your preferences (on mobile).
+## Contribution
+If you would like to contribute on the project, fixing bugs, please follow our [Contribution guide](https://github.com/salvia-kit/dashboard-v1-svelte/blob/main/contributing.md)
 
-## Acknowledgements
-- [Tailwind CSS](https://tailwindcss.com)
-- [Tail-kit](https://www.tailwind-kit.com)
-- [Illustration Kit](https://illustrationkit.com)
 
-<p>
-<a href="https://vercel.com?utm_source=salvia-kit&utm_campaign=oss">
- <img width="170px" src="https://res.cloudinary.com/beloved/image/upload/v1626832853/dashboards/vercel_a5chgh.svg" alt="Powered By Vercel" />
-</a>
-</p>
+# create-svelte
 
-## Our Amazing Sponsors
-<a href="https://www.jetbrains.com?utm_source=salvia-kit&utm_campaign=oss">
-<img width="170px" src="https://res.cloudinary.com/beloved/image/upload/v1637952838/jetbrains_cciubl.png" alt="Powered By Vercel" />
-</a>
-<br/>
-Thanks to Jetbrains for sponsoring this project by giving us a free license to use the jetbrains IDE for the entire Salvia-kit team.
-<br/>
-<br/>
-<br/>
-<a href="https://vercel.com?utm_source=salvia-kit&utm_campaign=oss">
-<img width="170px" src="https://res.cloudinary.com/beloved/image/upload/v1637953763/dashboards/hG77CP8UhJjUMH6f59hnUSo3p2V1608196200048_200x200_vkndbt_yufzmm.png" alt="Powered By Vercel" />
-</a>
-<br/>
-Thanks to Vercel for sponsoring this project by allowing it to be deployed for free for the entire Salvia-kit Team.
+Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
 
-## Contributing
-We're open to all contributions! If you'd like to contribute in any way, please first read our [Contribution Guide](https://github.com/salvia-kit/salvia-kit-website/blob/main/contributing.md).
+## Creating a project
 
-##Licence
-MIT
+If you're seeing this, you've probably already done this step. Congrats!
 
-## Getting Started
-First, run the development server:
+```bash
+# create a new project in the current directory
+npm create svelte@latest
+
+# create a new project in my-app
+npm create svelte@latest my-app
+```
+
+## Developing
+
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
 
-## Learn More
+## Building
 
-To learn more about Next.js, take a look at the following resources:
+To create a production version of your app:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+You can preview the production build with `npm run preview`.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
