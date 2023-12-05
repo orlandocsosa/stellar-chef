@@ -31,7 +31,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - run: npm run dev
 
   deploy:
     runs-on: ubuntu-latest
