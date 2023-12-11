@@ -1,23 +1,39 @@
-import * as StellarSdk from 'stellar-sdk';
+import { Account, TransactionBuilder, BASE_FEE, xdr, Transaction, Networks, Horizon } from 'stellar-sdk';
 
-/**
- * Build a transaction with multiple operations
- * @param {StellarSdk.Account} sourceAccount - The source account for the transaction
- * @param {StellarSdk.xdr.Operation[]} operations - An array of operations to include in the transaction
- * @param {string} networkPassphrase - The network passphrase (StellarSdk.Networks.TESTNET or StellarSdk.Networks.PUBLIC)
- * @returns {StellarSdk.Transaction} The built transaction
- */
-function buildTransaction(sourceAccount: StellarSdk.Account, operations: StellarSdk.xdr.Operation[], networkPassphrase: string): StellarSdk.Transaction {
-  const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
-    fee: StellarSdk.BASE_FEE,
+interface StellarServer {
+  server: Horizon.Server;
+  networkPassphrase: string;
+}
+
+
+function getStellarServer(): StellarServer {
+  const network = import.meta.env.VITE_STELLAR_NETWORK; // "public" or "testnet"
+
+  let server: Horizon.Server, networkPassphrase: string;
+  if (network === 'public') {
+    server = new Horizon.Server(import.meta.env.VITE_STELLAR_PUBLIC_URL);
+    networkPassphrase = import.meta.env.VITE_STELLAR_PUBLIC_PASSPHRASE;
+    console.log('Using public network');
+  } else {
+    server = new Horizon.Server(import.meta.env.VITE_STELLAR_TESTNET_URL);
+    networkPassphrase = import.meta.env.VITE_STELLAR_TESTNET_PASSPHRASE;
+    console.log('Using test network');
+  }
+
+  return { server, networkPassphrase };
+}
+
+function buildTransaction(sourceAccount: Account, operations: xdr.Operation[], networkPassphrase: string): Transaction {
+  const transaction = new TransactionBuilder(sourceAccount, {
+    fee: BASE_FEE,
     networkPassphrase: networkPassphrase
   });
 
-  operations.forEach((operation: StellarSdk.xdr.Operation) => {
+  operations.forEach((operation: xdr.Operation) => {
     transaction.addOperation(operation);
   });
 
   return transaction.setTimeout(30).build();
 }
 
-export default buildTransaction;
+export { buildTransaction, getStellarServer };
