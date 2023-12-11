@@ -1,39 +1,21 @@
-import { Account, TransactionBuilder, BASE_FEE, xdr, Transaction, Networks, Horizon } from 'stellar-sdk';
+import { Account, TransactionBuilder, BASE_FEE, xdr, Transaction, Horizon } from 'stellar-sdk';
 
-interface StellarServer {
-  server: Horizon.Server;
-  networkPassphrase: string;
-}
+const STELLAR_NETWORK_URL = import.meta.env.VITE_STELLAR_NETWORK_URL;
+const STELLAR_NETWORK_PASSPHRASE = import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE;
 
+const server = new Horizon.Server(STELLAR_NETWORK_URL);
 
-function getStellarServer(): StellarServer {
-  const network = import.meta.env.VITE_STELLAR_NETWORK; // "public" or "testnet"
-
-  let server: Horizon.Server, networkPassphrase: string;
-  if (network === 'public') {
-    server = new Horizon.Server(import.meta.env.VITE_STELLAR_PUBLIC_URL);
-    networkPassphrase = import.meta.env.VITE_STELLAR_PUBLIC_PASSPHRASE;
-    console.log('Using public network');
-  } else {
-    server = new Horizon.Server(import.meta.env.VITE_STELLAR_TESTNET_URL);
-    networkPassphrase = import.meta.env.VITE_STELLAR_TESTNET_PASSPHRASE;
-    console.log('Using test network');
-  }
-
-  return { server, networkPassphrase };
-}
-
-function buildTransaction(sourceAccount: Account, operations: xdr.Operation[], networkPassphrase: string): Transaction {
+function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): Transaction {
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: networkPassphrase
+    networkPassphrase: STELLAR_NETWORK_PASSPHRASE
   });
 
-  operations.forEach((operation: xdr.Operation) => {
+  for (const operation of operations) {
     transaction.addOperation(operation);
-  });
+  }
 
   return transaction.setTimeout(30).build();
 }
 
-export { buildTransaction, getStellarServer };
+export { buildTransaction, server };
