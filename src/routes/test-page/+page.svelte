@@ -1,77 +1,74 @@
 <script lang="ts">
   import { Account } from "../../services/stellar/Account";
+  import { server } from "../../services/stellar/utils";
 
-  const STELLAR_NETWORK_URL = import.meta.env.VITE_STELLAR_NETWORK_URL;
   let account: Account | null = null;
   let balance = "";
-  let loading = false;
+  let isLoading = false;
   let error = "";
 
-  async function createAccount() {
-    loading = true;
-    try {
-      account = await Account.generateKeypair();
-      await fetchBalance(account.publicKey);
-    } catch (e) {
-      if (e instanceof Error) {
-        error = e.message;
-      } else {
-        error = "An error occurred";
-      }
+  function handleError(e: any, functionName: string) {
+    if (e instanceof Error) {
+      error = `${functionName}: ${e.message}`;
+    } else {
+      error = `${functionName}: An error occurred`;
     }
-    loading = false;
+  }
+
+  async function createAccount() {
+    error = "";
+    isLoading = true;
+    try {
+      account = await Account.create();
+    } catch (e) {
+      handleError(e, "createAccount");
+    }
+    isLoading = false;
   }
 
   async function fundAccount() {
+    error = "";
     if (!account) {
       return;
     }
-    loading = true;
+    isLoading = true;
     try {
       await account.fundWithFriendBot();
-      await fetchBalance(account.publicKey);
+      await getBalance(account.publicKey);
     } catch (e) {
-      if (e instanceof Error) {
-        error = e.message;
-      } else {
-        error = "An error occurred";
-      }
+      handleError(e, "fundAccount");
     }
-    loading = false;
+    isLoading = false;
   }
 
-  async function fetchBalance(publicKey: string) {
-    const url = `${STELLAR_NETWORK_URL}/accounts/${publicKey}`;
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.balances && data.balances.length > 0) {
-          balance = data.balances[0].balance;
-        } else {
-          balance = "Account has no funds";
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        error = error.message;
-      });
+  async function getBalance(publicKey: string) {
+    try {
+      const account = await server.loadAccount(publicKey);
+      balance = account.balances[0].balance;
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("Not Found")) {
+        balance = "0";
+      } else {
+        handleError(e, "getBalance");
+      }
+    }
   }
 
   $: if (account) {
-    fetchBalance(account.publicKey);
+    getBalance(account.publicKey);
   }
 </script>
 
-<button on:click={createAccount} disabled={loading}>
-  {loading ? "Creating Account..." : "Create Account"}
+<button on:click={createAccount} disabled={isLoading}>
+  {isLoading ? "Processing..." : "Create Account"}
 </button>
-<button on:click={fundAccount} disabled={loading}>
-  {loading ? "Funding Account..." : "Fund Account"}
+<button on:click={fundAccount} disabled={isLoading}>
+  {isLoading ? "Processing..." : "Fund Account"}
 </button>
 
 <section class="log-box">
   <p>Account: {account ? account.publicKey : "No account"}</p>
-  <p>Balance: {balance}</p>
+  <p>XLM Balance: {balance ? balance : "No balance"}</p>
   {#if error}
     <p>Error: {error}</p>
   {/if}
@@ -85,6 +82,8 @@
     padding: 10px 20px;
     margin: 10px;
     cursor: pointer;
+    width: 150px;
+    border-radius: 5px;
   }
 
   .log-box {

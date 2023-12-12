@@ -1,8 +1,7 @@
 import { Keypair, Horizon } from 'stellar-sdk';
+import { server } from './utils';
 
 
-const STELLAR_NETWORK_URL = import.meta.env.VITE_STELLAR_NETWORK_URL;
-const server = new Horizon.Server(STELLAR_NETWORK_URL);
 
 class Account {
     public publicKey: string;
@@ -18,14 +17,9 @@ class Account {
         return this;
     }
 
-    static async generateKeypair(options: { hasToBeFounded: boolean } = { hasToBeFounded: false }): Promise<Account> {
+    static async create(): Promise<Account> {
         const keypair = Keypair.random();
         const account = new Account(keypair);
-
-        if (options.hasToBeFounded) {
-            await account.fundWithFriendBot();
-        }
-
         return account;
     }
 }
