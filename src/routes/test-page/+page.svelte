@@ -7,12 +7,8 @@
   let isLoading = false;
   let error = "";
 
-  function handleError(e: any, functionName: string) {
-    if (e instanceof Error) {
-      error = `${functionName}: ${e.message}`;
-    } else {
-      error = `${functionName}: An error occurred`;
-    }
+  function handleError(e: Error) {
+    error = `${e}`;
   }
 
   async function createAccount() {
@@ -21,22 +17,23 @@
     try {
       account = await Account.create();
     } catch (e) {
-      handleError(e, "createAccount");
+      if (e instanceof Error) {
+        handleError(e);
+      }
     }
     isLoading = false;
   }
 
-  async function fundAccount() {
+  async function fundAccount(account: Account) {
     error = "";
-    if (!account) {
-      return;
-    }
     isLoading = true;
     try {
       await account.fundWithFriendBot();
       await getBalance(account.publicKey);
     } catch (e) {
-      handleError(e, "fundAccount");
+      if (e instanceof Error) {
+        handleError(e);
+      }
     }
     isLoading = false;
   }
@@ -49,7 +46,9 @@
       if (e instanceof Error && e.message.includes("Not Found")) {
         balance = "0";
       } else {
-        handleError(e, "getBalance");
+        if (e instanceof Error) {
+          handleError(e);
+        }
       }
     }
   }
@@ -62,9 +61,11 @@
 <button on:click={createAccount} disabled={isLoading}>
   {isLoading ? "Processing..." : "Create Account"}
 </button>
-<button on:click={fundAccount} disabled={isLoading}>
-  {isLoading ? "Processing..." : "Fund Account"}
-</button>
+{#if account}
+  <button on:click={() => account && fundAccount(account)} disabled={isLoading}>
+    {isLoading ? "Processing..." : "Fund Account"}
+  </button>
+{/if}
 
 <section class="log-box">
   <p>Account: {account ? account.publicKey : "No account"}</p>

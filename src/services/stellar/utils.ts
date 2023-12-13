@@ -1,14 +1,25 @@
-import { Account, TransactionBuilder, BASE_FEE, xdr, Transaction, Horizon, Keypair } from 'stellar-sdk';
+import {
+  Account,
+  TransactionBuilder,
+  BASE_FEE,
+  xdr,
+  Transaction,
+  Horizon,
+} from "stellar-sdk";
 
 const STELLAR_NETWORK_URL = import.meta.env.VITE_STELLAR_NETWORK_URL;
-const STELLAR_NETWORK_PASSPHRASE = import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE;
+const STELLAR_NETWORK_PASSPHRASE = import.meta.env
+  .VITE_STELLAR_NETWORK_PASSPHRASE;
 
 const server = new Horizon.Server(STELLAR_NETWORK_URL);
 
-function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): Transaction {
+function buildTransaction(
+  sourceAccount: Account,
+  operations: xdr.Operation[]
+): Transaction {
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: STELLAR_NETWORK_PASSPHRASE
+    networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
   });
 
   for (const operation of operations) {
@@ -17,7 +28,5 @@ function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): 
 
   return transaction.setTimeout(30).build();
 }
-
-
 
 export { buildTransaction, server };
