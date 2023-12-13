@@ -24,9 +24,15 @@
     isLoading = false;
   }
 
-  async function fundAccount(account: Account) {
+  async function fundAccount() {
     error = "";
     isLoading = true;
+
+    if (!account) {
+      error = "Account not created";
+      return;
+    }
+
     try {
       await account.fundWithFriendBot();
       await getBalance(account.publicKey);
@@ -43,18 +49,14 @@
       const account = await server.loadAccount(publicKey);
       balance = account.balances[0].balance;
     } catch (e) {
-      if (e instanceof Error && e.message.includes("Not Found")) {
-        balance = "0";
-      } else {
-        if (e instanceof Error) {
-          handleError(e);
-        }
+      if (e instanceof Error) {
+        handleError(e);
       }
     }
   }
 
   $: if (account) {
-    getBalance(account.publicKey);
+    balance = "Fund account to see the balance";
   }
 </script>
 
@@ -62,11 +64,10 @@
   {isLoading ? "Processing..." : "Create Account"}
 </button>
 {#if account}
-  <button on:click={() => account && fundAccount(account)} disabled={isLoading}>
+  <button on:click={fundAccount} disabled={isLoading}>
     {isLoading ? "Processing..." : "Fund Account"}
   </button>
 {/if}
-
 <section class="log-box">
   <p>Account: {account ? account.publicKey : "No account"}</p>
   <p>XLM Balance: {balance ? balance : "No balance"}</p>
