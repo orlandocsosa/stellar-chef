@@ -1,7 +1,8 @@
 <script>
-	import Layout from '../dashboard/Layout.svelte';
+  export const ssr = false;
+  import Layout from "../dashboard/Layout.svelte";
 </script>
 
 <Layout>
-	<slot />
+  <slot />
 </Layout>
