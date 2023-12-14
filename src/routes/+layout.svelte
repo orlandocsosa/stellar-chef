@@ -1,7 +1,9 @@
 <script>
-  import Layout from "../dashboard/Layout.svelte";
+  import Page from './+page.svelte';
 </script>
 
-<Layout>
-  <slot />
-</Layout>
+<svelte:head>
+  <title>App</title>
+</svelte:head>
+
+<Page />
