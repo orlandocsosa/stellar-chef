@@ -23,13 +23,7 @@
   <Card title="Inputs">
     <Input id="asset-code" label="Asset Code" bind:value={assetCode} />
     <div class="flex justify-center items-center">
-      <button
-        class="bg-white hover:bg-gray-200 text-black py-2 px-4 border border-black w-full mx-2"
-        on:click={prepare}
-        style="box-shadow: 3px 3px 0px 0px black;"
-      >
-        Prepare!
-      </button>
+      <Button label="Prepare" onClick={prepare} />
     </div>
   </Card>
 
