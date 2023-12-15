@@ -3,7 +3,6 @@
   export let onClick = () => {};
 
   function handleClick() {
-    console.log('Button clicked!');
     onClick();
   }
 </script>
