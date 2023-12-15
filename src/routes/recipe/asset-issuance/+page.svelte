@@ -17,15 +17,12 @@
   let balanceValue = 100;
 
   async function prepare() {
-    try {
-      accounts = [];
-      const account1 = await Account.create();
-      const account2 = await Account.create();
-      accounts = [account1, account2];
-    } catch (error) {
-      console.error('Failed to create accounts:', error);
-    }
+    accounts = [];
+    const account1 = await Account.create();
+    const account2 = await Account.create();
+    accounts = [account1, account2];
   }
+
   $: accountFields = accounts.map((account) => ({
     publicKey: account.publicKey,
     secretKey: account.secretKey
