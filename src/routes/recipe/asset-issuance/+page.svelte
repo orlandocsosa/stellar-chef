@@ -2,12 +2,10 @@
   import { Asset, Networks, TransactionBuilder, Operation, Keypair } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
-  import AssetInput from '../../../components/AssetInput.svelte';
   import Input from '../../../components/Input.svelte';
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import NumberInput from '../../../components/NumberInput.svelte';
   import { server } from '../../../services/stellar/utils';
 
   let assetCode = '';
@@ -20,17 +18,11 @@
   let numberOfHolders = 0;
   let shouldBalanceBeEqualForAll = true;
 
-  async function createAndFundAccount() {
-    const account = await Account.create();
-    await account.fundWithFriendBot();
-    return account;
-  }
-
   async function prepare() {
     try {
       accounts = [];
-      const account1 = await createAndFundAccount();
-      const account2 = await createAndFundAccount();
+      const account1 = await Account.create().fundWithFriendBot();
+      const account2 = await Account.create().fundWithFriendBot();
       accounts = [account1, account2];
 
       const issuer = await server.loadAccount(account1.publicKey);
@@ -92,7 +84,10 @@
 <div class="flex justify-center">
   <Card title="Inputs">
     <div class="flex flex-col">
-      <AssetInput id="asset-code" label="Asset Code" bind:value={assetCode} />
+      <label for="asset-code" class="block mb-2"
+        >Asset Code <span class="text-red-500">*</span>
+        <Input id="asset-code" bind:value={assetCode} /></label
+      >
       <Checkbox
         id="create-distributor-account"
         label="Create distributor account"
@@ -102,9 +97,13 @@
       <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} />
       <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
       <div class="ml-4">
-        <NumberInput id="number-of-holders" label="How many?" bind:value={numberOfHolders} />
+        <label for="number-of-holders">
+          How many?<Input id="number-of-holders" type="number" bind:value={numberOfHolders} /></label
+        >
+
         <Checkbox label="Equal balance for all" bind:checked={shouldBalanceBeEqualForAll} />
-        <NumberInput id="balance-value" bind:value={balanceValue} />
+        <label for="balance-value" />
+        <Input id="balance-value" type="number" bind:value={balanceValue} />
       </div>
       <div class="flex justify-center items-center">
         <Button id="prepare-button" label="Prepare !" onClick={prepare} />
@@ -116,8 +115,13 @@
     {#each accountFields as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">Account {i + 1}</h2>
-        <Input id="publicKey{i + 1}" label="Public Key" value={publicKey} readonly />
-        <Input id="secretKey{i + 1}" label="Secret Key" value={secretKey} readonly />
+        <label for="publicKey{i + 1}" class="block mb-2"
+          >Public Key
+          <Input id="publicKey{i + 1}" value={publicKey} readonly />
+        </label>
+        <label for="secretKey{i + 1}" class="block">
+          <Input id="secretKey{i + 1}" value={secretKey} readonly />
+        </label>
       </div>
     {/each}
   </Card>
