@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Asset, Networks, TransactionBuilder, Operation, Keypair } from 'stellar-sdk';
+  import { Asset, TransactionBuilder, Operation, Keypair } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
   import Input from '../../../components/Input.svelte';
@@ -32,7 +32,7 @@
 
       const trustTransaction = new TransactionBuilder(distributor, {
         fee: (await server.fetchBaseFee()).toString(),
-        networkPassphrase: Networks.TESTNET
+        networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE
       })
         .addOperation(
           Operation.changeTrust({
@@ -48,7 +48,7 @@
 
       const paymentTransaction = new TransactionBuilder(issuer, {
         fee: (await server.fetchBaseFee()).toString(),
-        networkPassphrase: Networks.TESTNET
+        networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE
       })
         .addOperation(
           Operation.payment({
@@ -86,7 +86,7 @@
     <div class="flex flex-col">
       <label for="asset-code" class="block mb-2"
         >Asset Code <span class="text-red-500">*</span>
-        <Input id="asset-code" bind:value={assetCode} /></label
+        <Input id="asset-code" bind:value={assetCode} maxlength={12} /></label
       >
       <Checkbox
         id="create-distributor-account"
@@ -98,7 +98,12 @@
       <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
       <div class="ml-4">
         <label for="number-of-holders">
-          How many?<Input id="number-of-holders" type="number" bind:value={numberOfHolders} /></label
+          How many?<Input
+            id="number-of-holders"
+            hasToAcceptSpaces={true}
+            type="number"
+            bind:value={numberOfHolders}
+          /></label
         >
 
         <Checkbox label="Equal balance for all" bind:checked={shouldBalanceBeEqualForAll} />
@@ -114,12 +119,13 @@
   <Card title="Output">
     {#each accountFields as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
-        <h2 class="text-lg font-bold mb-2">Account {i + 1}</h2>
+        <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
         <label for="publicKey{i + 1}" class="block mb-2"
           >Public Key
           <Input id="publicKey{i + 1}" value={publicKey} readonly />
         </label>
         <label for="secretKey{i + 1}" class="block">
+          Secret Key
           <Input id="secretKey{i + 1}" value={secretKey} readonly />
         </label>
       </div>
