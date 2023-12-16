@@ -5,7 +5,7 @@
   export let readonly: boolean = false;
   export let type: string = 'text';
   export let hasToAcceptSpaces: boolean = false;
-  export let maxlength: number = 50;
+  export let maxlength: number = 80;
 
   function handleSpaces(event: Event & { currentTarget: HTMLInputElement }) {
     value = event.currentTarget.value;
