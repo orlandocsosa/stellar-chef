@@ -11,6 +11,9 @@
   let assetCode = '';
   let accounts: Account[] = [];
   let balanceValue = 100;
+  let buttonLabel = 'Prepare!';
+  let isButtonDisabled = false;
+  let logs: string[] = [];
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
@@ -18,7 +21,16 @@
   let numberOfHolders = 0;
   let shouldBalanceBeEqualForAll = true;
 
+  function showLog(message: string) {
+    logs = [...logs, message];
+    console.log(message);
+  }
+
   async function prepare() {
+    buttonLabel = 'Preparing...';
+    isButtonDisabled = true;
+    logs = ['Preparing...', ...logs];
+
     try {
       accounts = [];
       const account1 = await Account.create().fundWithFriendBot();
@@ -44,7 +56,7 @@
 
       trustTransaction.sign(Keypair.fromSecret(account2.secretKey));
       const trustResult = await server.submitTransaction(trustTransaction);
-      console.log('Trust transaction succeeded:', trustResult);
+      showLog('Trust transaction succeeded:' + JSON.stringify(trustResult));
 
       const paymentTransaction = new TransactionBuilder(issuer, {
         fee: (await server.fetchBaseFee()).toString(),
@@ -62,17 +74,18 @@
 
       paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
       const paymentResult = await server.submitTransaction(paymentTransaction);
-      console.log('Payment transaction succeeded:', paymentResult);
-
+      showLog('Payment transaction succeeded:' + JSON.stringify(paymentResult));
       const updatedDistributor = await server.loadAccount(account2.publicKey);
-      console.log('Updated distributor balances:', updatedDistributor.balances);
+      showLog(`Distributor balance: ${updatedDistributor.balances[0].balance} ${assetCode}`);
     } catch (error) {
       if (error instanceof Error) {
-        console.error('Failed to create accounts: ' + error.message);
+        showLog('Failed to create accounts: ' + JSON.stringify(error.message));
       } else {
-        console.error('Failed to create accounts: An unknown error occurred');
+        showLog('Failed to create accounts, unknown error ');
       }
     }
+    buttonLabel = 'Prepare!';
+    isButtonDisabled = false;
   }
 
   $: accountFields = accounts.map((account) => ({
@@ -111,12 +124,19 @@
         <Input id="balance-value" type="number" bind:value={balanceValue} />
       </div>
       <div class="flex justify-center items-center">
-        <Button id="prepare-button" label="Prepare !" onClick={prepare} />
+        <Button id="prepare-button" label={buttonLabel} onClick={prepare} disabled={isButtonDisabled} />
       </div>
     </div>
   </Card>
 
   <Card title="Output">
+    <div class="mt-4 bg-gray-100 p-2 rounded">
+      <pre class="overflow-y-auto" style="height: 150px;">
+        {#each logs as log}
+          <span>{log}</span><br />
+        {/each}
+      </pre>
+    </div>
     {#each accountFields as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
