@@ -4,24 +4,25 @@
   export let disabled: boolean = false;
   export let readonly: boolean = false;
   export let type: string = 'text';
-  export let hasToAcceptSpaces: boolean = false;
   export let maxlength: number = 80;
+  export let handleInput: (value: string) => string = (value) => value;
 
-  function handleSpaces(event: Event & { currentTarget: HTMLInputElement }) {
-    value = event.currentTarget.value;
-    if (!hasToAcceptSpaces) {
-      value = value.toString().replace(/\s/g, '');
-    }
+  const typeProp = {
+    type
+  };
+
+  function updateValue(event: Event) {
+    value = handleInput((event.target as HTMLInputElement).value);
   }
 </script>
 
 <input
   {id}
-  {value}
-  on:input={handleSpaces}
-  {type}
+  bind:value
+  {...typeProp}
   {disabled}
   {readonly}
   {maxlength}
   class={type === 'text' ? 'mb-4 border-4 w-full p-2 border-black' : 'mb-2 border-2 rounded'}
+  on:input={updateValue}
 />
