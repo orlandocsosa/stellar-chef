@@ -57,6 +57,9 @@
 
       trustTransaction.sign(Keypair.fromSecret(account2.secretKey));
       const trustResult = await server.submitTransaction(trustTransaction);
+      if (!trustResult) {
+        showStatus('Trust transaction failed');
+      }
       showStatus('Trust transaction succeeded');
 
       const paymentTransaction = new TransactionBuilder(issuer, {
@@ -72,12 +75,36 @@
         )
         .setTimeout(30)
         .build();
+      let paymentResult;
 
       paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
-      const paymentResult = await server.submitTransaction(paymentTransaction);
+      paymentResult = await server.submitTransaction(paymentTransaction);
+      if (!paymentResult) {
+        showStatus('Payment transaction failed');
+      }
       showStatus('Payment transaction succeeded');
-      const updatedDistributor = await server.loadAccount(account2.publicKey);
-      showStatus(`Distributor balance: ${updatedDistributor.balances[0].balance} ${assetCode}`);
+
+      paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
+      paymentResult = await server.submitTransaction(paymentTransaction);
+      if (!paymentResult) {
+        showStatus('Payment transaction failed');
+      } else {
+        showStatus('Payment transaction succeeded');
+
+        const updatedDistributor = await server.loadAccount(account2.publicKey);
+        const updatedIssuer = await server.loadAccount(account1.publicKey);
+
+        showStatus(
+          updatedDistributor.balances.length === 0 ? 'Distributor account not funded' : 'Distributor account funded'
+        );
+        showStatus(updatedIssuer.balances.length === 0 ? 'Issuer account not funded' : 'Issuer account funded');
+
+        if (updatedDistributor.balances.length === 0 || updatedIssuer.balances.length === 0) {
+          showStatus('One or more accounts not funded');
+        }
+
+        showStatus('Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode);
+      }
     } catch (error) {
       if (error instanceof Error) {
         showStatus('Failed to create accounts: ' + JSON.stringify(error.message));
@@ -93,6 +120,10 @@
     publicKey: account.publicKey,
     secretKey: account.secretKey
   }));
+
+  function removeSpaces(inputValue: string) {
+    return inputValue.replace(/\s/g, '');
+  }
 </script>
 
 <div class="flex justify-center">
@@ -100,8 +131,8 @@
     <div class="flex flex-col">
       <label for="asset-code" class="block mb-2"
         >Asset Code <span class="text-red-500">*</span>
-        <Input id="asset-code" bind:value={assetCode} maxlength={12} /></label
-      >
+        <Input id="asset-code" bind:value={assetCode} maxlength={12} handleInput={removeSpaces} />
+      </label>
       <Checkbox
         id="create-distributor-account"
         label="Create distributor account"
@@ -112,12 +143,7 @@
       <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
       <div class="ml-4">
         <label for="number-of-holders">
-          How many?<Input
-            id="number-of-holders"
-            hasToAcceptSpaces={true}
-            type="number"
-            bind:value={numberOfHolders}
-          /></label
+          How many?<Input id="number-of-holders" type="number" bind:value={numberOfHolders} /></label
         >
 
         <Checkbox label="Equal balance for all" bind:checked={shouldBalanceBeEqualForAll} />
