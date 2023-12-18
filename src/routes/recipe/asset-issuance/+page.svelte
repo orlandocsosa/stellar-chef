@@ -13,23 +13,23 @@
   let balanceValue = 100;
   let buttonLabel = 'Prepare!';
   let isButtonDisabled = false;
-  let logs: string[] = [];
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
   let shouldCreateHolders = true;
   let numberOfHolders = 0;
   let shouldBalanceBeEqualForAll = true;
+  let status = '';
 
-  function showLog(message: string) {
-    logs = [...logs, message];
+  function showStatus(message: string) {
     console.log(message);
+    status = message;
   }
 
   async function prepare() {
+    status = '';
     buttonLabel = 'Preparing...';
     isButtonDisabled = true;
-    logs = ['Preparing...', ...logs];
 
     try {
       accounts = [];
@@ -39,6 +39,7 @@
 
       const issuer = await server.loadAccount(account1.publicKey);
       const distributor = await server.loadAccount(account2.publicKey);
+      showStatus('Accounts created');
 
       const asset = new Asset(assetCode, issuer.accountId());
 
@@ -56,7 +57,7 @@
 
       trustTransaction.sign(Keypair.fromSecret(account2.secretKey));
       const trustResult = await server.submitTransaction(trustTransaction);
-      showLog('Trust transaction succeeded:' + JSON.stringify(trustResult));
+      showStatus('Trust transaction succeeded');
 
       const paymentTransaction = new TransactionBuilder(issuer, {
         fee: (await server.fetchBaseFee()).toString(),
@@ -74,14 +75,14 @@
 
       paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
       const paymentResult = await server.submitTransaction(paymentTransaction);
-      showLog('Payment transaction succeeded:' + JSON.stringify(paymentResult));
+      showStatus('Payment transaction succeeded');
       const updatedDistributor = await server.loadAccount(account2.publicKey);
-      showLog(`Distributor balance: ${updatedDistributor.balances[0].balance} ${assetCode}`);
+      showStatus(`Distributor balance: ${updatedDistributor.balances[0].balance} ${assetCode}`);
     } catch (error) {
       if (error instanceof Error) {
-        showLog('Failed to create accounts: ' + JSON.stringify(error.message));
+        showStatus('Failed to create accounts: ' + JSON.stringify(error.message));
       } else {
-        showLog('Failed to create accounts, unknown error ');
+        showStatus('Failed to create accounts, unknown error ');
       }
     }
     buttonLabel = 'Prepare!';
@@ -126,17 +127,11 @@
       <div class="flex justify-center items-center">
         <Button id="prepare-button" label={buttonLabel} onClick={prepare} disabled={isButtonDisabled} />
       </div>
+      <textarea id="status" class="h-auto max-h-12 overflow-auto mt-4" bind:value={status} readonly />
     </div>
   </Card>
 
   <Card title="Output">
-    <div class="mt-4 bg-gray-100 p-2 rounded">
-      <pre class="overflow-y-auto" style="height: 150px;">
-        {#each logs as log}
-          <span>{log}</span><br />
-        {/each}
-      </pre>
-    </div>
     {#each accountFields as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
