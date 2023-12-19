@@ -6,7 +6,9 @@ module.exports = {
     extend: {}
   },
   variants: {
-    extend: {}
+    extend: {
+      textOverflow: ['ellipsis']
+    }
   },
   plugins: []
 };
