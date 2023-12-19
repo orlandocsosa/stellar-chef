@@ -2,6 +2,7 @@
   import { Asset, TransactionBuilder, Operation, Keypair } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
+  import AssetOutput from '../../../components/AssetOutput.svelte';
   import Input from '../../../components/Input.svelte';
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
@@ -11,7 +12,6 @@
   let assetCode = '';
   let accounts: Account[] = [];
   let balanceValue = 100;
-  let buttonLabel = 'Prepare!';
   let isLoading = false;
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
@@ -23,7 +23,6 @@
 
   async function prepare() {
     status = '';
-    buttonLabel = 'Preparing...';
     isLoading = true;
 
     try {
@@ -31,6 +30,9 @@
       const issuerAccount = await Account.create().fundWithFriendBot();
       const distributorAccount = await Account.create().fundWithFriendBot();
       accounts = [issuerAccount, distributorAccount];
+
+      console.log('Issuer account:', issuerAccount);
+      console.log('Distributor account:', distributorAccount);
 
       const issuer = await server.loadAccount(issuerAccount.publicKey);
       const distributor = await server.loadAccount(distributorAccount.publicKey);
@@ -69,15 +71,6 @@
         status = 'Transaction successful';
 
         const updatedDistributor = await server.loadAccount(distributorAccount.publicKey);
-        const updatedIssuer = await server.loadAccount(issuerAccount.publicKey);
-
-        status =
-          updatedDistributor.balances.length === 0 ? 'Distributor account not funded' : 'Distributor account funded';
-        status = updatedIssuer.balances.length === 0 ? 'Issuer account not funded' : 'Issuer account funded';
-
-        if (updatedDistributor.balances.length === 0 || updatedIssuer.balances.length === 0) {
-          status = 'One or more accounts not funded';
-        }
 
         status = 'Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode;
       }
@@ -86,14 +79,8 @@
       status = 'Failed to create accounts: ' + error;
     }
 
-    buttonLabel = 'Prepare!';
     isLoading = false;
   }
-
-  $: accountFields = accounts.map((account) => ({
-    publicKey: account.publicKey,
-    secretKey: account.secretKey
-  }));
 
   function removeSpaces(inputValue: string) {
     return inputValue.replace(/\s/g, '');
@@ -125,23 +112,28 @@
         <Input id="balance-value" type="number" bind:value={balanceValue} />
       </div>
       <div class="flex justify-center items-center">
-        <Button id="prepare-button" label={buttonLabel} onClick={prepare} disabled={isLoading} />
+        <Button
+          id="prepare-button"
+          label={isLoading ? 'Preparing...' : 'Prepare!'}
+          onClick={prepare}
+          disabled={isLoading}
+        />
       </div>
       <textarea id="status" class="h-auto max-h-12 overflow-auto mt-4" bind:value={status} readonly />
     </div>
   </Card>
 
   <Card title="Output">
-    {#each accountFields as { publicKey, secretKey }, i (publicKey)}
+    {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
         <label for="publicKey{i + 1}" class="block mb-2"
           >Public Key
-          <Input id="publicKey{i + 1}" value={publicKey} readonly />
+          <AssetOutput id="publicKey{i + 1}" value={publicKey} />
         </label>
         <label for="secretKey{i + 1}" class="block">
           Secret Key
-          <Input id="secretKey{i + 1}" value={secretKey} readonly />
+          <AssetOutput id="secretKey{i + 1}" value={secretKey} />
         </label>
       </div>
     {/each}
