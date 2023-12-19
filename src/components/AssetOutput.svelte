@@ -10,8 +10,8 @@
   {id}
   contenteditable="false"
   class={type === 'text'
-    ? 'mb-4 w-full p-2 font-bold overflow-hidden whitespace-nowrap overflow-ellipsis'
-    : 'mb-2 font-bold overflow-hidden whitespace-nowrap overflow-ellipsis'}
+    ? 'mb-2 w-full p-1 font-bold overflow-hidden whitespace-nowrap overflow-ellipsis'
+    : 'mb-1 font-bold overflow-hidden whitespace-nowrap overflow-ellipsis'}
 >
   {value}
 </div>
