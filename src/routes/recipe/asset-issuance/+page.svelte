@@ -33,17 +33,17 @@
 
     try {
       accounts = [];
-      const account1 = await Account.create().fundWithFriendBot();
-      const account2 = await Account.create().fundWithFriendBot();
-      accounts = [account1, account2];
+      const issuerAccount = await Account.create().fundWithFriendBot();
+      const distributorAccount = await Account.create().fundWithFriendBot();
+      accounts = [issuerAccount, distributorAccount];
 
-      const issuer = await server.loadAccount(account1.publicKey);
-      const distributor = await server.loadAccount(account2.publicKey);
+      const issuer = await server.loadAccount(issuerAccount.publicKey);
+      const distributor = await server.loadAccount(distributorAccount.publicKey);
       showStatus('Accounts created');
 
       const asset = new Asset(assetCode, issuer.accountId());
 
-      const trustTransaction = new TransactionBuilder(distributor, {
+      const transaction = new TransactionBuilder(distributor, {
         fee: (await server.fetchBaseFee()).toString(),
         networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE
       })
@@ -52,22 +52,9 @@
             asset: asset
           })
         )
-        .setTimeout(30)
-        .build();
-
-      trustTransaction.sign(Keypair.fromSecret(account2.secretKey));
-      const trustResult = await server.submitTransaction(trustTransaction);
-      if (!trustResult) {
-        showStatus('Trust transaction failed');
-      }
-      showStatus('Trust transaction succeeded');
-
-      const paymentTransaction = new TransactionBuilder(issuer, {
-        fee: (await server.fetchBaseFee()).toString(),
-        networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE
-      })
         .addOperation(
           Operation.payment({
+            source: issuerAccount.publicKey,
             destination: distributor.accountId(),
             asset: asset,
             amount: '1000000'
@@ -75,24 +62,19 @@
         )
         .setTimeout(30)
         .build();
-      let paymentResult;
 
-      paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
-      paymentResult = await server.submitTransaction(paymentTransaction);
-      if (!paymentResult) {
-        showStatus('Payment transaction failed');
-      }
-      showStatus('Payment transaction succeeded');
+      transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
+      transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
-      paymentTransaction.sign(Keypair.fromSecret(account1.secretKey));
-      paymentResult = await server.submitTransaction(paymentTransaction);
-      if (!paymentResult) {
-        showStatus('Payment transaction failed');
+      const result = await server.submitTransaction(transaction);
+
+      if (!result) {
+        showStatus('Transaction failed');
       } else {
-        showStatus('Payment transaction succeeded');
+        showStatus('Transaction succeeded');
 
-        const updatedDistributor = await server.loadAccount(account2.publicKey);
-        const updatedIssuer = await server.loadAccount(account1.publicKey);
+        const updatedDistributor = await server.loadAccount(distributorAccount.publicKey);
+        const updatedIssuer = await server.loadAccount(issuerAccount.publicKey);
 
         showStatus(
           updatedDistributor.balances.length === 0 ? 'Distributor account not funded' : 'Distributor account funded'
@@ -106,12 +88,14 @@
         showStatus('Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode);
       }
     } catch (error) {
+      console.error('Error during preparation:', error);
       if (error instanceof Error) {
         showStatus('Failed to create accounts: ' + JSON.stringify(error.message));
       } else {
-        showStatus('Failed to create accounts, unknown error ');
+        showStatus('Failed to create accounts, unknown error');
       }
     }
+
     buttonLabel = 'Prepare!';
     isButtonDisabled = false;
   }
