@@ -31,9 +31,6 @@
       const distributorAccount = await Account.create().fundWithFriendBot();
       accounts = [issuerAccount, distributorAccount];
 
-      console.log('Issuer account:', issuerAccount);
-      console.log('Distributor account:', distributorAccount);
-
       const issuer = await server.loadAccount(issuerAccount.publicKey);
       const distributor = await server.loadAccount(distributorAccount.publicKey);
       status = 'Accounts created';
