@@ -12,7 +12,7 @@
   let accounts: Account[] = [];
   let balanceValue = 100;
   let buttonLabel = 'Prepare!';
-  let isButtonDisabled = false;
+  let isLoading = false;
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
@@ -21,15 +21,11 @@
   let shouldBalanceBeEqualForAll = true;
   let status = '';
 
-  function showStatus(message: string) {
-    console.log(message);
-    status = message;
-  }
-
+  console.log(status);
   async function prepare() {
     status = '';
     buttonLabel = 'Preparing...';
-    isButtonDisabled = true;
+    isLoading = true;
 
     try {
       accounts = [];
@@ -39,7 +35,7 @@
 
       const issuer = await server.loadAccount(issuerAccount.publicKey);
       const distributor = await server.loadAccount(distributorAccount.publicKey);
-      showStatus('Accounts created');
+      status = 'Accounts created';
 
       const asset = new Asset(assetCode, issuer.accountId());
 
@@ -69,35 +65,30 @@
       const result = await server.submitTransaction(transaction);
 
       if (!result) {
-        showStatus('Transaction failed');
+        status = 'Transaction failed';
       } else {
-        showStatus('Transaction succeeded');
+        status = 'Transaction successful';
 
         const updatedDistributor = await server.loadAccount(distributorAccount.publicKey);
         const updatedIssuer = await server.loadAccount(issuerAccount.publicKey);
 
-        showStatus(
-          updatedDistributor.balances.length === 0 ? 'Distributor account not funded' : 'Distributor account funded'
-        );
-        showStatus(updatedIssuer.balances.length === 0 ? 'Issuer account not funded' : 'Issuer account funded');
+        status =
+          updatedDistributor.balances.length === 0 ? 'Distributor account not funded' : 'Distributor account funded';
+        status = updatedIssuer.balances.length === 0 ? 'Issuer account not funded' : 'Issuer account funded';
 
         if (updatedDistributor.balances.length === 0 || updatedIssuer.balances.length === 0) {
-          showStatus('One or more accounts not funded');
+          status = 'One or more accounts not funded';
         }
 
-        showStatus('Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode);
+        status = 'Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode;
       }
     } catch (error) {
       console.error('Error during preparation:', error);
-      if (error instanceof Error) {
-        showStatus('Failed to create accounts: ' + JSON.stringify(error.message));
-      } else {
-        showStatus('Failed to create accounts, unknown error');
-      }
+      status = 'Failed to create accounts: ' + error;
     }
 
     buttonLabel = 'Prepare!';
-    isButtonDisabled = false;
+    isLoading = false;
   }
 
   $: accountFields = accounts.map((account) => ({
@@ -135,7 +126,7 @@
         <Input id="balance-value" type="number" bind:value={balanceValue} />
       </div>
       <div class="flex justify-center items-center">
-        <Button id="prepare-button" label={buttonLabel} onClick={prepare} disabled={isButtonDisabled} />
+        <Button id="prepare-button" label={buttonLabel} onClick={prepare} disabled={isLoading} />
       </div>
       <textarea id="status" class="h-auto max-h-12 overflow-auto mt-4" bind:value={status} readonly />
     </div>
