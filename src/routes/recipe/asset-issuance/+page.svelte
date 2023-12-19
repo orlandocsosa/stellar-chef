@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Asset, TransactionBuilder, Operation, Keypair } from 'stellar-sdk';
+  import { Asset, Operation, Keypair } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
   import AssetOutput from '../../../components/AssetOutput.svelte';
@@ -7,7 +7,7 @@
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import { server } from '../../../services/stellar/utils';
+  import { server, buildTransaction } from '../../../services/stellar/utils';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -29,33 +29,26 @@
       accounts = [];
       const issuerAccount = await Account.create().fundWithFriendBot();
       const distributorAccount = await Account.create().fundWithFriendBot();
-      accounts = [issuerAccount, distributorAccount];
 
       const issuer = await server.loadAccount(issuerAccount.publicKey);
-      const distributor = await server.loadAccount(distributorAccount.publicKey);
+      let distributor = await server.loadAccount(distributorAccount.publicKey);
       status = 'Accounts created';
 
       const asset = new Asset(assetCode, issuer.accountId());
 
-      const transaction = new TransactionBuilder(distributor, {
-        fee: (await server.fetchBaseFee()).toString(),
-        networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE
-      })
-        .addOperation(
-          Operation.changeTrust({
-            asset: asset
-          })
-        )
-        .addOperation(
-          Operation.payment({
-            source: issuerAccount.publicKey,
-            destination: distributor.accountId(),
-            asset: asset,
-            amount: '1000000'
-          })
-        )
-        .setTimeout(30)
-        .build();
+      const operations = [
+        Operation.changeTrust({
+          asset: asset
+        }),
+        Operation.payment({
+          source: issuerAccount.publicKey,
+          destination: distributor.accountId(),
+          asset: asset,
+          amount: '1000000'
+        })
+      ];
+
+      const transaction = buildTransaction(distributor, operations);
 
       transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
@@ -65,11 +58,14 @@
       if (!result) {
         status = 'Transaction failed';
       } else {
+        accounts = [issuerAccount, distributorAccount];
+
         status = 'Transaction successful';
 
-        const updatedDistributor = await server.loadAccount(distributorAccount.publicKey);
+        distributor = await server.loadAccount(distributorAccount.publicKey);
 
-        status = 'Distributor balance is: ' + updatedDistributor.balances[0].balance + ' ' + assetCode;
+        const distributorCreatedAssetBalance = distributor.balances[0].balance;
+        status = `Distributor balance is: ${distributorCreatedAssetBalance} ${assetCode}`;
       }
     } catch (error) {
       console.error('Error during preparation:', error);
