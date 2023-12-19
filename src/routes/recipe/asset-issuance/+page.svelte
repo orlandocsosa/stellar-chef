@@ -21,7 +21,6 @@
   let shouldBalanceBeEqualForAll = true;
   let status = '';
 
-  console.log(status);
   async function prepare() {
     status = '';
     buttonLabel = 'Preparing...';
