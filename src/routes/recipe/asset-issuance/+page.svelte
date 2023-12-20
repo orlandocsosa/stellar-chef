@@ -89,7 +89,7 @@
         }
       }
     } catch (error) {
-      status = `Transaction failed: ${error}`;
+      console.log(error);
     }
 
     isLoading = false;
