@@ -22,6 +22,7 @@
   let status = '';
 
   async function prepare() {
+    const operations = [];
     status = '';
     isLoading = true;
 
@@ -36,20 +37,20 @@
 
       const asset = new Asset(assetCode, issuer.accountId());
 
-      const operations = [
-        Operation.changeTrust({
-          asset: asset
-        }),
-        Operation.payment({
-          source: issuerAccount.publicKey,
-          destination: distributor.accountId(),
-          asset: asset,
-          amount: '1000000'
-        })
-      ];
+      const distributorAddTrustlineOperation = Operation.changeTrust({
+        asset: asset
+      });
+
+      const issuerPaymentOperation = Operation.payment({
+        source: issuerAccount.publicKey,
+        destination: distributor.accountId(),
+        asset: asset,
+        amount: '1000000'
+      });
+
+      operations.push(distributorAddTrustlineOperation, issuerPaymentOperation);
 
       const transaction = buildTransaction(distributor, operations);
-
       transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
