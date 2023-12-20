@@ -48,14 +48,13 @@
         amount: '1000000'
       });
 
-      if (isClawbackEnabled) {
-        const flags = [AuthRevocableFlag, AuthClawbackEnabledFlag];
-        const setClawback = flags.map((flag) => Operation.setOptions({ setFlags: flag }));
-
-        operations.push(...setClawback);
-      }
-
-      operations.push(distributorAddTrustlineOperation, issuerPaymentOperation);
+      operations.push(
+        ...(isClawbackEnabled
+          ? [AuthRevocableFlag, AuthClawbackEnabledFlag].map((flag) => Operation.setOptions({ setFlags: flag }))
+          : []),
+        distributorAddTrustlineOperation,
+        issuerPaymentOperation
+      );
 
       console.log('operations', operations);
       const transaction = buildTransaction(distributor, operations);
@@ -66,13 +65,11 @@
 
       distributor = await server.loadAccount(distributorAccount.publicKey);
 
-      if (!result) {
-        status = 'Transaction failed';
-      } else {
+      status = result ? 'Transaction successful' : 'Transaction failed';
+
+      if (result) {
         accounts.push(issuerAccount, distributorAccount);
         accounts = accounts;
-
-        status = 'Transaction successful';
 
         distributor = await server.loadAccount(distributorAccount.publicKey);
 
@@ -80,13 +77,7 @@
         status = `Distributor balance is: ${distributorCreatedAssetBalance} ${assetCode}`;
 
         // Check if clawback is enabled
-        const clawbackEnabled = distributor.flags.auth_clawback_enabled;
-
-        if (clawbackEnabled) {
-          status = 'Clawback is enabled';
-        } else {
-          status = 'Clawback is not enabled';
-        }
+        status += distributor.flags.auth_clawback_enabled ? '. Clawback is enabled' : '. Clawback is not enabled';
       }
     } catch (error) {
       console.log(error);
