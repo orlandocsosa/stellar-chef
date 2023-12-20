@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Asset, Operation, Keypair } from 'stellar-sdk';
+  import { Asset, Operation, Keypair, AuthClawbackEnabledFlag, AuthRevocableFlag } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
   import AssetOutput from '../../../components/AssetOutput.svelte';
@@ -48,13 +48,23 @@
         amount: '1000000'
       });
 
+      if (isClawbackEnabled) {
+        const flags = [AuthRevocableFlag, AuthClawbackEnabledFlag];
+        const setClawback = flags.map((flag) => Operation.setOptions({ setFlags: flag }));
+
+        operations.push(...setClawback);
+      }
+
       operations.push(distributorAddTrustlineOperation, issuerPaymentOperation);
 
+      console.log('operations', operations);
       const transaction = buildTransaction(distributor, operations);
       transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
       const result = await server.submitTransaction(transaction);
+
+      distributor = await server.loadAccount(distributorAccount.publicKey);
 
       if (!result) {
         status = 'Transaction failed';
@@ -68,10 +78,18 @@
 
         const distributorCreatedAssetBalance = distributor.balances[0].balance;
         status = `Distributor balance is: ${distributorCreatedAssetBalance} ${assetCode}`;
+
+        // Check if clawback is enabled
+        const clawbackEnabled = distributor.flags.auth_clawback_enabled;
+
+        if (clawbackEnabled) {
+          status = 'Clawback is enabled';
+        } else {
+          status = 'Clawback is not enabled';
+        }
       }
     } catch (error) {
-      console.error('Error during preparation:', error);
-      status = 'Failed to create accounts: ' + error;
+      status = `Transaction failed: ${error}`;
     }
 
     isLoading = false;
