@@ -58,7 +58,8 @@
       if (!result) {
         status = 'Transaction failed';
       } else {
-        accounts = [issuerAccount, distributorAccount];
+        accounts.push(issuerAccount, distributorAccount);
+        accounts = accounts;
 
         status = 'Transaction successful';
 
