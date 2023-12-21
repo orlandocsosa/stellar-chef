@@ -66,11 +66,7 @@
 
       accounts = [issuerAccount, distributorAccount];
     } catch (error) {
-      status = Array.isArray(error)
-        ? `Error: ${error.join(', ')}`
-        : error instanceof Error
-        ? `Error: ${error.message}`
-        : 'Unknown error occurred';
+      status = `Error: ${String(error)}`;
       console.error(error);
     } finally {
       isLoading = false;
