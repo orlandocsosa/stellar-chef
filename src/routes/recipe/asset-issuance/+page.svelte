@@ -42,17 +42,22 @@
       const asset = new Asset(assetCode, issuer.accountId());
 
       const operations = [
-        Operation.changeTrust({ asset }),
+      let operations = [];
+
+      if (isClawbackEnabled) {
+        operations.push(Operation.setOptions({ setFlags: AuthRevocableFlag }));
+        operations.push(Operation.setOptions({ setFlags: AuthClawbackEnabledFlag }));
+      }
+
+      operations.push(Operation.changeTrust({ asset }));
+      operations.push(
         Operation.payment({
           source: issuerAccount.publicKey,
           destination: distributor.accountId(),
           asset,
           amount: '1000000'
-        }),
-        ...(isClawbackEnabled
-          ? [AuthRevocableFlag, AuthClawbackEnabledFlag].map((flag) => Operation.setOptions({ setFlags: flag }))
-          : [])
-      ];
+        })
+      );
 
       const transaction = buildTransaction(distributor, operations);
       transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
@@ -67,7 +72,6 @@
       accounts = [issuerAccount, distributorAccount];
     } catch (error) {
       status = `Error: ${String(error)}`;
-      console.error(error);
     } finally {
       isLoading = false;
     }
