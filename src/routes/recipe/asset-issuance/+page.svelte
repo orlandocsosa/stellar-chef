@@ -62,7 +62,7 @@
 
       distributor = await server.loadAccount(distributorAccount.publicKey);
 
-      status = `${result}\nDistributor account balance: ${distributor.balances[0].balance}`;
+      status = `${result}\nDistributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
 
       accounts = [issuerAccount, distributorAccount];
     } catch (error) {
@@ -79,8 +79,8 @@
     }
   }
 
-  function removeSpaces(inputValue: string) {
-    return inputValue.replace(/\s/g, '');
+  function allowOnlyAlphanumeric(inputValue: string) {
+    return inputValue.replace(/[^a-zA-Z0-9]/g, '');
   }
 </script>
 
@@ -89,7 +89,7 @@
     <div class="flex flex-col">
       <label for="asset-code" class="block mb-2"
         >Asset Code <span class="text-red-500">*</span>
-        <Input id="asset-code" bind:value={assetCode} maxlength={12} handleInput={removeSpaces} />
+        <Input id="asset-code" bind:value={assetCode} maxlength={12} handleInput={allowOnlyAlphanumeric} />
       </label>
       <Checkbox
         id="create-distributor-account"
