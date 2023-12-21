@@ -11,11 +11,32 @@ function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): 
     networkPassphrase: STELLAR_NETWORK_PASSPHRASE
   });
 
-  for (const operation of operations) {
-    transaction.addOperation(operation);
-  }
+  try {
+    for (const operation of operations) {
+      transaction.addOperation(operation);
+    }
 
-  return transaction.setTimeout(30).build();
+    return transaction.setTimeout(30).build();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }
 
-export { buildTransaction, server };
+async function submitTransaction(transaction: Transaction): Promise<string> {
+  try {
+    await server.submitTransaction(transaction);
+    return 'Transaction submitted successfully';
+  } catch (e: unknown) {
+    let stellarErrorCode;
+    if (e instanceof Error) {
+      const errorResponse = e as any;
+      stellarErrorCode = errorResponse.response?.data?.extras?.result_codes;
+    }
+    if (stellarErrorCode !== undefined) {
+      throw new Error(JSON.stringify(stellarErrorCode));
+    }
+    throw new Error('An error occurred while submitting the transaction');
+  }
+}
+export { buildTransaction, server, submitTransaction };
