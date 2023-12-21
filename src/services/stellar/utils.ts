@@ -27,19 +27,13 @@ async function submitTransaction(transaction: Transaction): Promise<string> {
   try {
     await server.submitTransaction(transaction);
     return 'Transaction submitted successfully';
-  } catch (e: unknown) {
-    if (!(e instanceof Error)) {
-      throw new Error('An error occurred while submitting the transaction');
-    }
-
-    const errorResponse = e as any;
-    const stellarErrorCode = errorResponse.response?.data?.extras?.result_codes;
+  } catch (e: any) {
+    const stellarErrorCode = e.response.data.extras.result_codes;
 
     if (stellarErrorCode === undefined) {
-      throw new Error('An error occurred while submitting the transaction');
+      throw new Error(JSON.stringify(e));
     }
-
-    throw new Error(JSON.stringify(stellarErrorCode));
+    throw new Error(JSON.stringify(e.response.data.extras.result_codes));
   }
 }
 
