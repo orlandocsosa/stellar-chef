@@ -7,7 +7,7 @@
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import { server, buildTransaction } from '../../../services/stellar/utils';
+  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -22,68 +22,61 @@
   let status = '';
 
   async function prepare() {
-    const operations = [];
+    accounts = [];
     status = '';
     isLoading = true;
 
     try {
-      accounts = [];
-      const issuerAccount = await Account.create().fundWithFriendBot();
-      const distributorAccount = await Account.create().fundWithFriendBot();
+      const [issuerAccount, distributorAccount] = await Promise.all([
+        Account.create().fundWithFriendBot(),
+        Account.create().fundWithFriendBot()
+      ]);
 
-      const issuer = await server.loadAccount(issuerAccount.publicKey);
-      let distributor = await server.loadAccount(distributorAccount.publicKey);
+      let [issuer, distributor] = await Promise.all([
+        server.loadAccount(issuerAccount.publicKey),
+        server.loadAccount(distributorAccount.publicKey)
+      ]);
+
       status = 'Accounts created';
 
       const asset = new Asset(assetCode, issuer.accountId());
 
-      const distributorAddTrustlineOperation = Operation.changeTrust({
-        asset: asset
-      });
-
-      const issuerPaymentOperation = Operation.payment({
-        source: issuerAccount.publicKey,
-        destination: distributor.accountId(),
-        asset: asset,
-        amount: '1000000'
-      });
-
-      operations.push(
+      const operations = [
+        Operation.changeTrust({ asset }),
+        Operation.payment({
+          source: issuerAccount.publicKey,
+          destination: distributor.accountId(),
+          asset,
+          amount: '1000000'
+        }),
         ...(isClawbackEnabled
           ? [AuthRevocableFlag, AuthClawbackEnabledFlag].map((flag) => Operation.setOptions({ setFlags: flag }))
-          : []),
-        distributorAddTrustlineOperation,
-        issuerPaymentOperation
-      );
+          : [])
+      ];
 
-      console.log('operations', operations);
       const transaction = buildTransaction(distributor, operations);
       transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
-      const result = await server.submitTransaction(transaction);
+      const result = await submitTransaction(transaction);
 
       distributor = await server.loadAccount(distributorAccount.publicKey);
 
-      status = result ? 'Transaction successful' : 'Transaction failed';
+      status = `${result}\nDistributor account balance: ${distributor.balances[0].balance}`;
 
-      if (result) {
-        accounts.push(issuerAccount, distributorAccount);
-        accounts = accounts;
-
-        distributor = await server.loadAccount(distributorAccount.publicKey);
-
-        const distributorCreatedAssetBalance = distributor.balances[0].balance;
-        status = `Distributor balance is: ${distributorCreatedAssetBalance} ${assetCode}`;
-
-        // Check if clawback is enabled
-        status += distributor.flags.auth_clawback_enabled ? '. Clawback is enabled' : '. Clawback is not enabled';
-      }
+      accounts = [issuerAccount, distributorAccount];
     } catch (error) {
-      console.log(error);
+      if (Array.isArray(error)) {
+        status = `Error: ${error.join(', ')}`;
+      } else if (error instanceof Error) {
+        status = `Error: ${error.message}`;
+      } else {
+        status = `Unknown error occurred`;
+      }
+      console.error(error);
+    } finally {
+      isLoading = false;
     }
-
-    isLoading = false;
   }
 
   function removeSpaces(inputValue: string) {
