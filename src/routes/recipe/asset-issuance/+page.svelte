@@ -41,7 +41,6 @@
 
       const asset = new Asset(assetCode, issuer.accountId());
 
-      const operations = [
       let operations = [];
 
       if (isClawbackEnabled) {
