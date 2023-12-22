@@ -23,10 +23,9 @@ function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): 
   }
 }
 
-async function submitTransaction(transaction: Transaction): Promise<string> {
+async function submitTransaction(transaction: Transaction): Promise<object> {
   try {
-    await server.submitTransaction(transaction);
-    return 'Transaction submitted successfully';
+    return await server.submitTransaction(transaction);
   } catch (e: any) {
     const stellarErrorCode = e.response.data.extras.result_codes;
 
