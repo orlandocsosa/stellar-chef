@@ -64,11 +64,13 @@
 
       const result = await submitTransaction(transaction);
 
-      distributor = await server.loadAccount(distributorAccount.publicKey);
+      if (typeof result === 'object') {
+        distributor = await server.loadAccount(distributorAccount.publicKey);
 
-      status = `${result}\nDistributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
+        status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
 
-      accounts = [issuerAccount, distributorAccount];
+        accounts = [issuerAccount, distributorAccount];
+      }
     } catch (error) {
       status = `Error: ${String(error)}`;
     } finally {
