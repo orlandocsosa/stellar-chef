@@ -41,6 +41,7 @@
 
     if (trustline && 'is_authorized' in trustline && !trustline.is_authorized) {
       return 'Asset frozen successfully.';
+      ('');
     } else {
       throw new Error('Failed to freeze the asset.');
     }
@@ -69,6 +70,7 @@
       let operations = [];
 
       if (isClawbackEnabled) {
+        console.log('Setting clawback flag...');
         const setOptionsTransaction = buildTransaction(issuer, [
           Operation.setOptions({ setFlags: AuthRevocableFlag }),
           Operation.setOptions({ setFlags: AuthClawbackEnabledFlag })
@@ -77,7 +79,8 @@
         await submitTransaction(setOptionsTransaction);
       }
 
-      if (isFrozenAsset) {
+      if (isFrozenAsset && !isClawbackEnabled) {
+        console.log('Freezing asset...');
         operations.push(
           Operation.setOptions({
             source: issuerAccount.publicKey,
