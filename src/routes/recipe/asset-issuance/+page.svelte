@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Asset, Operation, Keypair, AuthClawbackEnabledFlag, AuthRevocableFlag, xdr } from 'stellar-sdk';
+  import { Asset, Operation, Keypair } from 'stellar-sdk';
 
   import { Account } from '../../../services/stellar/Account';
   import AssetOutput from '../../../components/AssetOutput.svelte';
@@ -14,6 +14,12 @@
     checkAssetFrozen,
     checkClawbackStatus
   } from '../../../services/stellar/utils';
+
+  import {
+    submitClawbackTransaction,
+    submitFreezeAssetTransaction,
+    submitDisableTrustlineTransactionForFrozenAsset
+  } from '../../../services/stellar/transactions/transactions';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -50,21 +56,10 @@
       let operations = [];
 
       if (isClawbackEnabled) {
-        const setOptionsTransaction = buildTransaction(issuer, [
-          Operation.setOptions({ setFlags: AuthRevocableFlag }),
-          Operation.setOptions({ setFlags: AuthClawbackEnabledFlag })
-        ]);
-        setOptionsTransaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
-        await submitTransaction(setOptionsTransaction);
+        submitClawbackTransaction(issuer, issuerAccount.secretKey);
       }
-
       if (isFrozenAsset && !isClawbackEnabled) {
-        operations.push(
-          Operation.setOptions({
-            source: issuerAccount.publicKey,
-            setFlags: AuthRevocableFlag
-          })
-        );
+        submitFreezeAssetTransaction(issuer, issuerAccount.secretKey);
       }
 
       operations.push(Operation.changeTrust({ asset }));
@@ -82,36 +77,13 @@
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
       const result = await submitTransaction(transaction);
-
       if (isFrozenAsset) {
-        const existingAsset = new Asset(assetCode, issuer.accountId());
-
-        const disableTrustOperation = Operation.setTrustLineFlags({
-          source: issuerAccount.publicKey,
-          trustor: distributorAccount.publicKey,
-          asset: existingAsset,
-          flags: { authorized: false }
-        });
-
-        const trustlineDisableOperations = [disableTrustOperation];
-
-        const transaction = buildTransaction(issuer, trustlineDisableOperations);
-        transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
-        await submitTransaction(transaction);
-
-        if (await checkAssetFrozen(distributorAccount.publicKey, assetCode, issuerAccount.publicKey)) {
-          status = 'Asset frozen successfully';
-        } else {
-          throw new Error('Failed to freeze the asset');
-        }
-      }
-
-      if (isClawbackEnabled) {
-        if (await checkClawbackStatus(issuerAccount.publicKey)) {
-          status = 'Clawback successfully enabled';
-        } else {
-          throw new Error('Failed to enable clawback');
-        }
+        submitDisableTrustlineTransactionForFrozenAsset(
+          assetCode,
+          distributorAccount.publicKey,
+          issuer,
+          issuerAccount.secretKey
+        );
       }
 
       if (typeof result === 'object') {
