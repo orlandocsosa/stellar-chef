@@ -70,7 +70,6 @@
       let operations = [];
 
       if (isClawbackEnabled) {
-        console.log('Setting clawback flag...');
         const setOptionsTransaction = buildTransaction(issuer, [
           Operation.setOptions({ setFlags: AuthRevocableFlag }),
           Operation.setOptions({ setFlags: AuthClawbackEnabledFlag })
@@ -80,7 +79,6 @@
       }
 
       if (isFrozenAsset && !isClawbackEnabled) {
-        console.log('Freezing asset...');
         operations.push(
           Operation.setOptions({
             source: issuerAccount.publicKey,
