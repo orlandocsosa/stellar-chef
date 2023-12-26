@@ -7,7 +7,13 @@
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
+  import {
+    server,
+    buildTransaction,
+    submitTransaction,
+    checkAssetFrozen,
+    checkClawbackStatus
+  } from '../../../services/stellar/utils';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -20,32 +26,6 @@
   let numberOfHolders = 0;
   let shouldBalanceBeEqualForAll = true;
   let status = '';
-
-  async function checkClawbackStatus(issuerAccountId: string) {
-    const issuerAccount = await server.loadAccount(issuerAccountId);
-
-    if (issuerAccount.flags.auth_clawback_enabled && issuerAccount.flags.auth_revocable) {
-      return 'Clawback has been set successfully.';
-    } else {
-      throw new Error('Failed to set the clawback flag.');
-    }
-  }
-
-  async function checkAssetFrozen(distributorPublicKey: string, frozenAssetCode: string, issuerPublicKey: string) {
-    const distributorAccountWithFrozenAsset = await server.loadAccount(distributorPublicKey);
-
-    const trustline = distributorAccountWithFrozenAsset.balances.find(
-      (balance) =>
-        'asset_issuer' in balance && balance.asset_code === frozenAssetCode && balance.asset_issuer === issuerPublicKey
-    );
-
-    if (trustline && 'is_authorized' in trustline && !trustline.is_authorized) {
-      return 'Asset frozen successfully.';
-      ('');
-    } else {
-      throw new Error('Failed to freeze the asset.');
-    }
-  }
 
   async function prepare() {
     accounts = [];
@@ -119,11 +99,19 @@
         transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
         await submitTransaction(transaction);
 
-        status = await checkAssetFrozen(distributorAccount.publicKey, assetCode, issuerAccount.publicKey);
+        if (await checkAssetFrozen(distributorAccount.publicKey, assetCode, issuerAccount.publicKey)) {
+          status = 'Asset frozen successfully';
+        } else {
+          throw new Error('Failed to freeze the asset');
+        }
       }
 
       if (isClawbackEnabled) {
-        status = await checkClawbackStatus(issuerAccount.publicKey);
+        if (await checkClawbackStatus(issuerAccount.publicKey)) {
+          status = 'Clawback successfully enabled';
+        } else {
+          throw new Error('Failed to enable clawback');
+        }
       }
 
       if (typeof result === 'object') {
