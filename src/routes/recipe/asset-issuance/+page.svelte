@@ -7,13 +7,7 @@
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import {
-    server,
-    buildTransaction,
-    submitTransaction,
-    checkAssetFrozen,
-    checkClawbackStatus
-  } from '../../../services/stellar/utils';
+  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
   import {
     submitClawbackTransaction,
@@ -56,10 +50,10 @@
       let operations = [];
 
       if (isClawbackEnabled) {
-        submitClawbackTransaction(issuer, issuerAccount.secretKey);
+        await submitClawbackTransaction(issuer, issuerAccount.secretKey);
       }
       if (isFrozenAsset && !isClawbackEnabled) {
-        submitFreezeAssetTransaction(issuer, issuerAccount.secretKey);
+        await submitFreezeAssetTransaction(issuer, issuerAccount.secretKey);
       }
 
       operations.push(Operation.changeTrust({ asset }));
@@ -78,7 +72,7 @@
 
       const result = await submitTransaction(transaction);
       if (isFrozenAsset) {
-        submitDisableTrustlineTransactionForFrozenAsset(
+        await submitDisableTrustlineTransactionForFrozenAsset(
           assetCode,
           distributorAccount.publicKey,
           issuer,
@@ -86,7 +80,7 @@
         );
       }
 
-      if (typeof result === 'object') {
+      if (typeof result.successful) {
         distributor = await server.loadAccount(distributorAccount.publicKey);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
