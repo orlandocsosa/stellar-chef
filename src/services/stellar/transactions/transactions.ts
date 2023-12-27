@@ -1,6 +1,6 @@
 import type { Account } from 'stellar-sdk';
 import { Operation, Keypair, AuthRevocableFlag, AuthClawbackEnabledFlag, Asset } from 'stellar-sdk';
-import { buildTransaction, submitTransaction, checkAssetFrozen, checkClawbackStatus } from '../utils';
+import { buildTransaction, submitTransaction } from '../utils';
 
 export async function submitClawbackTransaction(issuer: Account, issuerAccountsecretKey: string): Promise<void> {
   const setOptionsTransaction = buildTransaction(issuer, [
@@ -9,16 +9,12 @@ export async function submitClawbackTransaction(issuer: Account, issuerAccountse
   ]);
   setOptionsTransaction.sign(Keypair.fromSecret(issuerAccountsecretKey));
   await submitTransaction(setOptionsTransaction);
-
-  if (!(await checkClawbackStatus(issuer.accountId()))) {
-    throw new Error('Failed to enable clawback');
-  }
 }
 
 export async function submitFreezeAssetTransaction(issuer: Account, issuerAccountsecretKey: string): Promise<void> {
-  const setOptionsTransaction = buildTransaction(issuer, [Operation.setOptions({ setFlags: AuthRevocableFlag })]);
-  setOptionsTransaction.sign(Keypair.fromSecret(issuerAccountsecretKey));
-  await submitTransaction(setOptionsTransaction);
+  const setOptionTransaction = buildTransaction(issuer, [Operation.setOptions({ setFlags: AuthRevocableFlag })]);
+  setOptionTransaction.sign(Keypair.fromSecret(issuerAccountsecretKey));
+  await submitTransaction(setOptionTransaction);
 }
 
 export async function submitDisableTrustlineTransactionForFrozenAsset(
@@ -27,7 +23,6 @@ export async function submitDisableTrustlineTransactionForFrozenAsset(
   issuer: Account,
   issuerAccountSecretKey: string
 ): Promise<void> {
-  console.log(assetCode, distributorAccountPublicKey, issuer.accountId(), issuerAccountSecretKey);
   const existingAsset = new Asset(assetCode, issuer.accountId());
 
   const disableTrustOperation = Operation.setTrustLineFlags({
@@ -42,8 +37,4 @@ export async function submitDisableTrustlineTransactionForFrozenAsset(
   const transaction = buildTransaction(issuer, trustlineDisableOperations);
   transaction.sign(Keypair.fromSecret(issuerAccountSecretKey));
   await submitTransaction(transaction);
-
-  if (!(await checkAssetFrozen(distributorAccountPublicKey, assetCode, issuer.accountId()))) {
-    throw new Error('Failed to freeze the asset');
-  }
 }
