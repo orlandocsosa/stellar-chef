@@ -23,7 +23,7 @@ function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): 
   }
 }
 
-async function submitTransaction(transaction: Transaction): Promise<object> {
+async function submitTransaction(transaction: Transaction): Promise<Horizon.HorizonApi.SubmitTransactionResponse> {
   try {
     return await server.submitTransaction(transaction);
   } catch (e: any) {
