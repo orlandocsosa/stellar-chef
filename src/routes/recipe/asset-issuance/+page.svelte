@@ -9,11 +9,9 @@
   import Checkbox from '../../../components/Checkbox.svelte';
   import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
-  import {
-    submitClawbackTransaction,
-    submitFreezeAssetTransaction,
-    submitDisableTrustlineTransactionForFrozenAsset
-  } from '../../../services/stellar/transactions/transactions';
+  import { submitClawbackTransaction } from '../../../services/stellar/transactions/submitClawbackTransaction';
+  import { submitFreezeAssetTransaction } from '../../../services/stellar/transactions/submitFreezeAssetTransaction';
+  import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
 
   let assetCode = '';
   let accounts: Account[] = [];
