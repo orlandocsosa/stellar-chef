@@ -9,7 +9,7 @@
   import Checkbox from '../../../components/Checkbox.svelte';
   import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
-  import { submitClawbackTransaction } from '../../../services/stellar/transactions/submitClawbackTransaction';
+  import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
   import { submitFreezeAssetTransaction } from '../../../services/stellar/transactions/submitFreezeAssetTransaction';
   import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
 
@@ -46,9 +46,8 @@
       const asset = new Asset(assetCode, issuer.accountId());
 
       let operations = [];
-
       if (isClawbackEnabled) {
-        await submitClawbackTransaction(issuer, issuerAccount.secretKey);
+        operations.push(...prepareClawbackOperations(issuerAccount.publicKey));
       }
       if (isFrozenAsset && !isClawbackEnabled) {
         await submitFreezeAssetTransaction(issuer, issuerAccount.secretKey);
@@ -80,6 +79,8 @@
 
       if (typeof result.successful) {
         distributor = await server.loadAccount(distributorAccount.publicKey);
+
+        issuer = await server.loadAccount(issuerAccount.publicKey);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
 
