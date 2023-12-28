@@ -10,7 +10,7 @@
   import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
-  import { submitFreezeAssetTransaction } from '../../../services/stellar/transactions/submitFreezeAssetTransaction';
+  import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
   import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
 
   let assetCode = '';
@@ -50,7 +50,7 @@
         operations.push(...prepareClawbackOperations(issuerAccount.publicKey));
       }
       if (isFrozenAsset && !isClawbackEnabled) {
-        await submitFreezeAssetTransaction(issuer, issuerAccount.secretKey);
+        operations.push(...prepareFreezeAssetTransaction(issuerAccount.publicKey));
       }
 
       operations.push(Operation.changeTrust({ asset }));
@@ -81,6 +81,7 @@
         distributor = await server.loadAccount(distributorAccount.publicKey);
 
         issuer = await server.loadAccount(issuerAccount.publicKey);
+        console.log(issuer.flags);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
 
