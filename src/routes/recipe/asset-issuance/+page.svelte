@@ -26,6 +26,7 @@
   let shouldBalanceBeEqualForAll = true;
   let status = '';
   let holdersAccounts: Account[] = [];
+  let showHolders = false;
 
   async function prepare() {
     accounts = [];
@@ -156,5 +157,29 @@
         </label>
       </div>
     {/each}
+    {#if holdersAccounts.length > 0}
+      <Button
+        id="toggle-holders-button"
+        label={showHolders ? 'Hide Holders' : 'Show Holders'}
+        onClick={() => {
+          showHolders = !showHolders;
+        }}
+      />
+    {/if}
+    {#if showHolders}
+      {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
+        <div class="mt-4">
+          <h2 class="text-lg font-bold mb-2">Holder {i + 1}</h2>
+          <label for="publicKeyHolder{i + 1}" class="block mb-2"
+            >Public Key
+            <AssetOutput id="publicKeyHolder{i + 1}" value={publicKey} />
+          </label>
+          <label for="secretKeyHolder{i + 1}" class="block">
+            Secret Key
+            <AssetOutput id="secretKeyHolder{i + 1}" value={secretKey} />
+          </label>
+        </div>
+      {/each}
+    {/if}
   </Card>
 </div>
