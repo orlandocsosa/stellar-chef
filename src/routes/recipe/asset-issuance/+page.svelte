@@ -7,11 +7,12 @@
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
-  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
 
+  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
   import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
   import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
+  import { createHolders } from '../../../services/stellar/transactions/createHolders';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -24,6 +25,7 @@
   let numberOfHolders = 0;
   let shouldBalanceBeEqualForAll = true;
   let status = '';
+  let holdersAccounts: Account[] = [];
 
   async function prepare() {
     accounts = [];
@@ -77,11 +79,16 @@
         );
       }
 
+      if (shouldCreateHolders && numberOfHolders > 0) {
+        const equalBalance = shouldBalanceBeEqualForAll ? String(balanceValue) : String(balanceValue / numberOfHolders);
+
+        holdersAccounts = await createHolders(distributorAccount, numberOfHolders, equalBalance, asset);
+      }
+
       if (typeof result.successful) {
         distributor = await server.loadAccount(distributorAccount.publicKey);
 
         issuer = await server.loadAccount(issuerAccount.publicKey);
-        console.log(issuer.flags);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
 
