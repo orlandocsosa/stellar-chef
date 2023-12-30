@@ -30,6 +30,7 @@
 
   async function prepare() {
     accounts = [];
+    holdersAccounts = [];
     status = '';
     isLoading = true;
 
@@ -97,6 +98,7 @@
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
+      console.error(error);
     } finally {
       isLoading = false;
     }
@@ -108,7 +110,7 @@
 </script>
 
 <div class="flex justify-center">
-  <Card title="Inputs">
+  <Card id="inputs" title="Inputs">
     <div class="flex flex-col">
       <label for="asset-code" class="block mb-2"
         >Asset Code <span class="text-red-500">*</span>
@@ -143,7 +145,7 @@
     </div>
   </Card>
 
-  <Card title="Output">
+  <Card id="outputs" title="Output">
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
