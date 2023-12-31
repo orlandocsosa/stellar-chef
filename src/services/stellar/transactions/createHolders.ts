@@ -5,40 +5,32 @@ import { server, buildTransaction } from '../utils';
 
 export async function createHolders(
   distributorAccount: Account,
-  numberOfHolders: number,
+  holdersQuantity: number,
   equalBalance: string,
   asset: Asset
 ): Promise<Account[]> {
   const holders: Account[] = [];
 
-  for (let i = 0; i < numberOfHolders; i++) {
+  for (let i = 0; i < holdersQuantity; i++) {
     const holderAccount = Account.create();
 
-    let operation = Operation.createAccount({
-      destination: holderAccount.publicKey,
-      startingBalance: '100'
-    });
-    let distributor = await server.loadAccount(distributorAccount.publicKey);
-    let transaction = buildTransaction(distributor, [operation]);
-    transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
-    await server.submitTransaction(transaction);
+    await holderAccount.fundWithFriendBot();
 
-    operation = Operation.changeTrust({
+    const holder = await server.loadAccount(holderAccount.publicKey);
+
+    const changeTrustOp = Operation.changeTrust({
       asset
     });
-    const holder = await server.loadAccount(holderAccount.publicKey);
-    transaction = buildTransaction(holder, [operation]);
-    transaction.sign(Keypair.fromSecret(holderAccount.secretKey));
-    await server.submitTransaction(transaction);
 
-    operation = Operation.payment({
+    const paymentOp = Operation.payment({
+      source: distributorAccount.publicKey,
       destination: holderAccount.publicKey,
       asset,
       amount: equalBalance
     });
-    distributor = await server.loadAccount(distributorAccount.publicKey);
-    transaction = buildTransaction(distributor, [operation]);
-    transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
+
+    const transaction = buildTransaction(holder, [changeTrustOp, paymentOp]);
+    transaction.sign(Keypair.fromSecret(holderAccount.secretKey), Keypair.fromSecret(distributorAccount.secretKey));
     await server.submitTransaction(transaction);
 
     holders.push(holderAccount);
