@@ -16,14 +16,13 @@
 
   let assetCode = '';
   let accounts: Account[] = [];
-  let balanceValue = 100;
+  let balancePerHolder = 100;
   let isLoading = false;
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
   let shouldCreateHolders = true;
   let numberOfHolders = 0;
-  let shouldBalanceBeEqualForAll = true;
   let status = '';
   let holdersAccounts: Account[] = [];
   let showHolders = false;
@@ -82,9 +81,12 @@
       }
 
       if (shouldCreateHolders && numberOfHolders > 0) {
-        const equalBalance = shouldBalanceBeEqualForAll ? String(balanceValue) : String(balanceValue / numberOfHolders);
-
-        holdersAccounts = await createHolders(distributorAccount, numberOfHolders, equalBalance, asset);
+        holdersAccounts = await createHolders(
+          distributorAccount,
+          numberOfHolders,
+          balancePerHolder ? balancePerHolder.toString() : '',
+          asset
+        );
       }
 
       if (typeof result.successful) {
@@ -129,9 +131,9 @@
           How many?<Input id="number-of-holders" type="number" bind:value={numberOfHolders} /></label
         >
 
-        <Checkbox label="Equal balance for all" bind:checked={shouldBalanceBeEqualForAll} />
+        <p>Balance per holder:</p>
         <label for="balance-value" />
-        <Input id="balance-value" type="number" bind:value={balanceValue} />
+        <Input id="balance-value" type="number" bind:value={balancePerHolder} />
       </div>
       <div class="flex justify-center items-center">
         <Button
