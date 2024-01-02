@@ -2,7 +2,7 @@ import type { xdr } from 'stellar-sdk';
 import { Operation, AuthRevocableFlag, AuthClawbackEnabledFlag } from 'stellar-sdk';
 
 export function prepareClawbackOperations(issuerPublicKey: string): xdr.Operation[] {
-  const operationsArray = [
+  return [
     Operation.setOptions({
       setFlags: AuthRevocableFlag,
       source: issuerPublicKey
@@ -12,5 +12,4 @@ export function prepareClawbackOperations(issuerPublicKey: string): xdr.Operatio
       source: issuerPublicKey
     })
   ];
-  return operationsArray;
 }
