@@ -168,13 +168,13 @@
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
-        <label for="publicKey{i + 1}" class="block mb-2"
+        <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
           >Public Key
-          <AssetOutput id="publicKey{i + 1}" value={publicKey} />
+          <AssetOutput id={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} value={publicKey} />
         </label>
-        <label for="secretKey{i + 1}" class="block">
+        <label for={i === 0 ? 'issuerSecretKey' : 'distributorSecretKey'} class="block">
           Secret Key
-          <AssetOutput id="secretKey{i + 1}" value={secretKey} />
+          <AssetOutput id={i === 0 ? 'issuerSecretKey' : 'distributorSecretKey'} value={secretKey} />
         </label>
       </div>
     {/each}
@@ -191,13 +191,13 @@
       {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
         <div class="mt-4">
           <h2 class="text-lg font-bold mb-2">Holder {i + 1}</h2>
-          <label for="publicKeyHolder{i + 1}" class="block mb-2"
+          <label for="holder{i + 1}PublicKey" class="block mb-2"
             >Public Key
-            <AssetOutput id="publicKeyHolder{i + 1}" value={publicKey} />
+            <AssetOutput id="holder{i + 1}PublicKey" value={publicKey} />
           </label>
-          <label for="secretKeyHolder{i + 1}" class="block">
+          <label for="holder{i + 1}SecretKey" class="block">
             Secret Key
-            <AssetOutput id="secretKeyHolder{i + 1}" value={secretKey} />
+            <AssetOutput id="holder{i + 1}SecretKey" value={secretKey} />
           </label>
         </div>
       {/each}
