@@ -21,8 +21,8 @@
   let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
-  let shouldCreateHolders = true;
-  let numberOfHolders = 0;
+  let shouldCreateHolders = false;
+  let numberOfHolders = 1;
   let status = '';
   let holdersAccounts: Account[] = [];
   let showHolders = false;
@@ -128,12 +128,17 @@
       <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
       <div class="ml-4">
         <label for="number-of-holders">
-          How many?<Input id="number-of-holders" type="number" bind:value={numberOfHolders} /></label
+          How many?<Input
+            id="number-of-holders"
+            type="number"
+            bind:value={numberOfHolders}
+            disabled={!shouldCreateHolders}
+          /></label
         >
 
         <p>Balance per holder:</p>
         <label for="balance-value" />
-        <Input id="balance-value" type="number" bind:value={balancePerHolder} />
+        <Input id="balance-value" type="number" bind:value={balancePerHolder} disabled={!shouldCreateHolders} />
       </div>
       <div class="flex justify-center items-center">
         <Button
