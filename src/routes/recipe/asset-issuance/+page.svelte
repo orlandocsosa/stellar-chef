@@ -44,7 +44,8 @@
         server.loadAccount(distributorAccount.publicKey)
       ]);
 
-      status = 'Accounts created';
+      status = 'Accounts created...';
+      accounts = [issuerAccount, distributorAccount];
 
       const asset = new Asset(assetCode, issuer.accountId());
 
@@ -71,7 +72,7 @@
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
       const result = await submitTransaction(transaction);
-      if (isFrozenAsset) {
+      if (isFrozenAsset && !shouldCreateHolders) {
         await submitDisableTrustlineTransactionForFrozenAsset(
           assetCode,
           distributorAccount.publicKey,
@@ -81,12 +82,25 @@
       }
 
       if (shouldCreateHolders && numberOfHolders > 0) {
+        status = 'Creating holders...';
         holdersAccounts = await createHolders(
           distributorAccount,
           numberOfHolders,
           balancePerHolder ? balancePerHolder.toString() : '',
           asset
         );
+
+        if (isFrozenAsset) {
+          status = 'Holders created...';
+          for (const holderAccount of holdersAccounts) {
+            await submitDisableTrustlineTransactionForFrozenAsset(
+              assetCode,
+              holderAccount.publicKey,
+              issuer,
+              issuerAccount.secretKey
+            );
+          }
+        }
       }
 
       if (typeof result.successful) {
@@ -95,8 +109,6 @@
         issuer = await server.loadAccount(issuerAccount.publicKey);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
-
-        accounts = [issuerAccount, distributorAccount];
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
