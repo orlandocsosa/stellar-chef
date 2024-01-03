@@ -160,7 +160,9 @@
           disabled={isLoading}
         />
       </div>
-      <textarea id="status" class="h-auto max-h-12 overflow-auto mt-4" bind:value={status} readonly />
+      <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
+        {@html status}
+      </div>
     </div>
   </Card>
 
