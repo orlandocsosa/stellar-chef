@@ -49,7 +49,7 @@ describe('Asset Creation with Frozen and Clawback', () => {
   });
 });
 
-describe('Asset Creation with Frozen, Clawback, and Freeze', () => {
+describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder', () => {
   beforeEach(visitAssetIssuancePage);
 
   it('creates a new asset with frozen and clawback options', () => {
@@ -69,7 +69,6 @@ describe('Asset Creation with Frozen, Clawback, and Freeze', () => {
 
     cy.get('#toggle-holders-button').click();
 
-    // Check the holder's public key
     checkPublicKeyAndSecretKey('#holder1PublicKey', '#holder1SecretKey');
   });
 });
