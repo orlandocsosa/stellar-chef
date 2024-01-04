@@ -52,7 +52,7 @@ describe('Asset Creation with Frozen and Clawback', () => {
 describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder', () => {
   beforeEach(visitAssetIssuancePage);
 
-  it('creates a new asset with frozen and clawback options', () => {
+  it('creates a new asset with frozen and clawback options, and 1 holder', () => {
     createAsset('testAsset');
 
     cy.get('#frozen-asset').check();
@@ -70,5 +70,31 @@ describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder', () => {
     cy.get('#toggle-holders-button').click();
 
     checkPublicKeyAndSecretKey('#holder1PublicKey', '#holder1SecretKey');
+  });
+});
+
+describe('Asset Creation Failure', () => {
+  beforeEach(() => {
+    visitAssetIssuancePage();
+  });
+
+  it('handles asset creation failure with blank asset name', () => {
+    cy.get('#prepare-button').click();
+
+    cy.get('#status', { timeout: 30000 }).should(
+      'contain',
+      'Error: Error: Asset code is invalid (maximum alphanumeric, 12 characters at max)'
+    );
+  });
+
+  it('handles asset creation failure with zero balance for holder', () => {
+    cy.get('#create-holders').check();
+    cy.get('#balance-value').clear().type('0');
+    createAsset('testAsset');
+
+    cy.get('#status', { timeout: 30000 }).should(
+      'contain',
+      'Error: TypeError: amount argument must be of type String, represent a positive number and have at most 7 digits after the decimal'
+    );
   });
 });
