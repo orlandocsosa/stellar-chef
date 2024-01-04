@@ -18,7 +18,6 @@
   let accounts: Account[] = [];
   let balancePerHolder = 100;
   let isLoading = false;
-  let shouldCreateDistributorAccount = true;
   let isClawbackEnabled = false;
   let isFrozenAsset = false;
   let shouldCreateHolders = false;
@@ -130,11 +129,7 @@
         >Asset Code <span class="text-red-500">*</span>
         <Input id="asset-code" bind:value={assetCode} maxlength={12} handleInput={allowOnlyAlphanumeric} />
       </label>
-      <Checkbox
-        id="create-distributor-account"
-        label="Create distributor account"
-        bind:checked={shouldCreateDistributorAccount}
-      />
+
       <Checkbox id="clawback-enabled" label="Clawback enabled" bind:checked={isClawbackEnabled} />
       <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} />
       <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
