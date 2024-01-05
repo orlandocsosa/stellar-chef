@@ -1,13 +1,14 @@
 <script lang="ts">
   import { Asset, Operation, Keypair } from 'stellar-sdk';
 
-  import { Account } from '../../../services/stellar/Account';
   import AssetOutput from '../../../components/AssetOutput.svelte';
   import Input from '../../../components/Input.svelte';
   import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
+  import CoinInfo from '../../../components/CoinInfo.svelte';
 
+  import { Account } from '../../../services/stellar/Account';
   import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
   import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
@@ -16,6 +17,7 @@
 
   let assetCode = '';
   let accounts: Account[] = [];
+  let assetCodeForCoinInfo = '';
   let balancePerHolder = 100;
   let isLoading = false;
   let isClawbackEnabled = false;
@@ -25,12 +27,14 @@
   let status = '';
   let holdersAccounts: Account[] = [];
   let showHolders = false;
+  let isTransactionSuccessful = false;
 
   async function prepare() {
     accounts = [];
     holdersAccounts = [];
     status = '';
     isLoading = true;
+    isTransactionSuccessful = false;
 
     try {
       const [issuerAccount, distributorAccount] = await Promise.all([
@@ -103,6 +107,9 @@
       }
 
       if (typeof result.successful) {
+        assetCodeForCoinInfo = assetCode;
+        isTransactionSuccessful = true;
+
         distributor = await server.loadAccount(distributorAccount.publicKey);
 
         issuer = await server.loadAccount(issuerAccount.publicKey);
@@ -127,7 +134,13 @@
     <div class="flex flex-col">
       <label for="asset-code" class="block mb-2"
         >Asset Code <span class="text-red-500">*</span>
-        <Input id="asset-code" bind:value={assetCode} maxlength={12} handleInput={allowOnlyAlphanumeric} />
+        <Input
+          id="asset-code"
+          bind:value={assetCode}
+          maxlength={12}
+          handleInput={allowOnlyAlphanumeric}
+          disabled={isLoading}
+        />
       </label>
 
       <Checkbox id="clawback-enabled" label="Clawback enabled" bind:checked={isClawbackEnabled} />
@@ -162,6 +175,12 @@
   </Card>
 
   <Card id="outputs" title="Output">
+    <div id="coinInfo">
+      {#if isTransactionSuccessful}
+        <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} />
+      {/if}
+    </div>
+
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4">
         <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
