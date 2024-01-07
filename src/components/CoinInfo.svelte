@@ -6,10 +6,10 @@
 
 <div class="flex items-center">
   <CheckCircle fill="#34D399" />
-  <span>{assetCodeForCoinInfo} </span>
+  <span class="font-bold">{assetCodeForCoinInfo} </span>
   <a
     href="https://stellar.expert/explorer/testnet/asset/{assetCodeForCoinInfo}-{issuerPublicKey}"
     target="_blank"
-    class="text-blue-500 hover:text-blue-800 ml-1">see details</a
+    class="text-blue-500 hover:text-blue-800 underline ml-1">see details</a
   >
 </div>
