@@ -5,7 +5,7 @@
   async function copyToClipboard() {
     await navigator.clipboard.writeText(textToCopy.toString());
     copied = true;
-    setTimeout(() => (copied = false), 2000); // Reset after 2 seconds
+    setTimeout(() => (copied = false), 2000);
   }
 </script>
 
