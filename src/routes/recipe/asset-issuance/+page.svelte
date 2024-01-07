@@ -1,19 +1,20 @@
 <script lang="ts">
-  import { Asset, Operation, Keypair } from 'stellar-sdk';
+  import { Asset, Keypair, Operation } from 'stellar-sdk';
 
+  import AccountDetails from '../../../components/AccountDetails.svelte';
   import AssetOutput from '../../../components/AssetOutput.svelte';
-  import Input from '../../../components/Input.svelte';
-  import Card from '../../../components/Card.svelte';
   import Button from '../../../components/Button.svelte';
+  import Card from '../../../components/Card.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
   import CoinInfo from '../../../components/CoinInfo.svelte';
+  import Input from '../../../components/Input.svelte';
 
   import { Account } from '../../../services/stellar/Account';
-  import { server, buildTransaction, submitTransaction } from '../../../services/stellar/utils';
+  import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
+  import { createHolders } from '../../../services/stellar/transactions/createHolders';
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
   import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
   import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
-  import { createHolders } from '../../../services/stellar/transactions/createHolders';
 
   let assetCode = '';
   let accounts: Account[] = [];
@@ -182,8 +183,8 @@
     </div>
 
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
-      <div class="mt-4">
-        <h2 class="text-lg font-bold mb-2">{i === 0 ? 'Issuer' : 'Distributor'}</h2>
+      <div class="mt-4" id={i === 0 ? 'issuer-container' : 'distributor-container'}>
+        <h3 class="text-lg mb-2">{i === 0 ? 'Issuer' : 'Distributor'} <AccountDetails {publicKey} /></h3>
         <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
           >Public Key
           <AssetOutput id={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} value={publicKey} />
@@ -205,8 +206,8 @@
     {/if}
     {#if showHolders}
       {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
-        <div class="mt-4">
-          <h2 class="text-lg font-bold mb-2">Holder {i + 1}</h2>
+        <div class="mt-4" id="holder-{i + 1}-container">
+          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails {publicKey} /></h3>
           <label for="holder{i + 1}PublicKey" class="block mb-2"
             >Public Key
             <AssetOutput id="holder{i + 1}PublicKey" value={publicKey} />
