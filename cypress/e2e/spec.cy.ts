@@ -129,3 +129,21 @@ describe('Asset Creation Failure', () => {
     );
   });
 });
+
+describe('Asset distribution Failure with not enough funds for holder ', () => {
+  beforeEach(() => {
+    visitAssetIssuancePage();
+  });
+
+  it('handles asset dsitribution failure with not enough funds for the holders', () => {
+    cy.get('#create-holders').check();
+    cy.get('#number-of-holders').clear().type('4');
+    cy.get('#payment-amount').clear().type('100');
+    createAsset(ASSET_CODE);
+
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
+      'contain',
+      'Error: Not enough funds for distributor account to create holders.'
+    );
+  });
+});
