@@ -40,7 +40,7 @@
     if (shouldCreateHolders && numberOfHolders * balancePerHolder > paymentAmount) {
       status = 'Error: Not enough funds for distributor account to create holders.';
       isLoading = false;
-      throw new Error(status);
+      return;
     }
 
     try {
