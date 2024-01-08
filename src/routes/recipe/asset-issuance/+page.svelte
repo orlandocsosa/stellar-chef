@@ -19,7 +19,7 @@
   let assetCode = '';
   let accounts: Account[] = [];
   let assetCodeForCoinInfo = '';
-  let paymentAmount = 10000;
+  let paymentAmount = 1000000;
   let balancePerHolder = 100;
   let isLoading = false;
   let isClawbackEnabled = false;
@@ -37,6 +37,10 @@
     status = '';
     isLoading = true;
     isTransactionSuccessful = false;
+    if (shouldCreateHolders && numberOfHolders * balancePerHolder > paymentAmount) {
+      status = 'Error: Not enough funds for distributor account to create holders.';
+      return;
+    }
 
     try {
       const [issuerAccount, distributorAccount] = await Promise.all([
@@ -134,7 +138,7 @@
 <div class="flex justify-center">
   <Card id="inputs" title="Inputs">
     <div class="flex flex-col">
-      <label for="asset-code" class="block mb-2"
+      <label for="asset-code" class="block mb-1"
         >Asset Code <span class="text-red-500">*</span>
         <Input
           id="asset-code"
@@ -144,8 +148,8 @@
           disabled={isLoading}
         />
       </label>
-      <label for="payment-amount" class="block mb-2"
-        >Payment amount
+      <label for="payment-amount" class="block mb-1"
+        >Payment to distributor account
         <Input id="payment-amount" type="number" bind:value={paymentAmount} disabled={isLoading} />
         <Checkbox
           id="clawback-enabled"
