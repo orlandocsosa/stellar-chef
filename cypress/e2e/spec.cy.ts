@@ -1,7 +1,10 @@
-const baseUrl = Cypress.config('baseUrl');
+const BASE_URL = Cypress.config('baseUrl');
+const ASSET_CODE = 'testAsset';
+const STATUS_SELECTOR = '#status';
+const TIMEOUT = { timeout: 30000 };
 
 const visitAssetIssuancePage = (): void => {
-  cy.visit(`${baseUrl}/recipe/asset-issuance`);
+  cy.visit(`${BASE_URL}/recipe/asset-issuance`);
 };
 
 const createAsset = (assetCode: string): void => {
@@ -42,59 +45,57 @@ const checkAccountInfoLink = (accountForCheckDivId: string, linkDetailsId: strin
 describe('Asset Creation', () => {
   beforeEach(visitAssetIssuancePage);
 
-  it('creates a new asset', () => {
-    createAsset('testAsset');
+  it('Creates a new asset and verifies the details links, public and secret keys for the issuer and distributor, and the coin info link', () => {
+    createAsset(ASSET_CODE);
 
-    cy.get('#status', { timeout: 30000 }).should(
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
       'contain',
-      'Transaction successful. Distributor account balance: 1000000.0000000 testAsset'
+      `Transaction successful. Distributor account balance: 1000000.0000000 ${ASSET_CODE}`
     );
 
-    checkCoinInfoLink('testAsset');
+    checkCoinInfoLink(ASSET_CODE);
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
     checkAccountInfoLink('issuerPublicKey', 'issuerDetailsLink');
   });
 });
 
-describe('Asset Creation with Frozen and Clawback', () => {
+describe('Asset Creation with Frozen and Clawback, and checks details', () => {
   beforeEach(visitAssetIssuancePage);
 
-  it('creates a new asset with frozen and clawback options', () => {
-    createAsset('testAsset');
-
+  it('creates a new asset with "frozen" and "clawback" options enabled, verifies the keys, and the coin info link.', () => {
     cy.get('#frozen-asset').check();
     cy.get('#clawback-enabled').check();
+    createAsset(ASSET_CODE);
 
-    cy.get('#status', { timeout: 30000 }).should(
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
       'contain',
-      'Transaction successful. Distributor account balance: 1000000.0000000 testAsset'
+      `Transaction successful. Distributor account balance: 1000000.0000000 ${ASSET_CODE}`
     );
 
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
-    checkCoinInfoLink('testAsset');
+    checkCoinInfoLink(ASSET_CODE);
   });
 });
 
-describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder', () => {
+describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder, and checks details', () => {
   beforeEach(visitAssetIssuancePage);
 
-  it('creates a new asset with frozen and clawback options, and 1 holder', () => {
-    createAsset('testAsset');
-
+  it('creates a new asset with frozen and clawback options and 1 holder. Checks the details, keys and links, including holder', () => {
     cy.get('#frozen-asset').check();
     cy.get('#clawback-enabled').check();
     cy.get('#create-holders').check();
+    createAsset(ASSET_CODE);
 
-    cy.get('#status', { timeout: 30000 }).should(
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
       'contain',
-      'Transaction successful. Distributor account balance: 999900.0000000 testAsset'
+      `Transaction successful. Distributor account balance: 999900.0000000 ${ASSET_CODE}`
     );
 
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
-    checkCoinInfoLink('testAsset');
+    checkCoinInfoLink(ASSET_CODE);
 
     cy.get('#toggle-holders-button').click();
 
@@ -111,7 +112,7 @@ describe('Asset Creation Failure', () => {
   it('handles asset creation failure with blank asset name', () => {
     cy.get('#prepare-button').click();
 
-    cy.get('#status', { timeout: 30000 }).should(
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
       'contain',
       'Error: Error: Asset code is invalid (maximum alphanumeric, 12 characters at max)'
     );
@@ -122,7 +123,7 @@ describe('Asset Creation Failure', () => {
     cy.get('#balance-value').clear().type('0');
     createAsset('testAsset');
 
-    cy.get('#status', { timeout: 30000 }).should(
+    cy.get(STATUS_SELECTOR, TIMEOUT).should(
       'contain',
       'Error: TypeError: amount argument must be of type String, represent a positive number and have at most 7 digits after the decimal'
     );
