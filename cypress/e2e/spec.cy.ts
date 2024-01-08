@@ -14,6 +14,31 @@ const checkPublicKeyAndSecretKey = (publicKeyElement: string, secretKeyElement: 
   cy.get(secretKeyElement).should('not.be.empty').invoke('text').should('match', /^S/).and('have.length', 56);
 };
 
+const checkCoinInfoLink = (assetCode: string): void => {
+  let issuerPublicKey: string;
+
+  cy.get('#issuerPublicKey')
+    .invoke('text')
+    .then((text) => {
+      issuerPublicKey = text;
+    })
+    .then(() => {
+      cy.get('#coinInfo')
+        .find('a')
+        .should('have.attr', 'href')
+        .and('equal', `https://stellar.expert/explorer/testnet/asset/${assetCode}-${issuerPublicKey}`);
+    });
+};
+
+const checkAccountInfoLink = (accountForCheckDivId: string, linkDetailsId: string): void => {
+  cy.get(`#${accountForCheckDivId}`)
+    .invoke('text')
+    .then((accountId) => {
+      cy.get(`#${linkDetailsId}`)
+        .should('have.attr', 'href')
+        .and('equal', `https://stellar.expert/explorer/testnet/account/${accountId}`);
+    });
+};
 describe('Asset Creation', () => {
   beforeEach(visitAssetIssuancePage);
 
@@ -25,8 +50,10 @@ describe('Asset Creation', () => {
       'Transaction successful. Distributor account balance: 1000000.0000000 testAsset'
     );
 
+    checkCoinInfoLink('testAsset');
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
+    checkAccountInfoLink('issuerPublicKey', 'issuerDetailsLink');
   });
 });
 
@@ -46,6 +73,7 @@ describe('Asset Creation with Frozen and Clawback', () => {
 
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
+    checkCoinInfoLink('testAsset');
   });
 });
 
@@ -66,10 +94,12 @@ describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder', () => {
 
     checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
+    checkCoinInfoLink('testAsset');
 
     cy.get('#toggle-holders-button').click();
 
     checkPublicKeyAndSecretKey('#holder1PublicKey', '#holder1SecretKey');
+    checkAccountInfoLink('holder1PublicKey', 'holder1DetailsLink');
   });
 });
 

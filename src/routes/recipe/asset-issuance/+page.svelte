@@ -144,22 +144,27 @@
         />
       </label>
 
-      <Checkbox id="clawback-enabled" label="Clawback enabled" bind:checked={isClawbackEnabled} />
-      <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} />
-      <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} />
+      <Checkbox id="clawback-enabled" label="Clawback enabled" bind:checked={isClawbackEnabled} disabled={isLoading} />
+      <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
+      <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} disabled={isLoading} />
       <div class="ml-4">
         <label for="number-of-holders">
           How many?<Input
             id="number-of-holders"
             type="number"
             bind:value={numberOfHolders}
-            disabled={!shouldCreateHolders}
+            disabled={!shouldCreateHolders || isLoading}
           /></label
         >
 
         <p>Balance per holder:</p>
         <label for="balance-value" />
-        <Input id="balance-value" type="number" bind:value={balancePerHolder} disabled={!shouldCreateHolders} />
+        <Input
+          id="balance-value"
+          type="number"
+          bind:value={balancePerHolder}
+          disabled={!shouldCreateHolders || isLoading}
+        />
       </div>
       <div class="flex justify-center items-center">
         <Button
@@ -184,7 +189,10 @@
 
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4" id={i === 0 ? 'issuer-container' : 'distributor-container'}>
-        <h3 class="text-lg mb-2">{i === 0 ? 'Issuer' : 'Distributor'} <AccountDetails {publicKey} /></h3>
+        <h3 class="text-lg mb-2">
+          {i === 0 ? 'Issuer' : 'Distributor'}
+          <AccountDetails id={i === 0 ? 'issuerDetailsLink' : 'distributorDetailsLink'} {publicKey} />
+        </h3>
         <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
           >Public Key
           <AssetOutput id={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} value={publicKey} />
@@ -207,7 +215,7 @@
     {#if showHolders}
       {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
         <div class="mt-4" id="holder-{i + 1}-container">
-          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails {publicKey} /></h3>
+          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails id="holder{i + 1}DetailsLink" {publicKey} /></h3>
           <label for="holder{i + 1}PublicKey" class="block mb-2"
             >Public Key
             <AssetOutput id="holder{i + 1}PublicKey" value={publicKey} />
