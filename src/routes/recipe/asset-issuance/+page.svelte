@@ -19,6 +19,7 @@
   let assetCode = '';
   let accounts: Account[] = [];
   let assetCodeForCoinInfo = '';
+  let paymentAmount = 10000;
   let balancePerHolder = 100;
   let isLoading = false;
   let isClawbackEnabled = false;
@@ -67,7 +68,7 @@
           source: issuerAccount.publicKey,
           destination: distributor.accountId(),
           asset,
-          amount: '1000000'
+          amount: paymentAmount.toString()
         })
       );
 
@@ -143,40 +144,48 @@
           disabled={isLoading}
         />
       </label>
-
-      <Checkbox id="clawback-enabled" label="Clawback enabled" bind:checked={isClawbackEnabled} disabled={isLoading} />
-      <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
-      <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} disabled={isLoading} />
-      <div class="ml-4">
-        <label for="number-of-holders">
-          How many?<Input
-            id="number-of-holders"
-            type="number"
-            bind:value={numberOfHolders}
-            disabled={!shouldCreateHolders || isLoading}
-          /></label
-        >
-
-        <p>Balance per holder:</p>
-        <label for="balance-value" />
-        <Input
-          id="balance-value"
-          type="number"
-          bind:value={balancePerHolder}
-          disabled={!shouldCreateHolders || isLoading}
-        />
-      </div>
-      <div class="flex justify-center items-center">
-        <Button
-          id="prepare-button"
-          label={isLoading ? 'Preparing...' : 'Prepare!'}
-          onClick={prepare}
+      <label for="payment-amount" class="block mb-2"
+        >Payment amount
+        <Input id="payment-amount" type="number" bind:value={paymentAmount} disabled={isLoading} />
+        <Checkbox
+          id="clawback-enabled"
+          label="Clawback enabled"
+          bind:checked={isClawbackEnabled}
           disabled={isLoading}
         />
-      </div>
-      <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
-        {@html status}
-      </div>
+        <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
+        <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} disabled={isLoading} />
+        <div class="ml-4">
+          <label for="number-of-holders">
+            How many?<Input
+              id="number-of-holders"
+              type="number"
+              bind:value={numberOfHolders}
+              disabled={!shouldCreateHolders || isLoading}
+            /></label
+          >
+
+          <p>Balance per holder:</p>
+          <label for="balance-value" />
+          <Input
+            id="balance-value"
+            type="number"
+            bind:value={balancePerHolder}
+            disabled={!shouldCreateHolders || isLoading}
+          />
+        </div>
+        <div class="flex justify-center items-center">
+          <Button
+            id="prepare-button"
+            label={isLoading ? 'Preparing...' : 'Prepare!'}
+            onClick={prepare}
+            disabled={isLoading}
+          />
+        </div>
+        <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
+          {@html status}
+        </div>
+      </label>
     </div>
   </Card>
 
