@@ -58,10 +58,6 @@ describe('Asset Creation', () => {
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
     checkAccountInfoLink('issuerPublicKey', 'issuerDetailsLink');
   });
-});
-
-describe('Asset Creation with Frozen and Clawback, and checks details', () => {
-  beforeEach(visitAssetIssuancePage);
 
   it('creates a new asset with "frozen" and "clawback" options enabled, verifies the keys, and the coin info link.', () => {
     cy.get('#frozen-asset').check();
@@ -77,10 +73,6 @@ describe('Asset Creation with Frozen and Clawback, and checks details', () => {
     checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
     checkCoinInfoLink(ASSET_CODE);
   });
-});
-
-describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder, and checks details', () => {
-  beforeEach(visitAssetIssuancePage);
 
   it('creates a new asset with frozen and clawback options and 1 holder. Checks the details, keys and links, including holder', () => {
     cy.get('#frozen-asset').check();
@@ -102,12 +94,6 @@ describe('Asset Creation with Frozen, Clawback, Freeze, and 1 holder, and checks
     checkPublicKeyAndSecretKey('#holder1PublicKey', '#holder1SecretKey');
     checkAccountInfoLink('holder1PublicKey', 'holder1DetailsLink');
   });
-});
-
-describe('Asset Creation Failure', () => {
-  beforeEach(() => {
-    visitAssetIssuancePage();
-  });
 
   it('handles asset creation failure with blank asset name', () => {
     cy.get('#prepare-button').click();
@@ -127,12 +113,6 @@ describe('Asset Creation Failure', () => {
       'contain',
       'Error: TypeError: amount argument must be of type String, represent a positive number and have at most 7 digits after the decimal'
     );
-  });
-});
-
-describe('Asset distribution Failure with not enough funds for holder ', () => {
-  beforeEach(() => {
-    visitAssetIssuancePage();
   });
 
   it('handles asset dsitribution failure with not enough funds for the holders', () => {
