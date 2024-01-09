@@ -23,6 +23,6 @@
   {disabled}
   {readonly}
   {maxlength}
-  class={type === 'text' ? 'mb-4 border-4 w-full p-2 border-black' : 'mb-2 border-2 rounded'}
+  class={type === 'text' ? 'mb-4 border-4 w-full p-2 border-black' : 'mb-2 ml-1 border-2 rounded'}
   on:input={updateValue}
 />

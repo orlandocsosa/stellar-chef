@@ -8,9 +8,8 @@
 <button
   {id}
   {disabled}
-  class="bg-white hover:bg-gray-200 text-black py-2 px-4 border border-black w-full mx-2"
+  class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 border border-indigo-500 w-10/12 mx-2 rounded transition duration-200 ease-in-out"
   on:click={onClick}
-  style="box-shadow: 5px 5px 0px 0px black;"
 >
   {label}
 </button>

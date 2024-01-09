@@ -4,8 +4,10 @@
   export let id: string = '';
 </script>
 
-<div {id} class="border-4 border-black p-5 w-72 mx-2 bg-white shadow-lg mt-4 overflow-auto" style="height: 550px;">
-  <h1 class="text-xl font-bold mb-5">{title}</h1>
-  <p>{content}</p>
-  <slot />
+<div {id} class="border-4 border-black w-72 mx-2 bg-gray-100 shadow-lg mt-5 rounded overflow-auto h-600px">
+  <h1 class="text-xl font-bold mb-5 bg-indigo-500 text-white p-5">{title}</h1>
+  <div class="p-2">
+    <p>{content}</p>
+    <slot />
+  </div>
 </div>
