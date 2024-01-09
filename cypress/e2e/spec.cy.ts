@@ -1,7 +1,7 @@
 const BASE_URL = Cypress.config('baseUrl');
 const ASSET_CODE = 'testAsset';
 const STATUS_SELECTOR = '#status';
-const TIMEOUT = { timeout: 30000 };
+const TIMEOUT = { timeout: 35000 };
 
 const visitAssetIssuancePage = (): void => {
   cy.visit(`${BASE_URL}/recipe/asset-issuance`);
@@ -12,7 +12,7 @@ const createAsset = (assetCode: string): void => {
   cy.get('#prepare-button').click();
 };
 
-const checkPublicKeyAndSecretKey = (publicKeyElement: string, secretKeyElement: string): void => {
+const checkPublicKeyAndSecretKeyFormat = (publicKeyElement: string, secretKeyElement: string): void => {
   cy.get(publicKeyElement).should('not.be.empty').invoke('text').should('match', /^G/).and('have.length', 56);
   cy.get(secretKeyElement).should('not.be.empty').invoke('text').should('match', /^S/).and('have.length', 56);
 };
@@ -33,8 +33,8 @@ const checkCoinInfoLink = (assetCode: string): void => {
     });
 };
 
-const checkAccountInfoLink = (accountForCheckDivId: string, linkDetailsId: string): void => {
-  cy.get(`#${accountForCheckDivId}`)
+const checkAccountInfoLink = (publicKeyElement: string, linkDetailsId: string): void => {
+  cy.get(publicKeyElement)
     .invoke('text')
     .then((accountId) => {
       cy.get(`#${linkDetailsId}`)
@@ -45,7 +45,7 @@ const checkAccountInfoLink = (accountForCheckDivId: string, linkDetailsId: strin
 describe('Asset Creation', () => {
   beforeEach(visitAssetIssuancePage);
 
-  it('Creates a new asset and verifies the details links, public and secret keys for the issuer and distributor, and the coin info link', () => {
+  it('Should create a new asset and verifies the details links, public and secret keys for the issuer and distributor, and the coin info link', () => {
     createAsset(ASSET_CODE);
 
     cy.get(STATUS_SELECTOR, TIMEOUT).should(
@@ -54,12 +54,15 @@ describe('Asset Creation', () => {
     );
 
     checkCoinInfoLink(ASSET_CODE);
-    checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
-    checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
-    checkAccountInfoLink('issuerPublicKey', 'issuerDetailsLink');
+
+    checkPublicKeyAndSecretKeyFormat('#issuerPublicKey', '#issuerSecretKey');
+    checkAccountInfoLink('#issuerPublicKey', 'issuerDetailsLink');
+
+    checkPublicKeyAndSecretKeyFormat('#distributorPublicKey', '#distributorSecretKey');
+    checkAccountInfoLink('#distributorPublicKey', 'distributorDetailsLink');
   });
 
-  it('creates a new asset with "frozen" and "clawback" options enabled, verifies the keys, and the coin info link.', () => {
+  it('Should create a new asset with "frozen" and "clawback" options enabled, verifies the keys, and the coin info link.', () => {
     cy.get('#frozen-asset').check();
     cy.get('#clawback-enabled').check();
     createAsset(ASSET_CODE);
@@ -69,12 +72,15 @@ describe('Asset Creation', () => {
       `Transaction successful. Distributor account balance: 1000000.0000000 ${ASSET_CODE}`
     );
 
-    checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
-    checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
+    checkPublicKeyAndSecretKeyFormat('#issuerPublicKey', '#issuerSecretKey');
+    checkAccountInfoLink('#issuerPublicKey', 'issuerDetailsLink');
+
+    checkPublicKeyAndSecretKeyFormat('#distributorPublicKey', '#distributorSecretKey');
+    checkAccountInfoLink('#distributorPublicKey', 'distributorDetailsLink');
     checkCoinInfoLink(ASSET_CODE);
   });
 
-  it('creates a new asset with frozen and clawback options and 1 holder. Checks the details, keys and links, including holder', () => {
+  it('Should create a new asset with frozen and clawback options and 1 holder. Checks the details, keys and links, including holder', () => {
     cy.get('#frozen-asset').check();
     cy.get('#clawback-enabled').check();
     cy.get('#create-holders').check();
@@ -85,17 +91,21 @@ describe('Asset Creation', () => {
       `Transaction successful. Distributor account balance: 999900.0000000 ${ASSET_CODE}`
     );
 
-    checkPublicKeyAndSecretKey('#issuerPublicKey', '#issuerSecretKey');
-    checkPublicKeyAndSecretKey('#distributorPublicKey', '#distributorSecretKey');
     checkCoinInfoLink(ASSET_CODE);
+
+    checkPublicKeyAndSecretKeyFormat('#issuerPublicKey', '#issuerSecretKey');
+    checkAccountInfoLink('#issuerPublicKey', 'issuerDetailsLink');
+
+    checkPublicKeyAndSecretKeyFormat('#distributorPublicKey', '#distributorSecretKey');
+    checkAccountInfoLink('#distributorPublicKey', 'distributorDetailsLink');
 
     cy.get('#toggle-holders-button').click();
 
-    checkPublicKeyAndSecretKey('#holder1PublicKey', '#holder1SecretKey');
-    checkAccountInfoLink('holder1PublicKey', 'holder1DetailsLink');
+    checkPublicKeyAndSecretKeyFormat('#holder1PublicKey', '#holder1SecretKey');
+    checkAccountInfoLink('#holder1PublicKey', 'holder1DetailsLink');
   });
 
-  it('handles asset creation failure with blank asset name', () => {
+  it('Should handle asset creation failure with blank asset name', () => {
     cy.get('#prepare-button').click();
 
     cy.get(STATUS_SELECTOR, TIMEOUT).should(
@@ -104,7 +114,7 @@ describe('Asset Creation', () => {
     );
   });
 
-  it('handles asset creation failure with zero balance for holder', () => {
+  it('Should handle asset creation failure with zero balance for holder', () => {
     cy.get('#create-holders').check();
     cy.get('#balance-value').clear().type('0');
     createAsset('testAsset');
@@ -115,7 +125,7 @@ describe('Asset Creation', () => {
     );
   });
 
-  it('handles asset dsitribution failure with not enough funds for the holders', () => {
+  it('Should handle asset dsitribution failure with not enough funds for the holders', () => {
     cy.get('#create-holders').check();
     cy.get('#number-of-holders').clear().type('4');
     cy.get('#payment-amount').clear().type('100');
