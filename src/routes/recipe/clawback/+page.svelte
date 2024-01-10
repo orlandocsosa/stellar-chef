@@ -11,6 +11,8 @@
   let clawbackAccount = '';
   let isLoading = false;
   let status = '';
+  let amountForClawback = '';
+  let isClawbackAllEnabled = false;
 
   async function performClawback() {
     status = '';
@@ -27,16 +29,17 @@
       )?.balance;
 
       if (clawbackAssetBalance) {
-        status = `Performing clawback of ${assetCode} from ${clawbackAccount} to ${issuerSecretKey}`;
+        const amountToClawback = isClawbackAllEnabled ? clawbackAssetBalance : amountForClawback;
+        status = `Performing clawback of ${amountToClawback} ${assetCode} from ${clawbackAccount} to ${issuerSecretKey}`;
         const clawbackOperation = Operation.clawback({
           asset: new Asset(assetCode, issuerAccount.publicKey),
           from: clawbackAccount,
-          amount: clawbackAssetBalance.toString()
+          amount: amountToClawback.toString()
         });
         const transaction = buildTransaction(sourceAccount, [clawbackOperation]);
         transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
         await submitTransaction(transaction);
-        status = `Clawback of ${assetCode} successful`;
+        status = `Clawback of ${amountToClawback} ${assetCode} successful`;
       } else {
         status = `No ${assetCode} balance found in ${clawbackAccount}`;
         throw new Error(`No ${assetCode} balance found in ${clawbackAccount}`);
@@ -63,7 +66,15 @@
       Clawback Account
       <Input id="clawback-account" bind:value={clawbackAccount} disabled={isLoading} />
     </label>
-    <div class="flex justify-center">
+    <label for="amount">
+      Amount
+      <Input id="amount" bind:value={amountForClawback} type="number" disabled={isLoading || isClawbackAllEnabled} />
+    </label>
+    <label for="is-clawback-all-enabled">
+      Clawback All
+      <input type="checkbox" id="is-clawback-all-enabled" bind:checked={isClawbackAllEnabled} disabled={isLoading} />
+    </label>
+    <div class="flex justify-center mt-5">
       <Button
         id="clawback-button"
         label={isLoading ? 'Performing...' : 'Perform Clawback'}
