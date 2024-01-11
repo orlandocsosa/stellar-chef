@@ -30,7 +30,15 @@
 
       if (clawbackAssetBalance) {
         const amountToClawback = isClawbackAllEnabled ? clawbackAssetBalance : amountForClawback;
+
+        if (parseFloat(amountToClawback) > parseFloat(clawbackAssetBalance)) {
+          throw new Error(
+            `The amount for clawback (${amountToClawback}) is greater than the available balance (${clawbackAssetBalance})`
+          );
+        }
+
         status = `Performing clawback of ${amountToClawback} ${assetCode} from ${clawbackAccount} to ${issuerSecretKey}`;
+
         const clawbackOperation = Operation.clawback({
           asset: new Asset(assetCode, issuerAccount.publicKey),
           from: clawbackAccount,
@@ -39,6 +47,7 @@
         const transaction = buildTransaction(sourceAccount, [clawbackOperation]);
         transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
         await submitTransaction(transaction);
+
         status = `Clawback of ${amountToClawback} ${assetCode} successful`;
       } else {
         status = `No ${assetCode} balance found in ${clawbackAccount}`;
