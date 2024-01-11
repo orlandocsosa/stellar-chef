@@ -1,10 +1,11 @@
 <script>
-  import { Operation, Asset, Keypair } from 'stellar-sdk';
+  import { Operation, Asset, Keypair, Transaction } from 'stellar-sdk';
   import { Account } from '../../../services/stellar/Account';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import Card from '../../../components/Card.svelte';
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
+  import TransactionInfo from '../../../components/TransactionInfo.svelte';
 
   let assetCode = '';
   let issuerSecretKey = '';
@@ -13,27 +14,31 @@
   let status = '';
   let amountForClawback = '';
   let isClawbackAllEnabled = false;
+  let isTransactionSuccessful = false;
+  let transactionHash = '';
 
   async function performClawback() {
+    isTransactionSuccessful = false;
+    transactionHash = '';
     status = '';
     isLoading = true;
     try {
       const issuerAccount = new Account(Keypair.fromSecret(issuerSecretKey));
       const sourceAccount = await server.loadAccount(issuerAccount.publicKey);
       const clawbackAccountInfo = await server.loadAccount(clawbackAccount);
-      const clawbackAssetBalance = clawbackAccountInfo.balances.find(
+      const clawbackableAssetAmount = clawbackAccountInfo.balances.find(
         (balance) =>
           'asset_code' in balance &&
           balance.asset_code === assetCode &&
           balance.asset_issuer === issuerAccount.publicKey
       )?.balance;
 
-      if (clawbackAssetBalance) {
-        const amountToClawback = isClawbackAllEnabled ? clawbackAssetBalance : amountForClawback;
+      if (clawbackableAssetAmount) {
+        const amountToClawback = isClawbackAllEnabled ? clawbackableAssetAmount : amountForClawback;
 
-        if (parseFloat(amountToClawback) > parseFloat(clawbackAssetBalance)) {
+        if (parseFloat(amountToClawback) > parseFloat(clawbackableAssetAmount)) {
           throw new Error(
-            `The amount for clawback (${amountToClawback}) is greater than the available balance (${clawbackAssetBalance})`
+            `The amount for clawback (${amountToClawback}) is greater than the available balance (${clawbackableAssetAmount})`
           );
         }
 
@@ -46,12 +51,14 @@
         });
         const transaction = buildTransaction(sourceAccount, [clawbackOperation]);
         transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
-        await submitTransaction(transaction);
+        const transactionResponse = await submitTransaction(transaction);
+        transactionHash = transactionResponse.hash;
+        isTransactionSuccessful = transactionResponse.successful;
 
-        status = `Clawback of ${amountToClawback} ${assetCode} successful`;
-      } else {
-        status = `No ${assetCode} balance found in ${clawbackAccount}`;
-        throw new Error(`No ${assetCode} balance found in ${clawbackAccount}`);
+        if (!isTransactionSuccessful) {
+          status = `Clawback of ${amountToClawback} ${assetCode} failed.`;
+          throw new Error(`Clawback of ${amountToClawback} ${assetCode} failed.`);
+        }
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
@@ -83,6 +90,7 @@
       Clawback All
       <input type="checkbox" id="is-clawback-all-enabled" bind:checked={isClawbackAllEnabled} disabled={isLoading} />
     </label>
+
     <div class="flex justify-center mt-5">
       <Button
         id="clawback-button"
@@ -92,7 +100,11 @@
       />
     </div>
     <div id="status" class="h-auto max-h-12 overflow-y-auto overflow-x-hidden mt-4">
-      {@html status}
+      {#if isTransactionSuccessful}
+        Transaction successful <TransactionInfo {transactionHash} />
+      {:else}
+        {@html status}
+      {/if}
     </div>
   </Card>
 </div>
