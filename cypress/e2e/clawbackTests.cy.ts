@@ -17,11 +17,11 @@ describe('Test Asset Page', () => {
   });
 
   it('Should performs clawback when button is clicked, and verifies the status', () => {
-    cy.get('#asset-code').type('testCoin');
-    cy.get('#issuer-secret-key').type('SB2RZHC7JIUBYHYV45VEHEYVANDY5AWHYS3IJYZHPVNJ6TJ5YPEK7OQE');
-    cy.get('#clawback-account').type('GDAM4TVOXH5RA36KIQLG6JZBM5LB2LMWTTHHJMXCZIPVORNHV4AFPQW3');
-    cy.get('#is-clawback-all-enabled').uncheck();
-    cy.get('#amount').type('100');
+    cy.get('#asset-code').should('be.visible').type('testCoin');
+    cy.get('#issuer-secret-key').should('be.visible').type('SB2RZHC7JIUBYHYV45VEHEYVANDY5AWHYS3IJYZHPVNJ6TJ5YPEK7OQE');
+    cy.get('#clawback-account').should('be.visible').type('GDAM4TVOXH5RA36KIQLG6JZBM5LB2LMWTTHHJMXCZIPVORNHV4AFPQW3');
+    cy.get('#is-clawback-all-enabled').should('be.visible').uncheck();
+    cy.get('#amount').should('be.visible').type('100');
 
     cy.get('#clawback-button').click();
 
@@ -38,11 +38,11 @@ describe('Test Asset Page', () => {
   });
 
   it('Should try to perform clawback when button is clicked, but fails because the available balance is less than the amount', () => {
-    cy.get('#asset-code').type('testCoin');
-    cy.get('#issuer-secret-key').type('SB2RZHC7JIUBYHYV45VEHEYVANDY5AWHYS3IJYZHPVNJ6TJ5YPEK7OQE');
-    cy.get('#clawback-account').type('GDAM4TVOXH5RA36KIQLG6JZBM5LB2LMWTTHHJMXCZIPVORNHV4AFPQW3');
-    cy.get('#is-clawback-all-enabled').uncheck();
-    cy.get('#amount').type('10000000');
+    cy.get('#asset-code').should('be.visible').type('testCoin');
+    cy.get('#issuer-secret-key').should('be.visible').type('SB2RZHC7JIUBYHYV45VEHEYVANDY5AWHYS3IJYZHPVNJ6TJ5YPEK7OQE');
+    cy.get('#clawback-account').should('be.visible').type('GDAM4TVOXH5RA36KIQLG6JZBM5LB2LMWTTHHJMXCZIPVORNHV4AFPQW3');
+    cy.get('#is-clawback-all-enabled').should('be.visible').uncheck();
+    cy.get('#amount').should('be.visible').type('10000000');
 
     cy.get('#clawback-button').click();
 
