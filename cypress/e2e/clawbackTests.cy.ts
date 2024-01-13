@@ -10,12 +10,12 @@ describe('Test Clawback Page', () => {
   beforeEach(() => {
     cy.intercept('GET', `${HORIZON_SERVER}/accounts/${ISSUER_PUBLIC_KEY}`, {
       fixture: 'issuerAccount.json'
-    }).as('load Issuer Account request');
+    }).as('loadIssuerAccountRequest');
 
     cy.intercept('POST', '**/transactions', { fixture: 'transaction.json' }).as('performClawback');
     cy.intercept('GET', `${HORIZON_SERVER}/accounts/${CLAWBACK_ACCOUNT_PUBLIC_KEY}`, {
       fixture: 'clawbackAccount.json'
-    }).as('load clawbackAccount request');
+    }).as('loadClawbackAccountRequest');
 
     cy.visit('http://localhost:5173/recipe/clawback');
   });
@@ -75,4 +75,26 @@ describe('Test Clawback Page', () => {
       'Error: Error: The amount for clawback (10000000) is greater than the available balance (999900.0000000)'
     );
   });
+});
+
+it('Should show an error message when transaction fails', () => {
+  cy.intercept('GET', `${HORIZON_SERVER}/accounts/${ISSUER_PUBLIC_KEY}`, {
+    fixture: 'issuerAccount.json'
+  }).as('loadIssuerAccountRequest');
+
+  cy.intercept('POST', '**/transactions', { fixture: 'transactionFail.json' }).as('performClawback');
+  cy.intercept('GET', `${HORIZON_SERVER}/accounts/${CLAWBACK_ACCOUNT_PUBLIC_KEY}`, {
+    fixture: 'clawbackAccount.json'
+  }).as('loadClawbackAccountRequest');
+
+  cy.visit('http://localhost:5173/recipe/clawback');
+
+  cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+  cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
+  cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+  cy.get('#is-clawback-all-enabled').should('be.visible').check();
+
+  cy.get('#clawback-button').click();
+
+  cy.get('#status').should('contain', 'Error: Error: Clawback of 999900.0000000 testCoin failed.');
 });
