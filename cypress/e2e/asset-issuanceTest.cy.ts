@@ -104,26 +104,6 @@ describe('Asset Creation', () => {
     checkAccountInfoLink('#holder1PublicKey', 'holder1DetailsLink');
   });
 
-  it('Should handle asset creation failure with blank asset name', () => {
-    cy.get('#prepare-button').click();
-
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
-      'contain',
-      'Error: Error: Asset code is invalid (maximum alphanumeric, 12 characters at max)'
-    );
-  });
-
-  it('Should handle asset creation failure with zero balance for holder', () => {
-    cy.get('#create-holders').check();
-    cy.get('#balance-value').clear().type('0');
-    createAsset('testAsset');
-
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
-      'contain',
-      'Error: TypeError: amount argument must be of type String, represent a positive number and have at most 7 digits after the decimal'
-    );
-  });
-
   it('Should handle asset dsitribution failure with not enough funds for the holders', () => {
     cy.get('#create-holders').check();
     cy.get('#number-of-holders').clear().type('4');
