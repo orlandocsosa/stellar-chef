@@ -31,13 +31,11 @@ describe('Test Clawback Page', () => {
 
     cy.get('#status').within(() => {
       cy.contains('Transaction successful');
-      cy.get('div.flex.items-center').within(() => {
-        cy.contains('See details').should(
-          'have.attr',
-          'href',
-          `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
-        );
-      });
+      cy.contains('See details').should(
+        'have.attr',
+        'href',
+        `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
+      );
     });
   });
 
@@ -51,13 +49,11 @@ describe('Test Clawback Page', () => {
 
     cy.get('#status').within(() => {
       cy.contains('Transaction successful');
-      cy.get('div.flex.items-center').within(() => {
-        cy.contains('See details').should(
-          'have.attr',
-          'href',
-          `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
-        );
-      });
+      cy.contains('See details').should(
+        'have.attr',
+        'href',
+        `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
+      );
     });
   });
 
