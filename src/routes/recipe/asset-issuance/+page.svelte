@@ -188,7 +188,7 @@
           />
         </div>
         <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
-          {@html status}
+          {status}
         </div>
       </label>
     </div>
