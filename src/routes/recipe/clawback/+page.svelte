@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Operation, Asset, Keypair } from 'stellar-sdk';
   import { Account } from '../../../services/stellar/Account';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
@@ -7,15 +7,15 @@
   import Button from '../../../components/Button.svelte';
   import TransactionInfo from '../../../components/TransactionInfo.svelte';
 
-  let assetCode = '';
-  let issuerSecretKey = '';
-  let clawbackAccount = '';
+  let assetCode: string;
+  let issuerSecretKey: string;
+  let clawbackAccount: string;
   let isLoading = false;
   let status = '';
-  let amountForClawback = '';
+  let amountForClawback: string;
   let isClawbackAllEnabled = false;
   let isTransactionSuccessful = false;
-  let transactionHash = '';
+  let transactionHash: string;
 
   async function performClawback() {
     isTransactionSuccessful = false;
@@ -70,7 +70,7 @@
 
 <div class="flex justify-center">
   <form on:submit|preventDefault={performClawback}>
-    <Card title="Clawback Asset ">
+    <Card id="clawback-asset-card" title="Clawback Asset ">
       <label for="asset-code">
         Asset Code
         <Input id="asset-code" bind:value={assetCode} disabled={isLoading} required />
