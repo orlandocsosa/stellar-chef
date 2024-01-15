@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   export let publicKey = '';
-  export let id = '';
+  export let id: string;
 </script>
 
 <a

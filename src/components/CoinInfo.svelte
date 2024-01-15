@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   import CheckCircle from './icons/CheckCircle.svelte';
-  export let assetCodeForCoinInfo = '';
-  export let issuerPublicKey = '';
+  export let assetCodeForCoinInfo: string;
+  export let issuerPublicKey: string;
 </script>
 
 <div class="flex items-center">

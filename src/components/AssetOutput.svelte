@@ -2,7 +2,7 @@
   import CopyButton from './CopyButton.svelte';
   export let value: string | number;
   export let id: string;
-  export let type: string = 'text';
+  export let type = 'text';
 </script>
 
 <CopyButton textToCopy={value} />

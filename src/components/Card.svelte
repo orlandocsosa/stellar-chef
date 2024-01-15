@@ -1,7 +1,7 @@
 <script lang="ts">
   export let title: string;
-  export let content: string = '';
-  export let id: string = '';
+  export let content = '';
+  export let id: string;
 </script>
 
 <div {id} class="border-4 border-black w-72 mx-2 bg-gray-100 shadow-lg mt-5 rounded overflow-auto h-600px">

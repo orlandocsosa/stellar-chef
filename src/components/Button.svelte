@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   export let label = '';
   export let onClick = () => {};
-  export let id = '';
+  export let id: string;
   export let disabled = false;
 </script>
 

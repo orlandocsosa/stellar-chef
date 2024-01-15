@@ -1,5 +1,5 @@
-<script>
-  export let transactionHash = '';
+<script lang="ts">
+  export let transactionHash: string;
 </script>
 
 <div class="flex items-center">
