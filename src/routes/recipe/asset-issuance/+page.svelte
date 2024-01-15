@@ -137,62 +137,67 @@
 </script>
 
 <div class="flex justify-center">
-  <Card id="inputs" title="Inputs">
-    <div class="flex flex-col">
-      <label for="asset-code" class="block mb-1"
-        >Asset Code <span class="text-red-500">*</span>
-        <Input
-          id="asset-code"
-          bind:value={assetCode}
-          maxlength={12}
-          handleInput={allowOnlyAlphanumeric}
-          disabled={isLoading}
-        />
-      </label>
-      <label for="payment-amount" class="block mb-1"
-        >Payment to distributor account
-        <Input id="payment-amount" type="number" bind:value={paymentAmount} disabled={isLoading} />
-        <Checkbox
-          id="clawback-enabled"
-          label="Clawback enabled"
-          bind:checked={isClawbackEnabled}
-          disabled={isLoading}
-        />
-        <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
-        <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} disabled={isLoading} />
-        <div class="ml-4">
-          <label for="number-of-holders">
-            How many?<Input
-              id="number-of-holders"
-              type="number"
-              bind:value={numberOfHolders}
-              disabled={!shouldCreateHolders || isLoading}
-            /></label
-          >
-
-          <p>Balance per holder:</p>
-          <label for="balance-value" />
+  <form class="flex flex-col" on:submit|preventDefault={prepare}>
+    <Card id="inputs" title="Inputs">
+      <div class="flex flex-col">
+        <label for="asset-code" class="block mb-1"
+          >Asset Code <span class="text-red-500">*</span>
           <Input
-            id="balance-value"
-            type="number"
-            bind:value={balancePerHolder}
-            disabled={!shouldCreateHolders || isLoading}
+            id="asset-code"
+            bind:value={assetCode}
+            maxlength={12}
+            handleInput={allowOnlyAlphanumeric}
+            disabled={isLoading}
+            required
           />
-        </div>
-        <div class="flex justify-center items-center">
-          <Button
-            id="prepare-button"
-            label={isLoading ? 'Preparing...' : 'Prepare!'}
-            onClick={prepare}
+        </label>
+        <label for="payment-amount" class="block mb-1"
+          >Payment to distributor account
+          <Input id="payment-amount" type="number" bind:value={paymentAmount} disabled={isLoading} required />
+          <Checkbox
+            id="clawback-enabled"
+            label="Clawback enabled"
+            bind:checked={isClawbackEnabled}
             disabled={isLoading}
           />
-        </div>
-        <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
-          {status}
-        </div>
-      </label>
-    </div>
-  </Card>
+          <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
+          <Checkbox
+            id="create-holders"
+            label="Create holders"
+            bind:checked={shouldCreateHolders}
+            disabled={isLoading}
+          />
+          <div class="ml-4">
+            <label for="number-of-holders">
+              How many?<Input
+                id="number-of-holders"
+                type="number"
+                bind:value={numberOfHolders}
+                disabled={!shouldCreateHolders || isLoading}
+                required={shouldCreateHolders}
+              /></label
+            >
+
+            <p>Balance per holder:</p>
+            <label for="balance-value" />
+            <Input
+              id="balance-value"
+              type="number"
+              bind:value={balancePerHolder}
+              disabled={!shouldCreateHolders || isLoading}
+              required={shouldCreateHolders}
+            />
+          </div>
+          <div class="flex justify-center items-center">
+            <Button id="prepare-button" label={isLoading ? 'Preparing...' : 'Prepare!'} disabled={isLoading} />
+          </div>
+          <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
+            {status}
+          </div>
+        </label>
+      </div>
+    </Card>
+  </form>
 
   <Card id="outputs" title="Output">
     <div id="coinInfo">
