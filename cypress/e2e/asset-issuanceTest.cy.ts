@@ -1,10 +1,9 @@
-const BASE_URL = Cypress.config('baseUrl');
 const ASSET_CODE = 'testAsset';
 const STATUS_SELECTOR = '#status';
 const TIMEOUT = { timeout: 35000 };
 
 const visitAssetIssuancePage = (): void => {
-  cy.visit(`${BASE_URL}/recipe/asset-issuance`);
+  cy.visit(Cypress.config().baseUrl + '/recipe/asset-issuance');
 };
 
 const createAsset = (assetCode: string): void => {
