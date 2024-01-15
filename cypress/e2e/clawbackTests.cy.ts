@@ -36,6 +36,7 @@ describe('Test Clawback Page', () => {
         'href',
         `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
       );
+
     });
   });
 
@@ -54,6 +55,7 @@ describe('Test Clawback Page', () => {
         'href',
         `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
       );
+
     });
   });
 
