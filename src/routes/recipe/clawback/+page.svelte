@@ -1,5 +1,5 @@
 <script>
-  import { Operation, Asset, Keypair, Transaction } from 'stellar-sdk';
+  import { Operation, Asset, Keypair } from 'stellar-sdk';
   import { Account } from '../../../services/stellar/Account';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import Card from '../../../components/Card.svelte';
@@ -105,7 +105,7 @@
         {#if isTransactionSuccessful}
           Transaction successful <TransactionInfo {transactionHash} />
         {:else}
-          {@html status}
+          {status}
         {/if}
       </div>
     </Card>
