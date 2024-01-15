@@ -6,6 +6,7 @@
   export let type: string = 'text';
   export let maxlength: number = 80;
   export let handleInput: (value: string) => string = (value) => value;
+  export let required: boolean = false;
 
   const typeProp = {
     type
@@ -23,6 +24,7 @@
   {disabled}
   {readonly}
   {maxlength}
+  {required}
   class={type === 'text' ? 'mb-4 border-4 w-full p-2 border-black' : 'mb-2 ml-1 border-2 rounded'}
   on:input={updateValue}
 />
