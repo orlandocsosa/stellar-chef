@@ -11,5 +11,5 @@
     "sourceMap": true,
     "strict": true
   },
-  "include": ["src/**/*", "cypress/**/*"]
+  "include": ["src/**/*", "cypress/**/*", "svelte-env.d.ts"]
 }
