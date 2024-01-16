@@ -3,7 +3,7 @@ const STATUS_SELECTOR = '#status';
 const TIMEOUT = { timeout: 35000 };
 
 const visitAssetIssuancePage = (): void => {
-  cy.visit(Cypress.config().baseUrl + '/recipe/asset-issuance');
+  cy.visit('/recipe/asset-issuance');
 };
 
 const createAsset = (assetCode: string): void => {

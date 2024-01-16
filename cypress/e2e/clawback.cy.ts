@@ -17,7 +17,7 @@ describe('Test Clawback Page', () => {
       fixture: 'clawbackAccount.json'
     }).as('loadClawbackAccountRequest');
 
-    cy.visit(Cypress.config().baseUrl + '/recipe/clawback');
+    cy.visit('/recipe/clawback');
   });
 
   it('Should performs clawback of 100 testCoin when button is clicked, and verifies the status', () => {
@@ -83,8 +83,7 @@ it('Should show an error message when transaction fails', () => {
     fixture: 'clawbackAccount.json'
   }).as('loadClawbackAccountRequest');
 
-  cy.visit(Cypress.config().baseUrl + '/recipe/clawback');
-
+  cy.visit('/recipe/clawback');
   cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
   cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
   cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
