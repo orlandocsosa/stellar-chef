@@ -2,9 +2,10 @@
   import CheckCircle from './icons/CheckCircle.svelte';
   export let assetCodeForCoinInfo: string;
   export let issuerPublicKey: string;
+  export let dataCy = '';
 </script>
 
-<div class="flex items-center">
+<div class="flex items-center" data-cy={dataCy}>
   <CheckCircle fill="#34D399" />
   <span class="font-bold">{assetCodeForCoinInfo} </span>
   <a
