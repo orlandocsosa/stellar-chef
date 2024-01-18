@@ -21,18 +21,18 @@ describe('Test Clawback Page', () => {
   });
 
   it('Should performs clawback of 100 testCoin when button is clicked, and verifies the status', () => {
-    cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
-    cy.get('#is-clawback-all-enabled').should('be.visible').uncheck();
-    cy.get('#amount').should('be.visible').type('100');
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
+    cy.getByDataTestAttribute('amount-input').should('be.visible').type('100');
 
-    cy.get('#clawback-button').click();
+    cy.getByDataTestAttribute('clawback-button').click();
 
     cy.get('#status').within(() => {
       cy.contains('Transaction successful');
       cy.contains('See details').should(
-        'have.attr',
+        'have.prop',
         'href',
         `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
       );
@@ -40,17 +40,17 @@ describe('Test Clawback Page', () => {
   });
 
   it('Should perform a full clawback when checkbox is ticked', () => {
-    cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
-    cy.get('#is-clawback-all-enabled').should('be.visible').check();
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
-    cy.get('#clawback-button').click();
+    cy.getByDataTestAttribute('clawback-button').click();
 
     cy.get('#status').within(() => {
       cy.contains('Transaction successful');
       cy.contains('See details').should(
-        'have.attr',
+        'have.prop',
         'href',
         `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
       );
@@ -58,17 +58,17 @@ describe('Test Clawback Page', () => {
   });
 
   it('Should try to perform clawback when button is clicked, but fails because the available balance is less than the amount', () => {
-    cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
-    cy.get('#is-clawback-all-enabled').should('be.visible').uncheck();
-    cy.get('#amount').should('be.visible').type('10000000');
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
+    cy.getByDataTestAttribute('amount-input').should('be.visible').type('10000000');
 
-    cy.get('#clawback-button').click();
+    cy.getByDataTestAttribute('clawback-button').click();
 
     cy.get('#status').should(
       'contain',
-      'Error: Error: The amount for clawback (10000000) is greater than the available balance (999900.0000000)'
+      'An error occurred: The amount for clawback (10000000) is greater than the available balance (999900.0000000)'
     );
   });
 });
@@ -84,12 +84,12 @@ it('Should show an error message when transaction fails', () => {
   }).as('loadClawbackAccountRequest');
 
   cy.visit('/recipe/clawback');
-  cy.get('#asset-code').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-  cy.get('#issuer-secret-key').should('be.visible').type(ISSUER_SECRET_KEY);
-  cy.get('#clawback-account').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
-  cy.get('#is-clawback-all-enabled').should('be.visible').check();
+  cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+  cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+  cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+  cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
-  cy.get('#clawback-button').click();
+  cy.getByDataTestAttribute('clawback-button').click();
 
-  cy.get('#status').should('contain', 'Error: Error: Clawback of 999900.0000000 testCoin failed.');
+  cy.get('#status').should('contain', 'An error occurred: Clawback of 999900.0000000 testCoin failed.');
 });
