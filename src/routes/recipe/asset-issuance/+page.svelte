@@ -207,14 +207,14 @@
 
   <Card title="Output">
     {#if isTransactionSuccessful}
-      <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} dataCy="coin-info" />
+      <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} dataCy="coin-info-link" />
     {/if}
 
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
       <div class="mt-4" data-cy={i === 0 ? 'issuer-container' : 'distributor-container'}>
         <h3 class="text-lg mb-2">
           {i === 0 ? 'Issuer' : 'Distributor'}
-          <AccountDetails {publicKey} />
+          <AccountDetails dataCy={i === 0 ? 'issuer-info-link' : 'distributor-info-link'} {publicKey} />
         </h3>
         <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
           >Public Key
@@ -240,7 +240,7 @@
     {#if showHolders}
       {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
         <div class="mt-4" data-cy="holder-{i + 1}-container">
-          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails {publicKey} /></h3>
+          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails dataCy="holder-{i + 1}-info-link" {publicKey} /></h3>
           <label for="holder-{i + 1}PublicKey" class="block mb-2"
             >Public Key
             <AssetOutput value={publicKey} />
