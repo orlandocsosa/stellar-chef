@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import { Operation, Asset, Keypair } from 'stellar-sdk';
   import { Account } from '../../../services/stellar/Account';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
@@ -7,6 +6,7 @@
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
   import TransactionInfo from '../../../components/TransactionInfo.svelte';
+  import Checkbox from '../../../components/Checkbox.svelte';
 
   let assetCode: string;
   let issuerSecretKey: string;
@@ -14,10 +14,9 @@
   let isLoading = false;
   let status = '';
   let amountForClawback: string;
-  let isClawbackAllEnabled = false;
+  let isClawbackAllEnabled = true;
   let isTransactionSuccessful = false;
   let transactionHash: string;
-
 
   async function performClawback() {
     isTransactionSuccessful = false;
@@ -35,6 +34,9 @@
           balance.asset_issuer === issuerAccount.publicKey
       )?.balance;
 
+      if (!clawbackableAssetAmount) {
+        throw new Error(`Invalid asset code: ${assetCode}`);
+      }
       if (clawbackableAssetAmount) {
         const amountToClawback = isClawbackAllEnabled ? clawbackableAssetAmount : amountForClawback;
 
@@ -62,8 +64,8 @@
           throw new Error(`Clawback of ${amountToClawback} ${assetCode} failed.`);
         }
       }
-    } catch (error) {
-      status = `Error: ${String(error)}`;
+    } catch (error: any) {
+      status = `An error occurred: ${error.message}`;
     } finally {
       isLoading = false;
     }
@@ -72,37 +74,42 @@
 
 <div class="flex justify-center">
   <form on:submit|preventDefault={performClawback}>
-    <Card id="clawback-asset-card" title="Clawback Asset ">
-
+    <Card title="Clawback Asset ">
       <label for="asset-code">
         Asset Code
-        <Input id="asset-code" bind:value={assetCode} disabled={isLoading} required />
+        <Input dataCy="asset-code-input" bind:value={assetCode} disabled={isLoading} required />
       </label>
       <label for="issuer-secret-key">
         Issuer Secret Key
-        <Input id="issuer-secret-key" bind:value={issuerSecretKey} disabled={isLoading} required />
+        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} disabled={isLoading} required />
       </label>
       <label for="clawback-account">
         Clawback Account
-        <Input id="clawback-account" bind:value={clawbackAccount} disabled={isLoading} required />
+        <Input dataCy="clawback-account-input" bind:value={clawbackAccount} disabled={isLoading} required />
       </label>
       <label for="amount">
         Amount
         <Input
-          id="amount"
+          dataCy="amount-input"
           bind:value={amountForClawback}
           type="number"
           disabled={isLoading || isClawbackAllEnabled}
           required
         />
       </label>
-      <label for="is-clawback-all-enabled">
-        Clawback All
-        <input type="checkbox" id="is-clawback-all-enabled" bind:checked={isClawbackAllEnabled} disabled={isLoading} />
-      </label>
+      <Checkbox
+        dataCy="is-clawback-all-enabled-checkbox"
+        label="Clawback all"
+        bind:checked={isClawbackAllEnabled}
+        disabled={isLoading}
+      />
 
       <div class="flex justify-center mt-5">
-        <Button id="clawback-button" label={isLoading ? 'Performing...' : 'Perform Clawback'} disabled={isLoading} />
+        <Button
+          dataCy="clawback-button"
+          label={isLoading ? 'Performing...' : 'Perform Clawback'}
+          disabled={isLoading}
+        />
       </div>
       <div id="status" class="h-auto max-h-12 overflow-y-auto overflow-x-hidden mt-4">
         {#if isTransactionSuccessful}
