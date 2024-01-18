@@ -1,14 +1,26 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
-export {};
+import type { dataCy } from './typings/data-cy';
 declare global {
   namespace Cypress {
     interface Chainable {
-      getByDataTestAttribute: (selector: string) => Chainable<any>;
+      /**
+       * Get a DOM element by data-cy attribute
+       */
+      getByDataTestAttribute: (selector: dataCy) => Chainable<any>;
     }
   }
 }
 
-Cypress.Commands.add('getByDataTestAttribute', (selector: string) => {
+Cypress.Commands.add('getByDataTestAttribute', (selector: dataCy) => {
+  Cypress.log({
+    displayName: 'getByDataTestAttribute',
+    message: [selector],
+    consoleProps: () => {
+      return {
+        'data-cy': selector
+      };
+    }
+  });
   return cy.get(`[data-cy="${selector}"]`);
 });
