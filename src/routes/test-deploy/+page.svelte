@@ -1,6 +1,7 @@
 <script>
   import { Asset, Horizon, Keypair, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
-  import { buildTransaction } from '../../services/stellar/utils';
+  import { server } from '../../services/stellar/utils';
+  import { Account } from '../../services/stellar/Account';
 
   async function workingSubmit() {
     const server = new Horizon.Server('https://horizon-testnet.stellar.org');
@@ -27,21 +28,24 @@
   }
 
   async function failingSubmit() {
-    const server = new Horizon.Server('https://horizon-testnet.stellar.org');
-    const account1Keypair = Keypair.random();
-    const account2Keypair = Keypair.random();
-    await server.friendbot(account1Keypair.publicKey()).call();
-    await server.friendbot(account2Keypair.publicKey()).call();
+    const account1 = await Account.create().fundWithFriendBot();
+    const account2 = await Account.create().fundWithFriendBot();
 
-    const transaction = buildTransaction(await server.loadAccount(account1Keypair.publicKey()), [
-      Operation.payment({
-        amount: '100',
-        asset: Asset.native(),
-        destination: account2Keypair.publicKey()
-      })
-    ]);
+    const paymentOp = Operation.payment({
+      amount: '100',
+      asset: Asset.native(),
+      destination: account2.publicKey
+    });
 
-    transaction.sign(Keypair.fromSecret(account1Keypair.secret()));
+    const transaction = new TransactionBuilder(await server.loadAccount(account1.publicKey), {
+      networkPassphrase: Networks.TESTNET,
+      fee: '100'
+    })
+      .setTimeout(30)
+      .addOperation(paymentOp)
+      .build();
+
+    transaction.sign(Keypair.fromSecret(account1.secretKey));
     await server.submitTransaction(transaction);
   }
 
