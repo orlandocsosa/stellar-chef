@@ -37,8 +37,10 @@
       destination: account2.publicKey
     });
 
+    console.log(import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE);
+
     const transaction = new TransactionBuilder(await server.loadAccount(account1.publicKey), {
-      networkPassphrase: Networks.TESTNET,
+      networkPassphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE,
       fee: '100'
     })
       .setTimeout(30)
