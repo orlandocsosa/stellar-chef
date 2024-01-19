@@ -1,6 +1,6 @@
 <script>
   import { Asset, Horizon, Keypair, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
-  import { buildTransaction, server } from '../../services/stellar/utils';
+  import { buildTransaction } from '../../services/stellar/utils';
 
   async function workingSubmit() {
     const server = new Horizon.Server('https://horizon-testnet.stellar.org');
@@ -27,6 +27,7 @@
   }
 
   async function failingSubmit() {
+    const server = new Horizon.Server('https://horizon-testnet.stellar.org');
     const account1Keypair = Keypair.random();
     const account2Keypair = Keypair.random();
     await server.friendbot(account1Keypair.publicKey()).call();
