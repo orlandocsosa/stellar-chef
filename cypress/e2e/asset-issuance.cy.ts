@@ -5,23 +5,20 @@ const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL = 'https://stellar.expert/explorer/tes
 
 describe('Asset Creation', () => {
   beforeEach(() => {
-    // En el archivo de pruebas de Cypress
     cy.intercept('https://horizon-testnet.stellar.org/friendbot*', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-friendbot-response.json' }); // Devuelve un fixture para la solicitud a friendbot
+      req.reply({ fixture: 'horizon-testnet-stellar-friendbot-response.json' });
     });
 
     cy.intercept('https://friendbot.stellar.org/*', (req) => {
-      req.reply({ fixture: 'friendbot-stellar-response.json' }); // Devuelve un fixture para la solicitud a friendbot.stellar.org
+      req.reply({ fixture: 'friendbot-stellar-response.json' });
     });
 
-    // En el archivo de pruebas de Cypress
     cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-accounts-response.json' }); // Devuelve un fixture para la solicitud a accounts
+      req.reply({ fixture: 'horizon-testnet-stellar-accounts-response.json' });
     });
 
-    // En el archivo de pruebas de Cypress
     cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-transactions-response.json' }); // Devuelve un fixture para la solicitud POST a transactions
+      req.reply({ fixture: 'horizon-testnet-stellar-transactions-response.json' });
     });
     cy.visit('/recipe/asset-issuance');
     cy.getByDataTestAttribute('asset-code-input').type(ASSET_CODE);
