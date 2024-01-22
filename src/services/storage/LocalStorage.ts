@@ -1,16 +1,15 @@
 export default class LocalStorage {
-  get(key: string): string {
+  get(key: string): string | null {
     const value = localStorage.getItem(key);
-
     if (value === null) {
-      throw new Error(`Key ${key} not found`);
+      return null;
     }
-
     return value;
   }
 
-  set(key: string, value: string): void {
-    localStorage.setItem(key, value);
+  set(key: string, value: any): void {
+    const stringValue = JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
   }
 
   remove(key: string): void {
