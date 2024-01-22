@@ -6,19 +6,19 @@ const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL = 'https://stellar.expert/explorer/tes
 describe('Asset Creation', () => {
   beforeEach(() => {
     cy.intercept('https://horizon-testnet.stellar.org/friendbot*', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-friendbot-response.json' });
+      req.reply({ fixture: 'horizonTestnetStellarFriendbotResponse.json' });
     });
 
     cy.intercept('https://friendbot.stellar.org/*', (req) => {
-      req.reply({ fixture: 'friendbot-stellar-response.json' });
+      req.reply({ fixture: 'friendbotStellarResponse.json' });
     });
 
     cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-accounts-response.json' });
+      req.reply({ fixture: 'horizonTestnetStellarAccountsResponse.json' });
     });
 
     cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
-      req.reply({ fixture: 'horizon-testnet-stellar-transactions-response.json' });
+      req.reply({ fixture: 'horizonTestnetStellarTransactionsResponse.json' });
     });
     cy.visit('/recipe/asset-issuance');
     cy.getByDataTestAttribute('asset-code-input').type(ASSET_CODE);
