@@ -10,6 +10,8 @@
   import Input from '../../../components/Input.svelte';
 
   import { Account } from '../../../services/stellar/Account';
+  import AssetStorageService from '../../../services/asset/Asset';
+  import type IAsset from '../../../services/asset/IAsset';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import { createHolders } from '../../../services/stellar/transactions/createHolders';
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
@@ -30,6 +32,7 @@
   let holdersAccounts: Account[] = [];
   let showHolders = false;
   let isTransactionSuccessful = false;
+  let assetService = new AssetStorageService();
 
   async function prepare() {
     accounts = [];
@@ -37,6 +40,7 @@
     status = '';
     isLoading = true;
     isTransactionSuccessful = false;
+
     if (shouldCreateHolders && numberOfHolders * balancePerHolder > paymentAmount) {
       status = 'Error: Not enough funds for distributor account to create holders.';
       isLoading = false;
@@ -122,6 +126,13 @@
         issuer = await server.loadAccount(issuerAccount.publicKey);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
+
+        let assetForSave: IAsset = {
+          code: assetCode,
+          issuer: issuerAccount.publicKey,
+          issuerSecret: issuerAccount.secretKey
+        };
+        assetService.set(assetForSave);
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
