@@ -1,11 +1,28 @@
 const ASSET_CODE = 'testAsset';
 const STATUS_SELECTOR = '[data-cy=status]';
-const TIMEOUT = { timeout: 35000 };
 const EXPECTED_STELLAR_EXPERT_ASSET_URL = 'https://stellar.expert/explorer/testnet/asset/testAsset';
 const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL = 'https://stellar.expert/explorer/testnet/account/';
 
 describe('Asset Creation', () => {
   beforeEach(() => {
+    // En el archivo de pruebas de Cypress
+    cy.intercept('https://horizon-testnet.stellar.org/friendbot*', (req) => {
+      req.reply({ fixture: 'horizon-testnet-stellar-friendbot-response.json' }); // Devuelve un fixture para la solicitud a friendbot
+    });
+
+    cy.intercept('https://friendbot.stellar.org/*', (req) => {
+      req.reply({ fixture: 'friendbot-stellar-response.json' }); // Devuelve un fixture para la solicitud a friendbot.stellar.org
+    });
+
+    // En el archivo de pruebas de Cypress
+    cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
+      req.reply({ fixture: 'horizon-testnet-stellar-accounts-response.json' }); // Devuelve un fixture para la solicitud a accounts
+    });
+
+    // En el archivo de pruebas de Cypress
+    cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
+      req.reply({ fixture: 'horizon-testnet-stellar-transactions-response.json' }); // Devuelve un fixture para la solicitud POST a transactions
+    });
     cy.visit('/recipe/asset-issuance');
     cy.getByDataTestAttribute('asset-code-input').type(ASSET_CODE);
   });
@@ -13,9 +30,9 @@ describe('Asset Creation', () => {
   it('Should create a new asset and verifies the details links, the coin info link and the status', () => {
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
+    cy.get(STATUS_SELECTOR).should(
       'contain',
-      `Transaction successful. Distributor account balance: 1000000.0000000 ${ASSET_CODE}`
+      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
     );
 
     cy.getByDataTestAttribute('issuer-info-link')
@@ -39,9 +56,9 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('clawback-enabled').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
+    cy.get(STATUS_SELECTOR).should(
       'contain',
-      `Transaction successful. Distributor account balance: 1000000.0000000 ${ASSET_CODE}`
+      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
     );
 
     cy.getByDataTestAttribute('issuer-info-link')
@@ -66,9 +83,9 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('create-holders').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
+    cy.get(STATUS_SELECTOR).should(
       'contain',
-      `Transaction successful. Distributor account balance: 999900.0000000 ${ASSET_CODE}`
+      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
     );
 
     cy.getByDataTestAttribute('issuer-info-link')
@@ -101,9 +118,6 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('balance-per-holder-input').clear().type('1000');
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR, TIMEOUT).should(
-      'contain',
-      'Error: Not enough funds for distributor account to create holders.'
-    );
+    cy.get(STATUS_SELECTOR).should('contain', 'Error: Not enough funds for distributor account to create holders.');
   });
 });
