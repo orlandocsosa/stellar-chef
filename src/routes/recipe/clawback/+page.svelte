@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Operation, Asset, Keypair } from 'stellar-sdk';
+
   import { Account } from '../../../services/stellar/Account';
+  import AssetStorageService from '../../../services/asset/Asset';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import Card from '../../../components/Card.svelte';
   import Input from '../../../components/Input.svelte';
@@ -8,6 +10,8 @@
   import TransactionInfo from '../../../components/TransactionInfo.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
 
+  const assetService = new AssetStorageService();
+  let assetsOnLocalStorage = assetService.getAssets();
   let assetCode: string;
   let issuerSecretKey: string;
   let clawbackAccount: string;
@@ -18,11 +22,17 @@
   let isTransactionSuccessful = false;
   let transactionHash: string;
 
+  $: {
+    const selectedAsset = assetsOnLocalStorage.find((asset) => asset.code === assetCode);
+    issuerSecretKey = selectedAsset ? selectedAsset.issuerSecret : '';
+  }
+
   async function performClawback() {
     isTransactionSuccessful = false;
     transactionHash = '';
     status = '';
     isLoading = true;
+
     try {
       const issuerAccount = new Account(Keypair.fromSecret(issuerSecretKey));
       const sourceAccount = await server.loadAccount(issuerAccount.publicKey);
@@ -77,11 +87,24 @@
     <Card title="Clawback Asset ">
       <label for="asset-code">
         Asset Code
-        <Input dataCy="asset-code-input" bind:value={assetCode} disabled={isLoading} required />
+        <input
+          data-cy="asset-code-input"
+          disabled={isLoading}
+          required
+          list="assets"
+          bind:value={assetCode}
+          class="mb-4 border-4 w-full p-2 border-black"
+        />
+        <datalist id="assets">
+          {#each assetsOnLocalStorage as asset, i (`${asset.code}-${i}`)}
+            <option value={asset.code}>{asset.code}</option>
+          {/each}
+        </datalist>
       </label>
+
       <label for="issuer-secret-key">
         Issuer Secret Key
-        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} disabled={isLoading} required />
+        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} required disabled={isLoading} />
       </label>
       <label for="clawback-account">
         Clawback Account
