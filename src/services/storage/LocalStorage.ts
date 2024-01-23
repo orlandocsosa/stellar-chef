@@ -1,9 +1,7 @@
 export default class LocalStorage {
   get(key: string): string | null {
     const value = localStorage.getItem(key);
-    if (value === null) {
-      return null;
-    }
+
     return value;
   }
 
