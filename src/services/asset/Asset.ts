@@ -13,7 +13,7 @@ export default class Asset {
     }
   }
 
-  private getAssets(): IAsset[] {
+  public getAssets(): IAsset[] {
     let assetsString = this.storage.get('assets');
 
     if (assetsString === null) {
