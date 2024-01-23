@@ -44,8 +44,7 @@ export default class Asset {
 
     assets.push(asset);
 
-    const localStorage = new LocalStorage();
-    localStorage.set('assets', assets);
+    this.storage.set('assets', assets);
 
     return asset;
   }
