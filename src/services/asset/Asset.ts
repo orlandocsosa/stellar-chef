@@ -17,10 +17,6 @@ export default class Asset {
 
     const assets = JSON.parse(assetsString);
 
-    if (!Array.isArray(assets)) {
-      return [];
-    }
-
     return assets;
   }
 
