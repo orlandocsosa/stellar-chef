@@ -11,7 +11,7 @@
   import Checkbox from '../../../components/Checkbox.svelte';
 
   const assetService = new AssetStorageService();
-  let assetsOnLocalStorage = assetService.getAssets();
+  let assetsOnLocalStorage = assetService.getAll();
   let assetCode: string;
   let issuerSecretKey: string;
   let clawbackAccount: string;
@@ -45,7 +45,7 @@
       )?.balance;
 
       if (!clawbackableAssetAmount) {
-        throw new Error(`Invalid asset code: ${assetCode}`);
+        throw new Error('Error occurred while processing your request. Please check your inputs and try again.');
       }
       if (clawbackableAssetAmount) {
         const amountToClawback = isClawbackAllEnabled ? clawbackableAssetAmount : amountForClawback;
@@ -85,21 +85,23 @@
 <div class="flex justify-center">
   <form on:submit|preventDefault={performClawback}>
     <Card title="Clawback Asset ">
-      <label for="asset-code">
-        Asset Code
-        <input
-          data-cy="asset-code-input"
-          disabled={isLoading}
-          required
-          list="assets"
+      <label for="asset-code-select">
+        <select
+          id="asset-code-select"
           bind:value={assetCode}
+          disabled={isLoading}
           class="mb-4 border-4 w-full p-2 border-black"
-        />
-        <datalist id="assets">
+        >
+          <option disabled selected value={null}>Select an asset</option>
           {#each assetsOnLocalStorage as asset, i (`${asset.code}-${i}`)}
             <option value={asset.code}>{asset.code}</option>
           {/each}
-        </datalist>
+        </select>
+      </label>
+
+      <label for="asset-code-input">
+        Asset Code
+        <Input dataCy="asset-code-input" bind:value={assetCode} disabled={isLoading} required />
       </label>
 
       <label for="issuer-secret-key">
