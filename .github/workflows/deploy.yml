@@ -46,8 +46,8 @@ jobs:
       - name: Build site
         run: pnpm run build
         env:
-          VITE_STELLAR_NETWORK_URL: ${{ secrets.VITE_STELLAR_NETWORK_URL }}
-          VITE_STELLAR_NETWORK_PASSPHRASE: ${{ secrets.VITE_STELLAR_NETWORK_PASSPHRASE }}
+          PUBLIC_STELLAR_NETWORK_URL: ${{ secrets.PUBLIC_STELLAR_NETWORK_URL }}
+          PUBLIC_STELLAR_NETWORK_PASSPHRASE: ${{ secrets.PUBLIC_STELLAR_NETWORK_PASSPHRASE }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
