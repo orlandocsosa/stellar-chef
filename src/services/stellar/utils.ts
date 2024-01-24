@@ -1,14 +1,13 @@
 import { type Account, TransactionBuilder, BASE_FEE, type xdr, type Transaction, Horizon } from 'stellar-sdk';
 
-const STELLAR_NETWORK_URL = import.meta.env.VITE_STELLAR_NETWORK_URL;
-const STELLAR_NETWORK_PASSPHRASE = import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE;
+import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
 
-const server = new Horizon.Server(STELLAR_NETWORK_URL);
+const server = new Horizon.Server(PUBLIC_STELLAR_NETWORK_URL);
 
 function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): Transaction {
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: STELLAR_NETWORK_PASSPHRASE
+    networkPassphrase: PUBLIC_STELLAR_NETWORK_PASSPHRASE
   });
 
   try {

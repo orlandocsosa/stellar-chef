@@ -1,12 +1,12 @@
 <script lang="ts">
   export let value: string | number;
-  export let id: string;
   export let disabled: boolean = false;
   export let readonly: boolean = false;
   export let type: string = 'text';
   export let maxlength: number = 80;
   export let handleInput: (value: string) => string = (value) => value;
   export let required: boolean = false;
+  export let dataCy = '';
 
   const typeProp = {
     type
@@ -18,7 +18,7 @@
 </script>
 
 <input
-  {id}
+  data-cy={dataCy}
   bind:value
   {...typeProp}
   {disabled}

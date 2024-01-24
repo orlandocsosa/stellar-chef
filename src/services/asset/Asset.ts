@@ -8,17 +8,25 @@ export default class Asset {
     this.storage = new LocalStorage();
   }
 
-  private getAssetKey(asset: IAsset): string {
-    return `asset-${asset.code}-${asset.issuer}`;
+  public getAll(): IAsset[] {
+    const assetsString = this.storage.get('assets');
+
+    if (assetsString === null) {
+      return [];
+    }
+
+    const assets = JSON.parse(assetsString);
+
+    return assets;
   }
 
-  get(asset: IAsset): IAsset {
-    const assetString = this.storage.get(this.getAssetKey(asset));
-    return JSON.parse(assetString);
-  }
+  set(asset: IAsset): IAsset[] {
+    const assets = this.getAll();
 
-  set(asset: IAsset): IAsset {
-    this.storage.set(this.getAssetKey(asset), JSON.stringify(asset));
-    return this.get(asset);
+    assets.push(asset);
+
+    this.storage.set('assets', assets);
+
+    return assets;
   }
 }

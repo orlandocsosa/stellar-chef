@@ -1,11 +1,11 @@
 <script lang="ts">
   export let label = '';
   export let checked = false;
-  export let id = '';
   export let disabled = false;
+  export let dataCy = '';
 </script>
 
 <label class="block mb-2">
-  <input {id} type="checkbox" {disabled} bind:checked />
+  <input data-cy={dataCy} type="checkbox" {disabled} bind:checked />
   {label}
 </label>

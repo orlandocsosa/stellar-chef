@@ -10,6 +10,8 @@
   import Input from '../../../components/Input.svelte';
 
   import { Account } from '../../../services/stellar/Account';
+  import AssetStorageService from '../../../services/asset/Asset';
+  import type IAsset from '../../../services/asset/IAsset';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import { createHolders } from '../../../services/stellar/transactions/createHolders';
   import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
@@ -30,6 +32,7 @@
   let holdersAccounts: Account[] = [];
   let showHolders = false;
   let isTransactionSuccessful = false;
+  let assetService = new AssetStorageService();
 
   async function prepare() {
     accounts = [];
@@ -37,6 +40,7 @@
     status = '';
     isLoading = true;
     isTransactionSuccessful = false;
+
     if (shouldCreateHolders && numberOfHolders * balancePerHolder > paymentAmount) {
       status = 'Error: Not enough funds for distributor account to create holders.';
       isLoading = false;
@@ -122,6 +126,13 @@
         issuer = await server.loadAccount(issuerAccount.publicKey);
 
         status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
+
+        let assetForSave: IAsset = {
+          code: assetCode,
+          issuer: issuerAccount.publicKey,
+          issuerSecret: issuerAccount.secretKey
+        };
+        assetService.set(assetForSave);
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
@@ -137,106 +148,117 @@
 </script>
 
 <div class="flex justify-center">
-  <Card id="inputs" title="Inputs">
-    <div class="flex flex-col">
-      <label for="asset-code" class="block mb-1"
-        >Asset Code <span class="text-red-500">*</span>
-        <Input
-          id="asset-code"
-          bind:value={assetCode}
-          maxlength={12}
-          handleInput={allowOnlyAlphanumeric}
-          disabled={isLoading}
-        />
-      </label>
-      <label for="payment-amount" class="block mb-1"
-        >Payment to distributor account
-        <Input id="payment-amount" type="number" bind:value={paymentAmount} disabled={isLoading} />
-        <Checkbox
-          id="clawback-enabled"
-          label="Clawback enabled"
-          bind:checked={isClawbackEnabled}
-          disabled={isLoading}
-        />
-        <Checkbox id="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
-        <Checkbox id="create-holders" label="Create holders" bind:checked={shouldCreateHolders} disabled={isLoading} />
-        <div class="ml-4">
-          <label for="number-of-holders">
-            How many?<Input
-              id="number-of-holders"
-              type="number"
-              bind:value={numberOfHolders}
-              disabled={!shouldCreateHolders || isLoading}
-            /></label
-          >
-
-          <p>Balance per holder:</p>
-          <label for="balance-value" />
+  <form class="flex flex-col" on:submit|preventDefault={prepare}>
+    <Card title="Inputs">
+      <div class="flex flex-col">
+        <label for="asset-code" class="block mb-1"
+          >Asset Code <span class="text-red-500">*</span>
           <Input
-            id="balance-value"
-            type="number"
-            bind:value={balancePerHolder}
-            disabled={!shouldCreateHolders || isLoading}
+            dataCy="asset-code-input"
+            bind:value={assetCode}
+            maxlength={12}
+            handleInput={allowOnlyAlphanumeric}
+            disabled={isLoading}
+            required
           />
-        </div>
-        <div class="flex justify-center items-center">
-          <Button
-            id="prepare-button"
-            label={isLoading ? 'Preparing...' : 'Prepare!'}
-            onClick={prepare}
+        </label>
+        <label for="payment-amount" class="block mb-1"
+          >Payment to distributor account
+          <Input
+            dataCy="distributor-payment-amount-input"
+            type="number"
+            bind:value={paymentAmount}
+            disabled={isLoading}
+            required
+          />
+          <Checkbox
+            dataCy="clawback-enabled"
+            label="Clawback enabled"
+            bind:checked={isClawbackEnabled}
             disabled={isLoading}
           />
-        </div>
-        <div id="status" class="h-auto max-h-12 overflow-auto mt-4">
-          {@html status}
-        </div>
-      </label>
-    </div>
-  </Card>
+          <Checkbox dataCy="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
+          <Checkbox
+            dataCy="create-holders"
+            label="Create holders"
+            bind:checked={shouldCreateHolders}
+            disabled={isLoading}
+          />
+          <div class="ml-4">
+            <label for="number-of-holders">
+              How many?<Input
+                dataCy="number-of-holders-input"
+                type="number"
+                bind:value={numberOfHolders}
+                disabled={!shouldCreateHolders || isLoading}
+                required={shouldCreateHolders}
+              /></label
+            >
 
-  <Card id="outputs" title="Output">
-    <div id="coinInfo">
-      {#if isTransactionSuccessful}
-        <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} />
-      {/if}
-    </div>
+            <p>Balance per holder:</p>
+            <label for="balance-value" />
+            <Input
+              dataCy="balance-per-holder-input"
+              type="number"
+              bind:value={balancePerHolder}
+              disabled={!shouldCreateHolders || isLoading}
+              required={shouldCreateHolders}
+            />
+          </div>
+          <div class="flex justify-center items-center">
+            <Button dataCy="prepare-button" label={isLoading ? 'Preparing...' : 'Prepare!'} disabled={isLoading} />
+          </div>
+          <div data-cy="status" class="h-auto max-h-12 overflow-auto mt-4">
+            {status}
+          </div>
+        </label>
+      </div>
+    </Card>
+  </form>
+
+  <Card title="Output">
+    {#if isTransactionSuccessful}
+      <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} dataCy="coin-info-link" />
+    {/if}
 
     {#each accounts as { publicKey, secretKey }, i (publicKey)}
-      <div class="mt-4" id={i === 0 ? 'issuer-container' : 'distributor-container'}>
+      <div class="mt-4" data-cy={i === 0 ? 'issuer-container' : 'distributor-container'}>
         <h3 class="text-lg mb-2">
           {i === 0 ? 'Issuer' : 'Distributor'}
-          <AccountDetails id={i === 0 ? 'issuerDetailsLink' : 'distributorDetailsLink'} {publicKey} />
+          <AccountDetails dataCy={i === 0 ? 'issuer-info-link' : 'distributor-info-link'} {publicKey} />
         </h3>
         <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
           >Public Key
-          <AssetOutput id={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} value={publicKey} />
+          <AssetOutput value={publicKey} />
         </label>
         <label for={i === 0 ? 'issuerSecretKey' : 'distributorSecretKey'} class="block">
           Secret Key
-          <AssetOutput id={i === 0 ? 'issuerSecretKey' : 'distributorSecretKey'} value={secretKey} />
+          <AssetOutput value={secretKey} />
         </label>
       </div>
     {/each}
+
     {#if holdersAccounts.length > 0}
       <Button
-        id="toggle-holders-button"
+        dataCy="toggle-holders-button"
         label={showHolders ? 'Hide Holders' : 'Show Holders'}
         onClick={() => {
           showHolders = !showHolders;
         }}
       />
     {/if}
+
     {#if showHolders}
       {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
-        <div class="mt-4" id="holder-{i + 1}-container">
-          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails id="holder{i + 1}DetailsLink" {publicKey} /></h3>
-          <label for="holder{i + 1}PublicKey" class="block mb-2"
+        <div class="mt-4" data-cy="holder-{i + 1}-container">
+          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails dataCy="holder-{i + 1}-info-link" {publicKey} /></h3>
+          <label for="holder-{i + 1}PublicKey" class="block mb-2"
             >Public Key
-            <AssetOutput id="holder{i + 1}PublicKey" value={publicKey} />
+            <AssetOutput value={publicKey} />
           </label>
-          <label for="holder{i + 1}SecretKey" class="block">
+          <label for="holder-{i + 1}SecretKey" class="block">
             Secret Key
-            <AssetOutput id="holder{i + 1}SecretKey" value={secretKey} />
+            <AssetOutput value={secretKey} />
           </label>
         </div>
       {/each}
