@@ -6,23 +6,13 @@ export default class Asset {
 
   constructor() {
     this.storage = new LocalStorage();
-
-    const assets = this.storage.get('assets');
-    if (assets === null) {
-      this.storage.set('assets', []);
-    }
   }
 
-  public getAssets(): IAsset[] {
-    let assetsString = this.storage.get('assets');
+  public getAll(): IAsset[] {
+    const assetsString = this.storage.get('assets');
 
     if (assetsString === null) {
-      this.storage.set('assets', []);
-      assetsString = this.storage.get('assets');
-    }
-
-    if (assetsString === null) {
-      throw new Error('Failed to initialize assets in localStorage');
+      return [];
     }
 
     const assets = JSON.parse(assetsString);
@@ -34,18 +24,13 @@ export default class Asset {
     return assets;
   }
 
-  get(asset: IAsset): IAsset | undefined {
-    const assets = this.getAssets();
-    return assets.find((a) => a.code === asset.code && a.issuer === asset.issuer);
-  }
-
-  set(asset: IAsset): IAsset {
-    const assets = this.getAssets();
+  set(asset: IAsset): IAsset[] {
+    const assets = this.getAll();
 
     assets.push(asset);
 
     this.storage.set('assets', assets);
 
-    return asset;
+    return assets;
   }
 }
