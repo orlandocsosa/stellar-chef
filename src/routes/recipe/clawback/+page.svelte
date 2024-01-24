@@ -136,7 +136,7 @@
           disabled={isLoading}
         />
       </div>
-      <div id="status" class="h-auto max-h-12 overflow-y-auto overflow-x-hidden mt-4">
+      <div id="status" class="min-h-[50px] overflow-auto mt-4">
         {#if isTransactionSuccessful}
           Transaction successful <TransactionInfo {transactionHash} />
         {:else}

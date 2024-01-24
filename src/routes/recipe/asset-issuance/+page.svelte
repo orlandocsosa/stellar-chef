@@ -208,9 +208,7 @@
           <div class="flex justify-center items-center">
             <Button dataCy="prepare-button" label={isLoading ? 'Preparing...' : 'Prepare!'} disabled={isLoading} />
           </div>
-          <div data-cy="status" class="h-auto max-h-12 overflow-auto mt-4">
-            {status}
-          </div>
+          <div data-cy="status" class="min-h-[50px] overflow-auto mt-4">{status}</div>
         </label>
       </div>
     </Card>
