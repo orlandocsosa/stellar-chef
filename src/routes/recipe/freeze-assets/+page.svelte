@@ -30,11 +30,9 @@
     transactionLink = '';
     try {
       status = 'Freezing asset...';
-      // Derive the public key from the issuer secret key
       const issuerKeypair = Keypair.fromSecret(issuerSecretKey);
       const issuerPublicKey = issuerKeypair.publicKey();
 
-      // Fetch the accounts from the server to be used in the transaction
       let sourceAccount;
       let assetHolder;
       try {
@@ -46,16 +44,14 @@
         return;
       }
 
-      // Define operations
       const operations = [];
 
-      // Add operations to set the AUTHORIZATION REQUIRED and AUTHORIZATION REVOCABLE flags
       operations.push(
         Operation.setOptions({
-          setFlags: 1 // AUTH_REQUIRED_FLAG
+          setFlags: 1
         }),
         Operation.setOptions({
-          setFlags: 2 // AUTH_REVOCABLE_FLAG
+          setFlags: 2
         }),
         Operation.allowTrust({
           trustor: assetHolderPublicKey,
@@ -64,13 +60,10 @@
         })
       );
 
-      // Build the transaction
       let transaction = buildTransaction(sourceAccount, operations);
 
-      // Sign the transaction
       transaction.sign(issuerKeypair);
 
-      // Submit the transaction
       const transactionResult = await submitTransaction(transaction);
       if (transactionResult.successful) {
         const transactionHash = transactionResult.hash;
