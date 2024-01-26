@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { Operation, Asset, Keypair } from 'stellar-sdk';
+  import { Operation, Keypair } from 'stellar-sdk';
 
-  import { Account } from '../../../services/stellar/Account';
   import AssetStorageService from '../../../services/asset/Asset';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
-  import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
-
+  import TransactionInfo from '../../../components/TransactionInfo.svelte';
   import Card from '../../../components/Card.svelte';
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
@@ -17,7 +15,8 @@
   let assetHolderPublicKey = '';
   let isLoading = false;
   let status = '';
-  let transactionLink = '';
+  let isTransactionSuccessful = false;
+  let transactionHash = '';
 
   $: {
     const selectedAsset = assetsOnLocalStorage.find((asset) => asset.code === assetCode);
@@ -27,7 +26,8 @@
   async function freezeAsset() {
     isLoading = true;
     status = '';
-    transactionLink = '';
+    isTransactionSuccessful = false;
+    transactionHash = '';
     try {
       status = 'Freezing asset...';
       const issuerKeypair = Keypair.fromSecret(issuerSecretKey);
@@ -65,14 +65,16 @@
       transaction.sign(issuerKeypair);
 
       const transactionResult = await submitTransaction(transaction);
-      if (transactionResult.successful) {
-        const transactionHash = transactionResult.hash;
-        transactionLink = `https://stellar.expert/explorer/testnet/tx/${transactionHash}`;
+      isTransactionSuccessful = transactionResult.successful;
+
+      if (isTransactionSuccessful) {
+        transactionHash = transactionResult.hash;
         status = `Asset frozen successfully! `;
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
       console.error('An error occurred:', error);
+      isTransactionSuccessful = false;
       isLoading = false;
     } finally {
       isLoading = false;
@@ -101,6 +103,7 @@
             {/each}
           </select>
         </label>
+
         Asset Code
         <Input
           dataCy="asset-code-input"
@@ -111,27 +114,36 @@
         />
 
         Issuer Secret Key
-        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} required disabled={isLoading} />
+        <Input
+          dataCy="issuer-secret-key-input"
+          bind:value={issuerSecretKey}
+          required
+          disabled={isLoading}
+          handleInput={allowOnlyAlphanumeric}
+        />
 
         Asset Holder Public Key
-        <Input dataCy="asset-holder-public-key-input" bind:value={assetHolderPublicKey} required disabled={isLoading} />
-        <div>
+        <Input
+          dataCy="asset-holder-public-key-input"
+          bind:value={assetHolderPublicKey}
+          required
+          disabled={isLoading}
+          handleInput={allowOnlyAlphanumeric}
+        />
+
+        <div class="flex flex-col items-center">
           <Button dataCy="freeze-button" label={isLoading ? 'Freezing...' : 'Freeze Asset'} disabled={isLoading} />
-          <div data-cy="status" class="min-h-[50px] overflow-auto mt-4">
+
+          <div data-cy="status" class="min-h-[50px] overflow-auto mt-4 w-full">
             <p>{status}</p>
-            {#if transactionLink}
+            {#if isTransactionSuccessful}
               <p>
-                <a
-                  data-cy="transaction-link"
-                  class="text-blue-500 hover:text-blue-800 ml-1 underline"
-                  href={transactionLink}
-                  target="_blank">View transaction</a
-                >
+                <TransactionInfo {transactionHash} />
               </p>
             {/if}
           </div>
         </div>
-      </div>
-    </Card>
+      </div></Card
+    >
   </form>
 </div>
