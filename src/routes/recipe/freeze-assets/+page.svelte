@@ -25,45 +25,48 @@
     issuerSecretKey = selectedAsset ? selectedAsset.issuerSecret : '';
   }
 
-  async function freezeAsset() {
+  const SET_FLAGS = {
+    FREEZE: 1,
+    UNFREEZE: 2
+  };
+
+  async function loadAccounts(issuerPublicKey: string, assetHolderPublicKey: string) {
+    try {
+      const sourceAccount = await server.loadAccount(issuerPublicKey);
+      const assetHolder = await server.loadAccount(assetHolderPublicKey);
+      return { sourceAccount, assetHolder };
+    } catch (error) {
+      console.error('Failed to load account:', error);
+      throw new Error(`Failed to load account: ${String(error)}`);
+    }
+  }
+
+  async function performAssetAction() {
     isLoading = true;
     status = '';
     isTransactionSuccessful = false;
     transactionHash = '';
+
     try {
-      status = 'Freezing asset...';
       const issuerKeypair = Keypair.fromSecret(issuerSecretKey);
-      const issuerPublicKey = issuerKeypair.publicKey();
+      const { sourceAccount } = await loadAccounts(issuerKeypair.publicKey(), assetHolderPublicKey);
 
-      let sourceAccount;
-      let assetHolder;
-      try {
-        sourceAccount = await server.loadAccount(issuerPublicKey);
-        assetHolder = await server.loadAccount(assetHolderPublicKey);
-      } catch (error) {
-        status = `Error: ${String(error)}`;
-        console.error('Failed to load account:', error);
-        return;
-      }
-      status = 'Setting freeze flags...';
-      const operations = [];
-
-      operations.push(
+      const operations = [
         Operation.setOptions({
-          setFlags: 1
+          [shouldFreezeAsset ? 'setFlags' : 'clearFlags']: SET_FLAGS.FREEZE
         }),
         Operation.setOptions({
-          setFlags: 2
+          [shouldFreezeAsset ? 'setFlags' : 'clearFlags']: SET_FLAGS.UNFREEZE
         }),
         Operation.allowTrust({
           trustor: assetHolderPublicKey,
           assetCode: assetCode,
-          authorize: false
+          authorize: !shouldFreezeAsset
         })
-      );
+      ];
+
       status = 'Performing transaction...';
       let transaction = buildTransaction(sourceAccount, operations);
-
       transaction.sign(issuerKeypair);
 
       const transactionResult = await submitTransaction(transaction);
@@ -73,73 +76,12 @@
 
       if (isTransactionSuccessful) {
         transactionHash = transactionResult.hash;
-        status = `Asset frozen successfully! `;
+        status = `Asset ${shouldFreezeAsset ? 'frozen' : 'unfrozen'} successfully! `;
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
       console.error('An error occurred:', error);
       isTransactionSuccessful = false;
-      isLoading = false;
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  async function unfreezeAsset() {
-    isLoading = true;
-    status = '';
-    isTransactionSuccessful = false;
-    transactionHash = '';
-    try {
-      status = 'Unfreezing asset...';
-      const issuerKeypair = Keypair.fromSecret(issuerSecretKey);
-      const issuerPublicKey = issuerKeypair.publicKey();
-
-      let sourceAccount;
-      let assetHolder;
-      try {
-        sourceAccount = await server.loadAccount(issuerPublicKey);
-        assetHolder = await server.loadAccount(assetHolderPublicKey);
-      } catch (error) {
-        status = `Failed to load account: ${String(error)}`;
-        console.error('Failed to load account:', error);
-        return;
-      }
-      status = 'Clearing freeze flags...';
-      const operations = [];
-
-      operations.push(
-        Operation.setOptions({
-          clearFlags: 1
-        }),
-        Operation.setOptions({
-          clearFlags: 2
-        }),
-        Operation.allowTrust({
-          trustor: assetHolderPublicKey,
-          assetCode: assetCode,
-          authorize: true
-        })
-      );
-      status = 'Performing transaction...';
-      let transaction = buildTransaction(sourceAccount, operations);
-
-      transaction.sign(issuerKeypair);
-
-      const transactionResult = await submitTransaction(transaction);
-      isTransactionSuccessful = transactionResult.successful;
-
-      status = `Transaction ${transactionResult.successful ? 'succeeded' : 'failed'}.`;
-
-      if (isTransactionSuccessful) {
-        transactionHash = transactionResult.hash;
-        status = `Asset unfrozen successfully! `;
-      }
-    } catch (error) {
-      status = `Error: ${String(error)}`;
-      console.error('An error occurred:', error);
-      isTransactionSuccessful = false;
-      isLoading = false;
     } finally {
       isLoading = false;
     }
@@ -147,9 +89,6 @@
 
   function allowOnlyAlphanumeric(inputValue: string) {
     return inputValue.replace(/[^a-zA-Z0-9]/g, '');
-  }
-  function performAssetAction() {
-    return shouldFreezeAsset ? freezeAsset() : unfreezeAsset();
   }
 </script>
 
@@ -200,7 +139,7 @@
 
         <div class="flex flex-col items-center justify-center">
           <div class="flex items-center m-2">
-            <Switch bind:checked={shouldFreezeAsset} />
+            <Switch bind:checked={shouldFreezeAsset} dataCy="freeze-switch" disabled={isLoading} />
             <p class="ml-3">{shouldFreezeAsset ? 'Freeze' : 'Unfreeze'}</p>
           </div>
           <Button
