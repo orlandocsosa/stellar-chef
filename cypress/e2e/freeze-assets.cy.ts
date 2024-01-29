@@ -89,5 +89,7 @@ describe('Asset Freezing', () => {
     );
     cy.getByDataTestAttribute('freeze-switch').find('input').check({ force: true });
     cy.getByDataTestAttribute('perform-button').click();
+
+    cy.getByDataTestAttribute('status').should('contain', 'Error: Failed to load account');
   });
 });
