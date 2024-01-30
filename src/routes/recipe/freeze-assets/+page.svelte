@@ -109,10 +109,22 @@
         <Input dataCy="asset-code-input" bind:value={assetCode} maxlength={12} required disabled={isLoading} />
 
         Issuer Secret Key
-        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} required disabled={isLoading} />
+        <Input
+          dataCy="issuer-secret-key-input"
+          bind:value={issuerSecretKey}
+          maxlength={56}
+          required
+          disabled={isLoading}
+        />
 
         Asset Holder Public Key
-        <Input dataCy="asset-holder-public-key-input" bind:value={assetHolderPublicKey} required disabled={isLoading} />
+        <Input
+          dataCy="asset-holder-public-key-input"
+          bind:value={assetHolderPublicKey}
+          maxlength={56}
+          required
+          disabled={isLoading}
+        />
 
         <div class="flex flex-col items-center justify-center">
           <div class="flex items-center m-2">
