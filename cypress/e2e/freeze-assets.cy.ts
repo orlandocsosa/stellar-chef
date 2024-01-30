@@ -42,11 +42,11 @@ describe('Asset Freezing', () => {
     ).as('stellarWrongAccountGetRequest');
 
     cy.visit('/recipe/freeze-assets');
+    cy.getByDataTestAttribute('asset-code-input').type(TEST_ASSET_CODE);
+    cy.getByDataTestAttribute('issuer-secret-key-input').type(TEST_ISSUER_SECRET_KEY);
   });
 
   it('Should freezes an asset', () => {
-    cy.getByDataTestAttribute('asset-code-input').type(TEST_ASSET_CODE);
-    cy.getByDataTestAttribute('issuer-secret-key-input').type(TEST_ISSUER_SECRET_KEY);
     cy.getByDataTestAttribute('asset-holder-public-key-input').type(TEST_ASSET_HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('freeze-switch').find('input').check({ force: true });
 
@@ -64,8 +64,6 @@ describe('Asset Freezing', () => {
   });
 
   it('Should unfreezes an asset', () => {
-    cy.getByDataTestAttribute('asset-code-input').type(TEST_ASSET_CODE);
-    cy.getByDataTestAttribute('issuer-secret-key-input').type(TEST_ISSUER_SECRET_KEY);
     cy.getByDataTestAttribute('asset-holder-public-key-input').type(TEST_ASSET_HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('freeze-switch').find('input').uncheck({ force: true });
     cy.getByDataTestAttribute('perform-button').click();
@@ -82,8 +80,6 @@ describe('Asset Freezing', () => {
   });
 
   it('Should show an error if the account does not exist', () => {
-    cy.getByDataTestAttribute('asset-code-input').type(TEST_ASSET_CODE);
-    cy.getByDataTestAttribute('issuer-secret-key-input').type(TEST_ISSUER_SECRET_KEY);
     cy.getByDataTestAttribute('asset-holder-public-key-input').type(
       'GWRONGPUBLICKEYXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     );
