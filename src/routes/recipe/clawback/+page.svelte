@@ -9,6 +9,7 @@
   import Button from '../../../components/Button.svelte';
   import TransactionInfo from '../../../components/TransactionInfo.svelte';
   import Checkbox from '../../../components/Checkbox.svelte';
+  import Status from '../../../components/Status.svelte';
 
   const assetService = new AssetStorageService();
   let assetsOnLocalStorage = assetService.getAll();
@@ -68,6 +69,7 @@
         const transactionResponse = await submitTransaction(transaction);
         transactionHash = transactionResponse.hash;
         isTransactionSuccessful = transactionResponse.successful;
+        status = 'Transaction successful';
 
         if (!isTransactionSuccessful) {
           status = `Clawback of ${amountToClawback} ${assetCode} failed.`;
@@ -136,13 +138,7 @@
           disabled={isLoading}
         />
       </div>
-      <div id="status" class="min-h-[50px] overflow-auto mt-4">
-        {#if isTransactionSuccessful}
-          Transaction successful <TransactionInfo {transactionHash} />
-        {:else}
-          {status}
-        {/if}
-      </div>
+      <Status {transactionHash} {isTransactionSuccessful} {status} />
     </Card>
   </form>
 </div>
