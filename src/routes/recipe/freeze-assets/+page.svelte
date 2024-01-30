@@ -7,6 +7,7 @@
   import Card from '../../../components/Card.svelte';
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
+  import Status from '../../../components/Status.svelte';
   import Switch from '../../../components/Switch.svelte';
 
   const assetService = new AssetStorageService();
@@ -63,7 +64,7 @@
           authorize: !shouldFreezeAsset
         })
       ];
-
+      console.log(operations);
       status = 'Performing transaction...';
       let transaction = buildTransaction(sourceAccount, operations);
       transaction.sign(issuerKeypair);
@@ -148,14 +149,7 @@
           />
         </div>
 
-        <div data-cy="status" class="min-h-[50px] overflow-auto mt-4 w-full justify-center">
-          <p>{status}</p>
-          {#if isTransactionSuccessful}
-            <p>
-              <TransactionInfo {transactionHash} />
-            </p>
-          {/if}
-        </div>
+        <Status {status} {isTransactionSuccessful} {transactionHash} />
       </div></Card
     >
   </form>
