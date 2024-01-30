@@ -8,6 +8,7 @@
   import Checkbox from '../../../components/Checkbox.svelte';
   import CoinInfo from '../../../components/CoinInfo.svelte';
   import Input from '../../../components/Input.svelte';
+  import Status from '../../../components/Status.svelte';
 
   import { Account } from '../../../services/stellar/Account';
   import AssetStorageService from '../../../services/asset/Asset';
@@ -33,6 +34,7 @@
   let showHolders = false;
   let isTransactionSuccessful = false;
   let assetService = new AssetStorageService();
+  let transactionHash = '';
 
   async function prepare() {
     accounts = [];
@@ -86,6 +88,7 @@
       transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
 
       const result = await submitTransaction(transaction);
+      transactionHash = result.hash;
       if (isFrozenAsset && !shouldCreateHolders) {
         await submitDisableTrustlineTransactionForFrozenAsset(
           assetCode,
@@ -135,15 +138,10 @@
         assetService.set(assetForSave);
       }
     } catch (error) {
-      status = `Error: ${String(error)}`;
-      console.error(error);
+      status = `Error: ${error}`;
     } finally {
       isLoading = false;
     }
-  }
-
-  function allowOnlyAlphanumeric(inputValue: string) {
-    return inputValue.replace(/[^a-zA-Z0-9]/g, '');
   }
 </script>
 
@@ -153,14 +151,7 @@
       <div class="flex flex-col">
         <label for="asset-code" class="block mb-1"
           >Asset Code <span class="text-red-500">*</span>
-          <Input
-            dataCy="asset-code-input"
-            bind:value={assetCode}
-            maxlength={12}
-            handleInput={allowOnlyAlphanumeric}
-            disabled={isLoading}
-            required
-          />
+          <Input dataCy="asset-code-input" bind:value={assetCode} maxlength={12} disabled={isLoading} required />
         </label>
         <label for="payment-amount" class="block mb-1"
           >Payment to distributor account
@@ -208,7 +199,7 @@
           <div class="flex justify-center items-center">
             <Button dataCy="prepare-button" label={isLoading ? 'Preparing...' : 'Prepare!'} disabled={isLoading} />
           </div>
-          <div data-cy="status" class="min-h-[50px] overflow-auto mt-4">{status}</div>
+          <Status {status} {isTransactionSuccessful} {transactionHash} />
         </label>
       </div>
     </Card>
