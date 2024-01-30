@@ -1,19 +1,21 @@
 <script lang="ts">
+  import { allowOnlyAlphanumeric as cleanInput } from '../utils';
   export let value: string | number;
   export let disabled: boolean = false;
   export let readonly: boolean = false;
   export let type: string = 'text';
   export let maxlength: number = 80;
-  export let handleInput: (value: string) => string = (value) => value;
   export let required: boolean = false;
   export let dataCy = '';
+  export let allowOnlyAlphanumeric: boolean = true;
 
   const typeProp = {
     type
   };
 
   function updateValue(event: Event) {
-    value = handleInput((event.target as HTMLInputElement).value);
+    let inputValue = (event.target as HTMLInputElement).value;
+    value = allowOnlyAlphanumeric ? cleanInput(inputValue) : inputValue;
   }
 </script>
 

@@ -3,7 +3,7 @@
 
   import AssetStorageService from '../../../services/asset/Asset';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
-  import TransactionInfo from '../../../components/TransactionInfo.svelte';
+
   import Card from '../../../components/Card.svelte';
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
@@ -64,7 +64,7 @@
           authorize: !shouldFreezeAsset
         })
       ];
-      console.log(operations);
+
       status = 'Performing transaction...';
       let transaction = buildTransaction(sourceAccount, operations);
       transaction.sign(issuerKeypair);
@@ -79,15 +79,11 @@
         status = `Asset ${shouldFreezeAsset ? 'frozen' : 'unfrozen'} successfully! `;
       }
     } catch (error) {
-      status = `Error: ${String(error)}`;
+      status = `Error: ${error}`;
       isTransactionSuccessful = false;
     } finally {
       isLoading = false;
     }
-  }
-
-  function allowOnlyAlphanumeric(inputValue: string) {
-    return inputValue.replace(/[^a-zA-Z0-9]/g, '');
   }
 </script>
 
@@ -110,31 +106,13 @@
         </label>
 
         Asset Code
-        <Input
-          dataCy="asset-code-input"
-          handleInput={allowOnlyAlphanumeric}
-          bind:value={assetCode}
-          maxlength={12}
-          required
-        />
+        <Input dataCy="asset-code-input" bind:value={assetCode} maxlength={12} required disabled={isLoading} />
 
         Issuer Secret Key
-        <Input
-          dataCy="issuer-secret-key-input"
-          bind:value={issuerSecretKey}
-          required
-          disabled={isLoading}
-          handleInput={allowOnlyAlphanumeric}
-        />
+        <Input dataCy="issuer-secret-key-input" bind:value={issuerSecretKey} required disabled={isLoading} />
 
         Asset Holder Public Key
-        <Input
-          dataCy="asset-holder-public-key-input"
-          bind:value={assetHolderPublicKey}
-          required
-          disabled={isLoading}
-          handleInput={allowOnlyAlphanumeric}
-        />
+        <Input dataCy="asset-holder-public-key-input" bind:value={assetHolderPublicKey} required disabled={isLoading} />
 
         <div class="flex flex-col items-center justify-center">
           <div class="flex items-center m-2">
