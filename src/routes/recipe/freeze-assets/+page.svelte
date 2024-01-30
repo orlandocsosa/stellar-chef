@@ -36,7 +36,6 @@
       const assetHolder = await server.loadAccount(assetHolderPublicKey);
       return { sourceAccount, assetHolder };
     } catch (error) {
-      console.error('Failed to load account:', error);
       throw new Error(`Failed to load account: ${String(error)}`);
     }
   }
@@ -80,7 +79,6 @@
       }
     } catch (error) {
       status = `Error: ${String(error)}`;
-      console.error('An error occurred:', error);
       isTransactionSuccessful = false;
     } finally {
       isLoading = false;
