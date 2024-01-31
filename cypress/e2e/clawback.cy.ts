@@ -1,8 +1,4 @@
-const ASSET_CODE_FOR_CLAWBACK: string = Cypress.env('ASSET_CODE');
-
-const CLAWBACK_ISSUER_SECRET_KEY: string = Cypress.env('ISSUER_SECRET_KEY');
-const CLAWBACK_HOLDER_PUBLIC_KEY: string = Cypress.env('HOLDER_PUBLIC_KEY');
-const EXPECTED_STATUS_LINK_CLAWBACK: string = Cypress.env('EXPECTED_STATUS_LINK');
+import { ISSUER_SECRET_KEY, HOLDER_PUBLIC_KEY, ASSET_CODE, EXPECTED_STATUS_LINK } from '../index';
 
 describe('Test Clawback Page', () => {
   beforeEach(() => {
@@ -18,7 +14,7 @@ describe('Test Clawback Page', () => {
     cy.intercept(
       {
         method: 'GET',
-        url: `https://horizon-testnet.stellar.org/accounts/${CLAWBACK_HOLDER_PUBLIC_KEY}`
+        url: `https://horizon-testnet.stellar.org/accounts/${HOLDER_PUBLIC_KEY}`
       },
       { fixture: 'holderAccount.json' }
     ).as('stellarHolderGetRequest');
@@ -27,9 +23,9 @@ describe('Test Clawback Page', () => {
   });
 
   it('Should performs clawback of 100 testCoin when button is clicked, and verifies the status', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(CLAWBACK_ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_HOLDER_PUBLIC_KEY);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
     cy.getByDataTestAttribute('amount-input').should('be.visible').type('100');
 
@@ -37,28 +33,28 @@ describe('Test Clawback Page', () => {
 
     cy.getByDataTestAttribute('status').within(() => {
       cy.contains('Transaction successful');
-      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK_CLAWBACK);
+      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK);
     });
   });
 
   it('Should perform a full clawback when checkbox is ticked', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(CLAWBACK_ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_HOLDER_PUBLIC_KEY);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
     cy.getByDataTestAttribute('clawback-button').click();
 
     cy.getByDataTestAttribute('status').within(() => {
       cy.contains('Transaction successful');
-      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK_CLAWBACK);
+      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK);
     });
   });
 
   it('Should try to perform clawback when button is clicked, but fails because the available balance is less than the amount', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(CLAWBACK_ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_HOLDER_PUBLIC_KEY);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
+    cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
     cy.getByDataTestAttribute('amount-input').should('be.visible').type('10000000');
 
@@ -76,14 +72,14 @@ it('Should show an error message when transaction fails', () => {
     'performClawback'
   );
 
-  cy.intercept('GET', `https://horizon-testnet.stellar.org/accounts/${CLAWBACK_HOLDER_PUBLIC_KEY}`, {
+  cy.intercept('GET', `https://horizon-testnet.stellar.org/accounts/${HOLDER_PUBLIC_KEY}`, {
     fixture: 'holderAccount.json'
   }).as('loadholderAccountRequest');
 
   cy.visit('/recipe/clawback');
-  cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
-  cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(CLAWBACK_ISSUER_SECRET_KEY);
-  cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_HOLDER_PUBLIC_KEY);
+  cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
+  cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
+  cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
   cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
   cy.getByDataTestAttribute('clawback-button').click();

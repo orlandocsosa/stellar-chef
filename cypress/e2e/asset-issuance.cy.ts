@@ -1,6 +1,4 @@
-const ASSET_CODE: string = Cypress.env('ASSET_CODE');
-const EXPECTED_STELLAR_EXPERT_ASSET_URL: string = Cypress.env('EXPECTED_STELLAR_EXPERT_ASSET_URL');
-const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL: string = Cypress.env('EXPECTED_STELLAR_EXPERT_ACCOUNT_URL');
+import { ASSET_CODE, EXPECTED_STELLAR_EXPERT_ASSET_URL, EXPECTED_STELLAR_EXPERT_ACCOUNT_URL } from '../index';
 
 const transactionSuccessfulStatusMessage = `Transaction successful. Distributor account balance: 1000000 ${ASSET_CODE}`;
 
