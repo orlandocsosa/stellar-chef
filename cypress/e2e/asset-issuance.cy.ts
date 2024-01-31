@@ -1,22 +1,27 @@
 const ASSET_CODE: string = Cypress.env('ASSET_CODE');
 const EXPECTED_STELLAR_EXPERT_ASSET_URL: string = Cypress.env('EXPECTED_STELLAR_EXPERT_ASSET_URL');
 const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL: string = Cypress.env('EXPECTED_STELLAR_EXPERT_ACCOUNT_URL');
+
+const transactionSuccessfulStatusMessage = `Transaction successful. Distributor account balance: 1000000 ${ASSET_CODE}`;
+
 describe('Asset Creation', () => {
   beforeEach(() => {
+    cy.clearLocalStorage();
+
     cy.intercept('https://horizon-testnet.stellar.org/friendbot*', (req) => {
-      req.reply({ fixture: 'asset-issuance/horizonTestnetStellarFriendbotResponse.json' });
+      req.reply({ fixture: 'horizonTestnetStellarFriendbotResponse.json' });
     });
 
     cy.intercept('https://friendbot.stellar.org/*', (req) => {
-      req.reply({ fixture: 'asset-issuance/friendbotStellarResponse.json' });
+      req.reply({ fixture: 'friendbotStellarResponse.json' });
     });
 
     cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
-      req.reply({ fixture: 'asset-issuance/horizonTestnetStellarAccountsResponse.json' });
+      req.reply({ fixture: 'issuerAccount.json' });
     });
 
     cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
-      req.reply({ fixture: 'asset-issuance/horizonTestnetStellarTransactionsResponse.json' });
+      req.reply({ fixture: 'transaction.json' });
     });
     cy.visit('/recipe/asset-issuance');
     cy.getByDataTestAttribute('asset-code-input').type(ASSET_CODE);
@@ -25,10 +30,7 @@ describe('Asset Creation', () => {
   it('Should create a new asset and verifies the details links, the coin info link and the status', () => {
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.getByDataTestAttribute('status').should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
@@ -51,10 +53,7 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('clawback-enabled').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.getByDataTestAttribute('status').should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
@@ -78,10 +77,7 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('create-holders').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.getByDataTestAttribute('status').should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
