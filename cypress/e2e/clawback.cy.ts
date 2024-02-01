@@ -1,72 +1,66 @@
-const ASSET_CODE_FOR_CLAWBACK = 'testCoin';
-const ISSUER_PUBLIC_KEY = 'GANFMU7SHOFXUM6OF32BGKADD6QSEEP25E2ZVJ6PTJUKI4WORZY6Y6SI';
-const ISSUER_SECRET_KEY = 'SB2RZHC7JIUBYHYV45VEHEYVANDY5AWHYS3IJYZHPVNJ6TJ5YPEK7OQE';
-const CLAWBACK_ACCOUNT_PUBLIC_KEY = 'GDAM4TVOXH5RA36KIQLG6JZBM5LB2LMWTTHHJMXCZIPVORNHV4AFPQW3';
-const TRANSACTION_ID = '9fa82582516534232e7a9a2ccc391908790d9a2d7da6cce0a13c34e457d381dd';
-const HORIZON_SERVER = 'https://horizon-testnet.stellar.org';
-const STELLAR_EXPERT_TESTNET_EXPLORER_SERVER = 'https://stellar.expert/explorer/testnet';
+import { ISSUER_SECRET_KEY, HOLDER_PUBLIC_KEY, ASSET_CODE, EXPECTED_STATUS_LINK } from '../constants/index';
 
 describe('Test Clawback Page', () => {
   beforeEach(() => {
-    cy.intercept('GET', `${HORIZON_SERVER}/accounts/${ISSUER_PUBLIC_KEY}`, {
-      fixture: 'issuerAccount.json'
-    }).as('loadIssuerAccountRequest');
+    cy.clearLocalStorage();
 
-    cy.intercept('POST', `${HORIZON_SERVER}/transactions`, { fixture: 'transaction.json' }).as('performClawback');
-    cy.intercept('GET', `${HORIZON_SERVER}/accounts/${CLAWBACK_ACCOUNT_PUBLIC_KEY}`, {
-      fixture: 'clawbackAccount.json'
-    }).as('loadClawbackAccountRequest');
+    cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
+      req.reply({ fixture: 'issuerAccount.json' });
+    });
+
+    cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
+      req.reply({ fixture: 'transaction.json' });
+    });
+    cy.intercept(
+      {
+        method: 'GET',
+        url: `https://horizon-testnet.stellar.org/accounts/${HOLDER_PUBLIC_KEY}`
+      },
+      { fixture: 'holderAccount.json' }
+    ).as('stellarHolderGetRequest');
 
     cy.visit('/recipe/clawback');
   });
 
   it('Should performs clawback of 100 testCoin when button is clicked, and verifies the status', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
     cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
     cy.getByDataTestAttribute('amount-input').should('be.visible').type('100');
 
     cy.getByDataTestAttribute('clawback-button').click();
 
-    cy.get('#status').within(() => {
+    cy.getByDataTestAttribute('status').within(() => {
       cy.contains('Transaction successful');
-      cy.contains('See details').should(
-        'have.prop',
-        'href',
-        `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
-      );
+      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK);
     });
   });
 
   it('Should perform a full clawback when checkbox is ticked', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
     cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
     cy.getByDataTestAttribute('clawback-button').click();
 
-    cy.get('#status').within(() => {
+    cy.getByDataTestAttribute('status').within(() => {
       cy.contains('Transaction successful');
-      cy.contains('See details').should(
-        'have.prop',
-        'href',
-        `${STELLAR_EXPERT_TESTNET_EXPLORER_SERVER}/tx/${TRANSACTION_ID}`
-      );
+      cy.contains('See details').should('have.prop', 'href', EXPECTED_STATUS_LINK);
     });
   });
 
   it('Should try to perform clawback when button is clicked, but fails because the available balance is less than the amount', () => {
-    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+    cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
     cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
-    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+    cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
     cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').uncheck();
     cy.getByDataTestAttribute('amount-input').should('be.visible').type('10000000');
 
     cy.getByDataTestAttribute('clawback-button').click();
 
-    cy.get('#status').should(
+    cy.getByDataTestAttribute('status').should(
       'contain',
       'An error occurred: The amount for clawback (10000000) is greater than the available balance (999900.0000000)'
     );
@@ -74,22 +68,24 @@ describe('Test Clawback Page', () => {
 });
 
 it('Should show an error message when transaction fails', () => {
-  cy.intercept('GET', `${HORIZON_SERVER}/accounts/${ISSUER_PUBLIC_KEY}`, {
-    fixture: 'issuerAccount.json'
-  }).as('loadIssuerAccountRequest');
+  cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', { fixture: 'transactionFail.json' }).as(
+    'performClawback'
+  );
 
-  cy.intercept('POST', '**/transactions', { fixture: 'transactionFail.json' }).as('performClawback');
-  cy.intercept('GET', `${HORIZON_SERVER}/accounts/${CLAWBACK_ACCOUNT_PUBLIC_KEY}`, {
-    fixture: 'clawbackAccount.json'
-  }).as('loadClawbackAccountRequest');
+  cy.intercept('GET', `https://horizon-testnet.stellar.org/accounts/${HOLDER_PUBLIC_KEY}`, {
+    fixture: 'holderAccount.json'
+  }).as('loadholderAccountRequest');
 
   cy.visit('/recipe/clawback');
-  cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE_FOR_CLAWBACK);
+  cy.getByDataTestAttribute('asset-code-input').should('be.visible').type(ASSET_CODE);
   cy.getByDataTestAttribute('issuer-secret-key-input').should('be.visible').type(ISSUER_SECRET_KEY);
-  cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(CLAWBACK_ACCOUNT_PUBLIC_KEY);
+  cy.getByDataTestAttribute('clawback-account-input').should('be.visible').type(HOLDER_PUBLIC_KEY);
   cy.getByDataTestAttribute('is-clawback-all-enabled-checkbox').should('be.visible').check();
 
   cy.getByDataTestAttribute('clawback-button').click();
 
-  cy.get('#status').should('contain', 'An error occurred: Clawback of 999900.0000000 testCoin failed.');
+  cy.getByDataTestAttribute('status').should(
+    'contain',
+    'An error occurred: Clawback of 999900.0000000 testCoin failed.'
+  );
 });

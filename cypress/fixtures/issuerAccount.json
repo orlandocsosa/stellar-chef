@@ -53,7 +53,7 @@
   },
   "balances": [
     {
-      "balance": "9999.9999900",
+      "balance": "1000000",
       "buying_liabilities": "0.0000000",
       "selling_liabilities": "0.0000000",
       "asset_type": "native"

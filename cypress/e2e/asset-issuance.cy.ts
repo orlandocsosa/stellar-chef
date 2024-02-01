@@ -1,10 +1,11 @@
-const ASSET_CODE = 'testAsset';
-const STATUS_SELECTOR = '[data-cy=status]';
-const EXPECTED_STELLAR_EXPERT_ASSET_URL = 'https://stellar.expert/explorer/testnet/asset/testAsset';
-const EXPECTED_STELLAR_EXPERT_ACCOUNT_URL = 'https://stellar.expert/explorer/testnet/account/';
+import { ASSET_CODE, EXPECTED_STELLAR_EXPERT_ASSET_URL, EXPECTED_STELLAR_EXPERT_ACCOUNT_URL } from '../constants/index';
+
+const transactionSuccessfulStatusMessage = `Transaction successful. Distributor account balance: 1000000 ${ASSET_CODE}`;
 
 describe('Asset Creation', () => {
   beforeEach(() => {
+    cy.clearLocalStorage();
+
     cy.intercept('https://horizon-testnet.stellar.org/friendbot*', (req) => {
       req.reply({ fixture: 'horizonTestnetStellarFriendbotResponse.json' });
     });
@@ -14,11 +15,11 @@ describe('Asset Creation', () => {
     });
 
     cy.intercept('GET', 'https://horizon-testnet.stellar.org/accounts/*', (req) => {
-      req.reply({ fixture: 'horizonTestnetStellarAccountsResponse.json' });
+      req.reply({ fixture: 'issuerAccount.json' });
     });
 
     cy.intercept('POST', 'https://horizon-testnet.stellar.org/transactions', (req) => {
-      req.reply({ fixture: 'horizonTestnetStellarTransactionsResponse.json' });
+      req.reply({ fixture: 'transaction.json' });
     });
     cy.visit('/recipe/asset-issuance');
     cy.getByDataTestAttribute('asset-code-input').type(ASSET_CODE);
@@ -27,10 +28,7 @@ describe('Asset Creation', () => {
   it('Should create a new asset and verifies the details links, the coin info link and the status', () => {
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR).should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
@@ -53,10 +51,7 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('clawback-enabled').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR).should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
@@ -80,10 +75,7 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('create-holders').check();
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR).should(
-      'contain',
-      `Transaction successful. Distributor account balance: 10000.0000000 ${ASSET_CODE}`
-    );
+    cy.getByDataTestAttribute('status').should('contain', transactionSuccessfulStatusMessage);
 
     cy.getByDataTestAttribute('issuer-info-link')
       .should('be.visible')
@@ -115,6 +107,9 @@ describe('Asset Creation', () => {
     cy.getByDataTestAttribute('balance-per-holder-input').clear().type('1000');
     cy.getByDataTestAttribute('prepare-button').click();
 
-    cy.get(STATUS_SELECTOR).should('contain', 'Error: Not enough funds for distributor account to create holders.');
+    cy.getByDataTestAttribute('status').should(
+      'contain',
+      'Error: Not enough funds for distributor account to create holders.'
+    );
   });
 });
