@@ -1,4 +1,10 @@
-import { ISSUER_PUBLIC_KEY, ISSUER_SECRET_KEY, HOLDER_PUBLIC_KEY, ASSET_CODE, EXPECTED_STATUS_LINK } from '../index';
+import {
+  ISSUER_PUBLIC_KEY,
+  ISSUER_SECRET_KEY,
+  HOLDER_PUBLIC_KEY,
+  ASSET_CODE,
+  EXPECTED_STATUS_LINK
+} from '../constants/index';
 
 describe('Asset Freezing', () => {
   beforeEach(() => {

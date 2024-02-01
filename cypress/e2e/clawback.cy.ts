@@ -1,4 +1,4 @@
-import { ISSUER_SECRET_KEY, HOLDER_PUBLIC_KEY, ASSET_CODE, EXPECTED_STATUS_LINK } from '../index';
+import { ISSUER_SECRET_KEY, HOLDER_PUBLIC_KEY, ASSET_CODE, EXPECTED_STATUS_LINK } from '../constants/index';
 
 describe('Test Clawback Page', () => {
   beforeEach(() => {

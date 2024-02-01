@@ -1,4 +1,4 @@
-import { ASSET_CODE, EXPECTED_STELLAR_EXPERT_ASSET_URL, EXPECTED_STELLAR_EXPERT_ACCOUNT_URL } from '../index';
+import { ASSET_CODE, EXPECTED_STELLAR_EXPERT_ASSET_URL, EXPECTED_STELLAR_EXPERT_ACCOUNT_URL } from '../constants/index';
 
 const transactionSuccessfulStatusMessage = `Transaction successful. Distributor account balance: 1000000 ${ASSET_CODE}`;
 
