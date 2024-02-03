@@ -23,18 +23,13 @@
     isLoading = true;
     sponsorSecretKey = '';
     sponsoreeSecretKey = '';
-    status = 'Creating accounts...';
 
     try {
       const sponsorAccount = await Account.create();
       const sponsoreeAccount = await Account.create();
 
-      await sponsorAccount.fundWithFriendBot();
-
       ({ publicKey: sponsorPublicKey, secretKey: sponsorSecretKey } = sponsorAccount);
       ({ publicKey: sponsoreePublicKey, secretKey: sponsoreeSecretKey } = sponsoreeAccount);
-
-      status = 'Accounts created';
     } catch (error) {
       status = `Error creating accounts: ${error}`;
     } finally {
@@ -84,8 +79,8 @@
 </script>
 
 <div class="flex justify-center">
-  <Card title="Sponsor Account">
-    <form class="flex flex-col items-center" on:submit|preventDefault={performAccountSponsorship}>
+  <Card title="Create Accounts">
+    <form class="flex flex-col items-center" on:submit|preventDefault={createAccounts}>
       <div>
         <h2 class="font-bold">Sponsor Account</h2>
         Public key {#if isValidKey(sponsorPublicKey)}
@@ -113,8 +108,12 @@
       <div class="flex justify-center w-full">
         <Button label="Create Accounts" onClick={createAccounts} disabled={isLoading} />
       </div>
+    </form>
+  </Card>
+  <Card title="Sponsor Account Recipe">
+    <form class="flex flex-col items-center" on:submit|preventDefault={performAccountSponsorship}>
       <div class="flex justify-center w-full">
-        <Button label="Sponsor" onClick={performAccountSponsorship} disabled={isLoading} />
+        <Button label="Sponsor" disabled={isLoading} />
       </div>
     </form>
     <div class="flex justify-center w-full">
