@@ -8,6 +8,7 @@
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
   import Status from '../../../components/Status.svelte';
+  import Switch from '../../../components/Switch.svelte';
 
   let sponsorPublicKey = '';
   let sponsorSecretKey = '';
@@ -17,19 +18,35 @@
   let transactionHash = '';
   let isTransactionSuccessful = false;
   let isLoading = false;
+  let shouldFoundSponsor = false;
+  let shouldFoundSponsoree = false;
+  let accountsStatus = '';
 
   async function createAccounts() {
     isTransactionSuccessful = false;
     isLoading = true;
+    sponsorPublicKey = '';
+    sponsoreePublicKey = '';
     sponsorSecretKey = '';
     sponsoreeSecretKey = '';
-
+    accountsStatus = '';
     try {
-      const sponsorAccount = await Account.create();
-      const sponsoreeAccount = await Account.create();
+      let sponsorAccount = await Account.create();
+      let sponsoreeAccount = await Account.create();
+
+      if (shouldFoundSponsor) {
+        accountsStatus = 'Funding sponsor account...';
+        sponsorAccount = await sponsorAccount.fundWithFriendBot();
+      }
+
+      if (shouldFoundSponsoree) {
+        accountsStatus = 'Funding sponsoree account...';
+        sponsoreeAccount = await sponsoreeAccount.fundWithFriendBot();
+      }
 
       ({ publicKey: sponsorPublicKey, secretKey: sponsorSecretKey } = sponsorAccount);
       ({ publicKey: sponsoreePublicKey, secretKey: sponsoreeSecretKey } = sponsoreeAccount);
+      accountsStatus = 'Accounts created successfully!';
     } catch (error) {
       status = `Error creating accounts: ${error}`;
     } finally {
@@ -67,6 +84,7 @@
           status = 'Transaction successful, account creation sponsored';
           isTransactionSuccessful = true;
           transactionHash = result.hash;
+          isLoading = false;
         }
       }
     } catch (error) {
@@ -78,11 +96,15 @@
   const isValidKey = (key: string) => key && key.length === 56;
 </script>
 
-<div class="flex justify-center">
+<div class="flex justify-center items-start">
   <Card title="Create Accounts">
     <form class="flex flex-col items-center" on:submit|preventDefault={createAccounts}>
       <div>
         <h2 class="font-bold">Sponsor Account</h2>
+        <div class="flex justify-between items-center">
+          <span class={shouldFoundSponsor ? 'text-green-500 font-bold' : ''}>Found Sponsor</span>
+          <Switch bind:checked={shouldFoundSponsor} disabled={isLoading} />
+        </div>
         Public key {#if isValidKey(sponsorPublicKey)}
           <CopyButton textToCopy={sponsorPublicKey} />
         {/if}
@@ -95,6 +117,10 @@
       </div>
       <div>
         <h2 class="font-bold">Sponsoree Account</h2>
+        <div class="flex justify-between items-center">
+          <span class={shouldFoundSponsoree ? 'text-green-500 font-bold' : ''}>Found Sponsoree</span>
+          <Switch bind:checked={shouldFoundSponsoree} disabled={isLoading} />
+        </div>
         Public key {#if isValidKey(sponsoreePublicKey)}
           <CopyButton textToCopy={sponsoreePublicKey} />
         {/if}
@@ -109,11 +135,12 @@
         <Button label="Create Accounts" onClick={createAccounts} disabled={isLoading} />
       </div>
     </form>
+    <p>{accountsStatus}</p>
   </Card>
-  <Card title="Sponsor Account Recipe">
+  <Card title="Sponsor Recipe">
     <form class="flex flex-col items-center" on:submit|preventDefault={performAccountSponsorship}>
       <div class="flex justify-center w-full">
-        <Button label="Sponsor" disabled={isLoading} />
+        <Button label="Perform Sponsorship" disabled={isLoading} />
       </div>
     </form>
     <div class="flex justify-center w-full">
