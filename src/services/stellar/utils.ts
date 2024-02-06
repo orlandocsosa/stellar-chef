@@ -60,4 +60,9 @@ async function checkAssetFrozen(
   }
 }
 
-export { buildTransaction, server, submitTransaction, checkClawbackStatus, checkAssetFrozen };
+async function findClaimableBalance(claimant: string): Promise<Horizon.ServerApi.ClaimableBalanceRecord[]> {
+  const claimableBalances = await server.claimableBalances().claimant(claimant).call();
+  return claimableBalances.records;
+}
+
+export { buildTransaction, server, submitTransaction, checkClawbackStatus, checkAssetFrozen, findClaimableBalance };
