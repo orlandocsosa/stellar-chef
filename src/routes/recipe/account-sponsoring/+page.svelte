@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { Operation, Keypair, Asset, Claimant } from 'stellar-sdk';
+  import { Keypair, Operation } from 'stellar-sdk';
   import { buildTransaction, submitTransaction, server } from '../../../services/stellar/utils';
   import { Account } from '../../../services/stellar/Account';
 
+  import CreateAccountForm from '../../../components/sponsoringResources/CreateAccountForm.svelte';
+  import ChangeTrustForm from '../../../components/sponsoringResources/ChangeTrustForm.svelte';
+  import { createSandwichTransaction } from '../../../services/stellar/transactions/createSandwichTransaction';
   import Card from '../../../components/Card.svelte';
   import CopyButton from '../../../components/CopyButton.svelte';
   import Input from '../../../components/Input.svelte';
@@ -18,9 +21,22 @@
   let transactionHash = '';
   let isTransactionSuccessful = false;
   let isLoading = false;
-  let shouldFoundSponsor = false;
+  let shouldFoundSponsor = true;
   let shouldFoundSponsoree = false;
   let accountsStatus = '';
+
+  const sponsoringForms = [
+    {
+      type: 'create-account',
+      component: CreateAccountForm
+    },
+    {
+      type: 'change-trust',
+      component: ChangeTrustForm
+    }
+  ];
+
+  let selectedForm = sponsoringForms[0];
 
   async function createAccounts() {
     isTransactionSuccessful = false;
@@ -54,45 +70,28 @@
     }
   }
 
-  async function performAccountSponsorship() {
+  async function performSponsorshipRecipe(event: CustomEvent) {
+    isTransactionSuccessful = false;
+    isLoading = true;
+    status = 'Performing sponsorship recipe...';
     try {
-      isTransactionSuccessful = false;
-      isLoading = true;
-      status = 'Sponsoring account...';
+      const sponsoredOperation = event.detail.operation;
       const sponsorKeypair = Keypair.fromSecret(sponsorSecretKey);
-      const sponsorAccount = await server.loadAccount(sponsorKeypair.publicKey());
-
       const sponsoreeKeypair = Keypair.fromSecret(sponsoreeSecretKey);
-      let sponsoreeAccount;
-      try {
-        sponsoreeAccount = await server.loadAccount(sponsoreeKeypair.publicKey());
-      } catch (error) {
-        status = 'Sponsoring account...';
-        const operations = [
-          Operation.beginSponsoringFutureReserves({ sponsoredId: sponsoreeKeypair.publicKey() }),
-          Operation.createAccount({ destination: sponsoreeKeypair.publicKey(), startingBalance: '0' }),
-          Operation.endSponsoringFutureReserves({ source: sponsoreeKeypair.publicKey() })
-        ];
 
-        const transaction = buildTransaction(sponsorAccount, operations);
+      const transaction = await createSandwichTransaction(sponsoredOperation, sponsoreeKeypair, sponsorKeypair);
+      const result = await submitTransaction(transaction);
 
-        transaction.sign(sponsorKeypair);
-        transaction.sign(sponsoreeKeypair);
-
-        const result = await submitTransaction(transaction);
-        if (result) {
-          status = 'Transaction successful, account creation sponsored';
-          isTransactionSuccessful = true;
-          transactionHash = result.hash;
-          isLoading = false;
-        }
-      }
+      isTransactionSuccessful = true;
+      transactionHash = result.hash;
+      status = 'Transaction successful!';
+      isLoading = false;
     } catch (error) {
-      status = `Error sponsoring account: ${error}`;
+      status = `Error: ${error}`;
+
       isLoading = false;
     }
   }
-
   const isValidKey = (key: string) => key && key.length === 56;
 </script>
 
@@ -138,10 +137,16 @@
     <p>{accountsStatus}</p>
   </Card>
   <Card title="Sponsor Recipe">
-    <form class="flex flex-col items-center" on:submit|preventDefault={performAccountSponsorship}>
-      <div class="flex justify-center w-full">
-        <Button label="Perform Sponsorship" disabled={isLoading} />
-      </div>
+    <form class="flex flex-col items-center">
+      <select bind:value={selectedForm}>
+        {#each sponsoringForms as form}
+          <option value={form}>{form.type}</option>
+        {/each}
+      </select>
+
+      {#if selectedForm}
+        <svelte:component this={selectedForm.component} on:formSubmission={performSponsorshipRecipe} />
+      {/if}
     </form>
     <div class="flex justify-center w-full">
       <Status {status} {isTransactionSuccessful} {transactionHash} />
