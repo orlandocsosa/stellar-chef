@@ -12,6 +12,8 @@
   import Button from '../../../components/Button.svelte';
   import Status from '../../../components/Status.svelte';
   import Switch from '../../../components/Switch.svelte';
+  import { buildCreateAccountOperation } from '../../../services/stellar/operations/createAccount';
+  import { buildChangeTrustOperation } from '../../../services/stellar/operations/changeTrust';
 
   let sponsorPublicKey = '';
   let sponsorSecretKey = '';
@@ -28,11 +30,13 @@
   const sponsoringForms = [
     {
       type: 'create-account',
-      component: CreateAccountForm
+      component: CreateAccountForm,
+      operation: buildCreateAccountOperation
     },
     {
       type: 'change-trust',
-      component: ChangeTrustForm
+      component: ChangeTrustForm,
+      operation: buildChangeTrustOperation
     }
   ];
 
@@ -70,12 +74,12 @@
     }
   }
 
-  async function performSponsorshipRecipe(event: CustomEvent) {
+  async function onSubmit(event: Event) {
     isTransactionSuccessful = false;
     isLoading = true;
     status = 'Performing sponsorship recipe...';
     try {
-      const sponsoredOperation = event.detail.operation;
+      const sponsoredOperation = selectedForm.operation(new FormData(event.target as HTMLFormElement));
       const sponsorKeypair = Keypair.fromSecret(sponsorSecretKey);
       const sponsoreeKeypair = Keypair.fromSecret(sponsoreeSecretKey);
 
@@ -145,7 +149,7 @@
       </select>
 
       {#if selectedForm}
-        <svelte:component this={selectedForm.component} on:formSubmission={performSponsorshipRecipe} />
+        <svelte:component this={selectedForm.component} {onSubmit} />
       {/if}
     </form>
     <div class="flex justify-center w-full">

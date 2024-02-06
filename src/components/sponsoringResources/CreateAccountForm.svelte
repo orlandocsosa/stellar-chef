@@ -1,21 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  import { buildCreateAccountOperation } from '../../services/stellar/operations/createAccount';
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
 
-  const dispatch = createEventDispatcher();
-
-  function handleSubmit(event: Event) {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const operation = buildCreateAccountOperation(formData);
-    dispatch('formSubmission', { operation });
-  }
+  export let onSubmit: (event: Event) => void;
 </script>
 
-<form on:submit={handleSubmit}>
+<form on:submit={onSubmit}>
   <label for="sponsorAccount">
     Sponsor Account
     <Input name="sponsorAccount" required />

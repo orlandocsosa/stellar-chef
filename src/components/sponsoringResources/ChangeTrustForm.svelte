@@ -1,21 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  import { buildChangeTrustOperation } from '../../services/stellar/operations/changeTrust';
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
 
-  const dispatch = createEventDispatcher();
-
-  function handleChangeTrustFormSubmit(event: Event) {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const operation = buildChangeTrustOperation(formData);
-    dispatch('formSubmission', { operation });
-  }
+  export let onSubmit: (event: Event) => void;
 </script>
 
-<form on:submit={handleChangeTrustFormSubmit}>
+<form on:submit={onSubmit}>
   <label for="sponsorAccount">
     Sponsor Account
     <Input name="sponsorAccount" required />
