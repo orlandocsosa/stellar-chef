@@ -3,8 +3,6 @@
   import { buildTransaction, submitTransaction, server } from '../../../services/stellar/utils';
   import { Account } from '../../../services/stellar/Account';
 
-  import CreateAccountForm from '../../../components/sponsoringResources/CreateAccountForm.svelte';
-  import ChangeTrustForm from '../../../components/sponsoringResources/ChangeTrustForm.svelte';
   import { createSandwichTransaction } from '../../../services/stellar/transactions/createSandwichTransaction';
   import Card from '../../../components/Card.svelte';
   import CopyButton from '../../../components/CopyButton.svelte';
@@ -12,8 +10,7 @@
   import Button from '../../../components/Button.svelte';
   import Status from '../../../components/Status.svelte';
   import Switch from '../../../components/Switch.svelte';
-  import { buildCreateAccountOperation } from '../../../services/stellar/operations/createAccount';
-  import { buildChangeTrustOperation } from '../../../services/stellar/operations/changeTrust';
+  import { sponsoringForms } from '../../../utils/sponsoringForms';
 
   let sponsorPublicKey = '';
   let sponsorSecretKey = '';
@@ -24,22 +21,8 @@
   let isTransactionSuccessful = false;
   let isLoading = false;
   let shouldFoundSponsor = true;
-  let shouldFoundSponsoree = false;
+  let shouldFoundSponsoree = true;
   let accountsStatus = '';
-
-  const sponsoringForms = [
-    {
-      type: 'create-account',
-      component: CreateAccountForm,
-      operation: buildCreateAccountOperation
-    },
-    {
-      type: 'change-trust',
-      component: ChangeTrustForm,
-      operation: buildChangeTrustOperation
-    }
-  ];
-
   let selectedForm = sponsoringForms[0];
 
   async function createAccounts() {
@@ -75,6 +58,7 @@
   }
 
   async function onSubmit(event: Event) {
+    status = '';
     isTransactionSuccessful = false;
     isLoading = true;
     status = 'Performing sponsorship recipe...';
@@ -91,8 +75,8 @@
       status = 'Transaction successful!';
       isLoading = false;
     } catch (error) {
+      console.error(error);
       status = `Error: ${error}`;
-
       isLoading = false;
     }
   }
@@ -141,17 +125,15 @@
     <p>{accountsStatus}</p>
   </Card>
   <Card title="Sponsor Recipe">
-    <form class="flex flex-col items-center">
-      <select bind:value={selectedForm}>
-        {#each sponsoringForms as form}
-          <option value={form}>{form.type}</option>
-        {/each}
-      </select>
+    <select bind:value={selectedForm} class="w-full p-2 border border-gray-300 rounded" disabled={isLoading}>
+      {#each sponsoringForms as form}
+        <option value={form}>{form.type}</option>
+      {/each}
+    </select>
 
-      {#if selectedForm}
-        <svelte:component this={selectedForm.component} {onSubmit} />
-      {/if}
-    </form>
+    {#if selectedForm}
+      <svelte:component this={selectedForm.component} {onSubmit} {sponsorPublicKey} {sponsoreePublicKey} {isLoading} />
+    {/if}
     <div class="flex justify-center w-full">
       <Status {status} {isTransactionSuccessful} {transactionHash} />
     </div>
