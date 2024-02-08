@@ -22,12 +22,12 @@
 
   <label for="entryName">
     Entry Name
-    <Input name="entryName" required disabled={isLoading} maxlength={64} />
+    <Input name="entryName" required disabled={isLoading} allowOnlyAlphanumeric={false} maxlength={64} />
   </label>
 
   <label for="entryValue">
     Entry Value
-    <Input name="entryValue" disabled={isLoading} />
+    <Input name="entryValue" disabled={isLoading} allowOnlyAlphanumeric={false} maxlength={64} />
   </label>
 
   <Button label="Submit" disabled={isLoading} />
