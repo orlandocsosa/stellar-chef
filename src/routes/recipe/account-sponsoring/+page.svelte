@@ -92,14 +92,10 @@
           <span class={shouldFoundSponsor ? 'text-green-500 font-bold' : ''}>Found Sponsor</span>
           <Switch bind:checked={shouldFoundSponsor} disabled={isLoading} />
         </div>
-        Public key {#if isValidKey(sponsorPublicKey)}
-          <CopyButton textToCopy={sponsorPublicKey} />
-        {/if}
+        Public key
         <Input bind:value={sponsorPublicKey} disabled={isLoading} required />
 
-        Secret key {#if isValidKey(sponsorSecretKey)}
-          <CopyButton textToCopy={sponsorSecretKey} />
-        {/if}
+        Secret key
         <Input bind:value={sponsorSecretKey} disabled={isLoading} required />
       </div>
       <div>
@@ -108,14 +104,10 @@
           <span class={shouldFoundSponsoree ? 'text-green-500 font-bold' : ''}>Found Sponsoree</span>
           <Switch bind:checked={shouldFoundSponsoree} disabled={isLoading} />
         </div>
-        Public key {#if isValidKey(sponsoreePublicKey)}
-          <CopyButton textToCopy={sponsoreePublicKey} />
-        {/if}
+        Public key
         <Input bind:value={sponsoreePublicKey} disabled={isLoading} required />
 
-        Secret key{#if isValidKey(sponsoreeSecretKey)}
-          <CopyButton textToCopy={sponsoreeSecretKey} />
-        {/if}
+        Secret key
         <Input bind:value={sponsoreeSecretKey} disabled={isLoading} required />
       </div>
       <div class="flex justify-center w-full">
