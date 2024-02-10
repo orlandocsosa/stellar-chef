@@ -5,7 +5,6 @@
 
   import { createSandwichTransaction } from '../../../services/stellar/transactions/createSandwichTransaction';
   import Card from '../../../components/Card.svelte';
-  import CopyButton from '../../../components/CopyButton.svelte';
   import Input from '../../../components/Input.svelte';
   import Button from '../../../components/Button.svelte';
   import Status from '../../../components/Status.svelte';
@@ -80,7 +79,6 @@
       isLoading = false;
     }
   }
-  const isValidKey = (key: string) => key && key.length === 56;
 </script>
 
 <div class="flex justify-center items-start">

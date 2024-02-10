@@ -1,10 +1,12 @@
 import ChangeTrustForm from '../components/sponsoringResources/ChangeTrustForm.svelte';
 import CreateAccountForm from '../components/sponsoringResources/CreateAccountForm.svelte';
+import CreateClaimableBalanceForm from '../components/sponsoringResources/CreateClaimableBalanceForm.svelte';
 import ManageDataForm from '../components/sponsoringResources/ManageDataForm.svelte';
 
 import { buildChangeTrustOperation } from '../services/stellar/operations/changeTrust';
 import { buildCreateAccountOperation } from '../services/stellar/operations/createAccount';
 import { buildManageDataOperation } from '../services/stellar/operations/manageData';
+import { buildCreateClamableBalanceOperation } from '../services/stellar/operations/createClamableBalanceOperation';
 
 export const sponsoringForms = [
   {
@@ -21,5 +23,10 @@ export const sponsoringForms = [
     type: 'manage-data',
     component: ManageDataForm,
     operation: buildManageDataOperation
+  },
+  {
+    type: 'Create-Claimable-Balance',
+    component: CreateClaimableBalanceForm,
+    operation: buildCreateClamableBalanceOperation
   }
 ];
