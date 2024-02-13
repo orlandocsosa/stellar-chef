@@ -1,6 +1,7 @@
 <script lang="ts">
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
+  import Claimant from '../claimant/Claimant.svelte';
 
   export let sponsorPublicKey: string = '';
   export let sponsoreePublicKey: string = '';
@@ -9,8 +10,10 @@
   export let onSubmit: (event: Event) => void;
 
   let assetType: string = 'native';
-
   let totalClaimants: number = 0;
+
+  let claimants = [];
+
   function updateClaimants(action: 'add' | 'remove') {
     if (action === 'add') {
       totalClaimants += 1;
@@ -34,8 +37,14 @@
     </label>
 
     <label for="assetType" class="block">
-      Asset:
-      <select bind:value={assetType} name="assetType" required disabled={isLoading} class="mt-1 block w-full">
+      <strong class="block mb-1 text-lg">Asset Type</strong>
+      <select
+        bind:value={assetType}
+        name="assetType"
+        required
+        disabled={isLoading}
+        class="w-full p-2 border border-gray-300 rounded mb-1"
+      >
         <option value="native">native</option>
         <option value="alphanumeric4">Alphanumeric 4</option>
         <option value="alphanumeric12">Alphanumeric 12</option>
@@ -44,7 +53,7 @@
 
     {#if !(assetType === 'native')}
       <label for="assetCode" class="block">
-        Asset Code
+        <strong class="block mb-1 text-lg">Asset Code</strong>
         <Input
           type="text"
           name="assetCode"
@@ -54,47 +63,57 @@
         />
       </label>
       <label for="issuerAccount" class="block">
-        Asset Issuer Account
+        <strong class="block mb-1 text-lg">Asset Issuer Account</strong>
         <Input type="text" name="issuerAccount" required disabled={isLoading} maxlength={56} />
       </label>
     {/if}
 
     <label for="amount" class="block">
-      Amount
-      <Input type="number" value="0" name="amount" required disabled={isLoading} />
+      <strong class="block text-lg mb-1"
+        >Amount: <Input type="number" value="0" name="amount" required disabled={isLoading} />
+      </strong>
     </label>
 
     <label for="claimants">
-      Claimants
+      <h2 class="text-xl font-bold mb-5 p-3">
+        <span>Claimants</span>
+      </h2>
       <div class="flex flex-col">
-        <button
-          type="button"
-          on:click={() => updateClaimants('add')}
-          class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 border border-green-500 w-10/12 mx-2 rounded transition duration-200 ease-in-out mb-4"
-        >
-          Add Claimant
-        </button>
+        <div class="flex flex-row justify-start">
+          <button
+            type="button"
+            on:click={() => updateClaimants('add')}
+            class="bg-green-500 hover:bg-green-600 text-white py-2 border border-green-500 w-20 mx-2 rounded transition duration-200 ease-in-out mb-4"
+          >
+            Add Claimant
+          </button>
+          <button
+            type="button"
+            on:click={() => updateClaimants('remove')}
+            class:disabled={totalClaimants === 0}
+            class="bg-red-500 hover:bg-red-600 text-white py-2 border border-red-500 w-20 mx-2 rounded transition duration-200 ease-in-out mb-4 {totalClaimants ===
+            0
+              ? 'opacity-50 cursor-not-allowed'
+              : ''}"
+            disabled={totalClaimants === 0}
+          >
+            Remove claimant
+          </button>
+        </div>
         {#each Array(totalClaimants) as _, i}
-          <div id={`claimant${i}`} class="mb-4 border border-black p-4 shadow-md">
-            <h2><bold>Claimant {i + 1}</bold></h2>
-            <label for={`destinationClaimant${i}`}>
+          <div class="flex flex-col border-4 m-1 p-1 border-black rounded shadow-lg">
+            <strong>Claimant {i + 1}</strong>
+            <label for="destination" class="block">
               Destination
-              <Input type="text" name={`destinationClaimant${i}`} required disabled={isLoading} />
+              <Input type="text" name="destination" required disabled={isLoading} maxlength={56} />
             </label>
-            <label for={`predicateClaimant${i}`} class="block">
-              Predicate
-              <select name={`predicateClaimant${i}`} required disabled={isLoading} class="mt-1 block w-full">
-                <option value="unconditional">Unconditional</option>
-                <option value="conditional">Conditional</option>
-              </select>
-            </label>
-            <button
-              type="button"
-              on:click={() => updateClaimants('remove')}
-              class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Remove
-            </button>
+            <Claimant
+              claimant={{ predicate: undefined }}
+              isFirstNested={false}
+              isSecondNested={false}
+              nestedLevel={0}
+              id={`claimant${i + 1}`}
+            />
           </div>
         {/each}
       </div>
