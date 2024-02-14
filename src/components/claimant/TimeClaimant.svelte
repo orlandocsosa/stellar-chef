@@ -15,12 +15,16 @@
   <div class="flex flex-col bg-gray-200">
     <button
       type="button"
-      class={clickedButton === 'relative' ? 'bg-blue-600 text-white' : 'bg-gray-200'}
+      class={clickedButton === 'relative'
+        ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+        : 'bg-gray-200 hover:bg-gray-300'}
       on:click={() => setTimeType('relative')}>Relative</button
     >
     <button
       type="button"
-      class={clickedButton === 'absolute' ? 'bg-blue-600 text-white' : 'bg-gray-200'}
+      class={clickedButton === 'absolute'
+        ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+        : 'bg-gray-200 hover:bg-gray-300'}
       on:click={() => setTimeType('absolute')}>Absolute</button
     >
     <input type="number" class="w-32 h-7" min="0" bind:value={claimant.value} />

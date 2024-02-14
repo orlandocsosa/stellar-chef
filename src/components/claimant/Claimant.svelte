@@ -17,16 +17,16 @@
     isConditional = !isConditional;
   }
   function toggleTimeMenu() {
-    isTimeMenuVisible = !isTimeMenuVisible;
+    isTimeMenuVisible = true;
   }
   function toggleAndMenu() {
-    isAndMenuVisible = !isAndMenuVisible;
+    isAndMenuVisible = true;
   }
   function toggleOrMenu() {
-    isOrMenuVisible = !isOrMenuVisible;
+    isOrMenuVisible = true;
   }
   function toggleNotMenu() {
-    isNotMenuVisible = !isNotMenuVisible;
+    isNotMenuVisible = true;
   }
   function setUnconditionalType() {
     toggleConditionalMenu();
@@ -67,46 +67,55 @@
 
 <div {id} class=" border border-black rounded shadow-lg m-5 flex flex-col items-center justify-center">
   <div class="flex flex-col">
+    <p class="ml-2">Predicate:</p>
     <div class="flex">
       <button
         type="button"
         class="m-2 rounded w-32 h-10 flex items-center justify-center {!isConditional
-          ? 'bg-blue-600 text-white '
-          : 'bg-gray-200'}"
+          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+          : 'bg-gray-200 hover:bg-gray-300'}"
         on:click={() => setUnconditionalType()}>Unconditional</button
       >
 
       <button
         type="button"
         class="m-2 rounded w-32 h-10 flex items-center justify-center {isConditional
-          ? 'bg-blue-600 text-white '
-          : 'bg-gray-200'}"
+          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+          : 'bg-gray-200 hover:bg-gray-300'}"
         on:click={toggleConditionalMenu}>Conditional</button
       >
     </div>
-
     {#if isConditional}
+      Predicate Type:
       <div class="flex gap-5">
         <button
           type="button"
-          class="px-4 py-2 rounded {claimant.predicate === 'time' ? 'bg-blue-600 text-white ' : 'bg-gray-200'}"
+          class="px-4 py-2 rounded {claimant.predicate === 'time'
+            ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
+            : 'bg-gray-200 hover:bg-gray-300'}"
           on:click={setTimePredicate}>Time</button
         >
 
         {#if nestedLevel < 2}
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'and' ? 'bg-blue-600 text-white ' : 'bg-gray-200'}"
+            class="px-4 py-2 rounded {claimant.predicate === 'and'
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white  '
+              : 'bg-gray-200 hover:bg-gray-300'}"
             on:click={setAndPredicate}>AND</button
           >
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'or' ? 'bg-blue-600 text-white ' : 'bg-gray-200'}"
+            class="px-4 py-2 rounded {claimant.predicate === 'or'
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
+              : 'bg-gray-200 hover:bg-gray-300'}"
             on:click={setOrPredicate}>OR</button
           >
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'not' ? 'bg-blue-600 text-white ' : 'bg-gray-200'}"
+            class="px-4 py-2 rounded {claimant.predicate === 'not'
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
+              : 'bg-gray-200 hover:bg-gray-300'}"
             on:click={setNotPredicate}>NOT</button
           >
         {/if}
@@ -120,12 +129,12 @@
 
   {#if isAndMenuVisible && claimant.predicate === 'and'}
     <div class="flex flex-col">
-      <strong
-        >{#if nestedLevel > 0} Nested {/if} Predicate 1:</strong
+      <strong class="ml-5">
+        {#if nestedLevel > 0} Nested {/if} Predicate 1:</strong
       >
       <svelte:self {claimant} isFirstNested={true} nestedLevel={nestedLevel + 1} />
-      <strong
-        >{#if nestedLevel > 0} Nested {/if} Predicate 2:</strong
+      <strong class="ml-5">
+        {#if nestedLevel > 0} Nested {/if} Predicate 2:</strong
       >
       <svelte:self {claimant} isSecondNested={true} nestedLevel={nestedLevel + 1} />
     </div>
@@ -133,12 +142,12 @@
 
   {#if isOrMenuVisible && claimant.predicate === 'or'}
     <div class="flex flex-col">
-      <strong>
+      <strong class="ml-5">
         {#if nestedLevel > 0} Nested {/if} Predicate 1:</strong
       >
       <svelte:self {claimant} isFirstNested={true} nestedLevel={nestedLevel + 1} />
-      <strong
-        >{#if nestedLevel > 0} Nested {/if} Predicate 2:</strong
+      <strong class="ml-5">
+        {#if nestedLevel > 0} Nested {/if} Predicate 2:</strong
       >
       <svelte:self {claimant} isSecondNested={true} nestedLevel={nestedLevel + 1} />
     </div>
@@ -146,7 +155,7 @@
 
   {#if isNotMenuVisible && claimant.predicate === 'not'}
     <div class="flex flex-col">
-      <strong>Predicate:</strong>
+      <strong class="ml-5">Predicate:</strong>
       <svelte:self {claimant} isFirstNested={true} nestedLevel={nestedLevel + 1} />
     </div>
   {/if}
