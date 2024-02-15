@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import type { PredicateType } from '../../services/stellar/claimants/predicateFactory';
   import TimeClaimant from './TimeClaimant.svelte';
+  import { claimantsStore } from '../../utils/stores/claimantsStore';
+  import type { Claimant } from '../../utils/stores/claimantsStore';
+
   export let claimant: PredicateType;
   export let isFirstNested = false;
   export let isSecondNested = false;
