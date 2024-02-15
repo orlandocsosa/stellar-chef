@@ -1,7 +1,9 @@
 <script lang="ts">
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
-  import Claimant from '../claimant/Claimant.svelte';
+  import ClaimantForm from '../claimant/Claimant.svelte';
+  import { claimantsStore } from '../../utils/stores/claimantsStore';
+  import type { Claimant } from '../../utils/stores/claimantsStore';
 
   export let sponsorPublicKey: string = '';
   export let sponsoreePublicKey: string = '';
@@ -11,17 +13,25 @@
 
   let assetType: string = 'native';
   let totalClaimants: number = 0;
-
-  let claimants = [];
+  let claimants: Claimant[] = [];
 
   function updateClaimants(action: 'add' | 'remove') {
     if (action === 'add') {
       totalClaimants += 1;
+      const newClaimant = {
+        claimantNumber: totalClaimants,
+        destination: '',
+        predicates: []
+      };
+      claimants.push(newClaimant);
     }
     if (action === 'remove' && totalClaimants > 0) {
       totalClaimants -= 1;
+      claimants = claimants.filter((claimant) => claimant.claimantNumber !== totalClaimants + 1);
     }
   }
+
+  $: claimantsStore.set(claimants);
 </script>
 
 <div class="flex flex-col items-center">
@@ -105,14 +115,14 @@
             <strong>Claimant {i + 1}</strong>
             <label for="destination" class="block">
               Destination
-              <Input type="text" name="destination" required disabled={isLoading} maxlength={56} />
+              <Input type="text" bind:value={claimants[i].destination} required disabled={isLoading} maxlength={56} />
             </label>
-            <Claimant
+            <ClaimantForm
               claimant={{ predicate: undefined }}
               isFirstNested={false}
               isSecondNested={false}
               nestedLevel={0}
-              id={`claimant${i + 1}`}
+              id={`${i + 1}`}
             />
           </div>
         {/each}
