@@ -1,7 +1,7 @@
 import { writable, type Writable } from 'svelte/store';
 
-interface Claimant {
-  number: number;
+export interface Claimant {
+  claimantNumber: number;
   destination: string;
   predicates: object[];
 }
