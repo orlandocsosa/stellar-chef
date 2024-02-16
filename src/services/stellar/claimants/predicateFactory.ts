@@ -6,8 +6,8 @@ interface IUnconditionalPredicate {
 
 interface ITimePredicate {
   predicate: 'time';
-  timeType: 'relative' | 'absolute';
-  value: xdr.Int64;
+  timeType: 'relative' | 'absolute' | undefined;
+  value: xdr.Int64 | undefined;
 }
 
 interface IAndPredicate {
@@ -44,6 +44,9 @@ function createPredicate(claimant: PredicateType): xdr.ClaimPredicate {
 
   switch (claimant.predicate) {
     case 'time':
+      if (claimant.timeType === undefined || claimant.value === undefined) {
+        throw new Error('Time type and value are undefined');
+      }
       if (claimant.timeType === 'absolute') {
         predicate = xdr.ClaimPredicate.claimPredicateBeforeAbsoluteTime(claimant.value);
       } else {

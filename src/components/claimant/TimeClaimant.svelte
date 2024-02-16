@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { ITimePredicate } from '../../services/stellar/claimants/predicateFactory';
   export let claimant: ITimePredicate;
-  let clickedButton = 'relative';
+  // let clickedButton = undefined;
 
   function setTimeType(type: ITimePredicate['timeType']) {
     claimant.timeType = type;
-    clickedButton = type;
+    // clickedButton = type;
   }
 </script>
 
@@ -15,14 +15,14 @@
   <div class="flex flex-col bg-gray-200">
     <button
       type="button"
-      class={clickedButton === 'relative'
+      class={claimant.timeType === 'relative'
         ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
         : 'bg-gray-200 hover:bg-gray-300'}
       on:click={() => setTimeType('relative')}>Relative</button
     >
     <button
       type="button"
-      class={clickedButton === 'absolute'
+      class={claimant.timeType === 'absolute'
         ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
         : 'bg-gray-200 hover:bg-gray-300'}
       on:click={() => setTimeType('absolute')}>Absolute</button

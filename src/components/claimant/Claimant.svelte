@@ -3,21 +3,32 @@
   import type { PredicateType } from '../../services/stellar/claimants/predicateFactory';
   import TimeClaimant from './TimeClaimant.svelte';
   import { claimantsStore } from '../../utils/stores/claimantsStore';
-  import type { Claimant } from '../../utils/stores/claimantsStore';
 
-  export let claimant: PredicateType;
+  export let claimant: any;
   export let isFirstNested = false;
   export let isSecondNested = false;
   export let nestedLevel = 0;
   export let id = '';
 
-  let isConditional = false;
+  // $: {
+  //   if (claimant) {
+  //     const targetIndex = claimantsStore.update((c) => {
+  //       const index = c.findIndex((item) => item.claimantNumber === parseInt(id, 10));
+  //       if (index !== -1) {
+  //         c[index].predicate = claimant;
+  //       }
+  //       return c;
+  //     });
+  //   }
+  // }
+
+  let predicateButtonSelected: 'conditional' | 'unconditional' | undefined = undefined;
   let isTimeMenuVisible = false;
   let isAndMenuVisible = false;
   let isOrMenuVisible = false;
   let isNotMenuVisible = false;
-  function toggleConditionalMenu() {
-    isConditional = !isConditional;
+  function toggleConditionalMenu(type: 'conditional' | 'unconditional') {
+    predicateButtonSelected = type;
   }
   function toggleTimeMenu() {
     isTimeMenuVisible = true;
@@ -32,34 +43,38 @@
     isNotMenuVisible = true;
   }
   function setUnconditionalType() {
-    toggleConditionalMenu();
-    claimant.predicate = 'unconditional';
+    toggleConditionalMenu('unconditional');
+    claimant = 'unconditional';
   }
   function setTimePredicate() {
-    claimant.predicate = 'time';
+    claimant = {
+      predicate: 'time',
+      timeType: undefined,
+      value: undefined
+    };
     toggleTimeMenu();
   }
   function setAndPredicate() {
-    claimant.predicate = 'and';
-    if (claimant.predicate === 'and') {
-      claimant.firstPredicate = { predicate: undefined };
-      claimant.secondPredicate = { predicate: undefined };
-    }
+    claimant = {
+      predicate: 'and',
+      firstPredicate: { predicate: undefined },
+      secondPredicate: { predicate: undefined }
+    };
     toggleAndMenu();
   }
   function setOrPredicate() {
-    claimant.predicate = 'or';
-    if (claimant.predicate === 'or') {
-      claimant.firstPredicate = { predicate: undefined };
-      claimant.secondPredicate = { predicate: undefined };
-    }
+    claimant = {
+      predicate: 'or',
+      firstPredicate: { predicate: undefined },
+      secondPredicate: { predicate: undefined }
+    };
     toggleOrMenu();
   }
   function setNotPredicate() {
-    claimant.predicate = 'not';
-    if (claimant.predicate === 'not') {
-      claimant.firstPredicate = { predicate: undefined };
-    }
+    claimant = {
+      predicate: 'not',
+      firstPredicate: { predicate: undefined }
+    };
     toggleNotMenu();
   }
   onMount(() => {
@@ -74,21 +89,31 @@
     <div class="flex">
       <button
         type="button"
-        class="m-2 rounded w-32 h-10 flex items-center justify-center {!isConditional
+        class="m-2 rounded w-32 h-10 flex items-center justify-center {predicateButtonSelected === 'unconditional'
           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
           : 'bg-gray-200 hover:bg-gray-300'}"
-        on:click={() => setUnconditionalType()}>Unconditional</button
+        on:click={() => {
+          setUnconditionalType();
+          toggleConditionalMenu('unconditional');
+        }}
       >
+        Unconditional
+      </button>
 
       <button
         type="button"
-        class="m-2 rounded w-32 h-10 flex items-center justify-center {isConditional
+        class="m-2 rounded w-32 h-10 flex items-center justify-center {predicateButtonSelected === 'conditional'
           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
           : 'bg-gray-200 hover:bg-gray-300'}"
-        on:click={toggleConditionalMenu}>Conditional</button
+        on:click={() => {
+          toggleConditionalMenu('conditional');
+          claimant = { predicate: undefined };
+        }}
       >
+        Conditional
+      </button>
     </div>
-    {#if isConditional}
+    {#if predicateButtonSelected === 'conditional'}
       Predicate Type:
       <div class="flex gap-5">
         <button

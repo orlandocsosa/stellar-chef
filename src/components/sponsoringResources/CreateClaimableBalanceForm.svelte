@@ -2,8 +2,8 @@
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
   import ClaimantForm from '../claimant/Claimant.svelte';
-  import { claimantsStore } from '../../utils/stores/claimantsStore';
-  import type { Claimant } from '../../utils/stores/claimantsStore';
+  import { claimantsStore as claimants } from '../../utils/stores/claimantsStore';
+  import PredicateType from '../../services/stellar/claimants/predicateFactory';
 
   export let sponsorPublicKey: string = '';
   export let sponsoreePublicKey: string = '';
@@ -13,25 +13,28 @@
 
   let assetType: string = 'native';
   let totalClaimants: number = 0;
-  let claimants: Claimant[] = [];
+  // let claimantPredicate = { predicate: undefined };
 
-  function updateClaimants(action: 'add' | 'remove') {
-    if (action === 'add') {
-      totalClaimants += 1;
-      const newClaimant = {
-        claimantNumber: totalClaimants,
-        destination: '',
-        predicates: []
-      };
-      claimants.push(newClaimant);
-    }
-    if (action === 'remove' && totalClaimants > 0) {
+  function addClaimant() {
+    totalClaimants += 1;
+    const newClaimant = {
+      destination: '',
+      predicate: undefined
+    };
+    $claimants.push(newClaimant);
+    $claimants = $claimants;
+  }
+
+  function removeClaimant() {
+    if (totalClaimants > 0) {
       totalClaimants -= 1;
-      claimants = claimants.filter((claimant) => claimant.claimantNumber !== totalClaimants + 1);
+      $claimants = $claimants.filter((claimant) => claimant.claimantNumber !== totalClaimants + 1);
+      $claimants = $claimants;
     }
   }
 
-  $: claimantsStore.set(claimants);
+  // $: claimantsStore.set($claimants);
+  $: console.log($claimants);
 </script>
 
 <div class="flex flex-col items-center">
@@ -84,22 +87,22 @@
       </strong>
     </label>
 
-    <label for="claimants">
+    <label for="$claimants">
       <h2 class="text-xl font-bold mb-5 p-3">
-        <span>Claimants</span>
+        <span>$Claimants</span>
       </h2>
       <div class="flex flex-col">
         <div class="flex flex-row justify-start">
           <button
             type="button"
-            on:click={() => updateClaimants('add')}
+            on:click={() => addClaimant()}
             class="bg-green-500 hover:bg-green-600 text-white py-2 border border-green-500 w-20 mx-2 rounded transition duration-200 ease-in-out mb-4"
           >
             Add Claimant
           </button>
           <button
             type="button"
-            on:click={() => updateClaimants('remove')}
+            on:click={() => removeClaimant()}
             class:disabled={totalClaimants === 0}
             class="bg-red-500 hover:bg-red-600 text-white py-2 border border-red-500 w-20 mx-2 rounded transition duration-200 ease-in-out mb-4 {totalClaimants ===
             0
@@ -110,15 +113,15 @@
             Remove claimant
           </button>
         </div>
-        {#each Array(totalClaimants) as _, i}
+        {#each $claimants as claimant, i}
           <div class="flex flex-col border-4 m-1 p-1 border-black rounded shadow-lg">
             <strong>Claimant {i + 1}</strong>
             <label for="destination" class="block">
               Destination
-              <Input type="text" bind:value={claimants[i].destination} required disabled={isLoading} maxlength={56} />
+              <Input type="text" bind:value={claimant.destination} required disabled={isLoading} maxlength={56} />
             </label>
             <ClaimantForm
-              claimant={{ predicate: undefined }}
+              claimant={claimant.predicate}
               isFirstNested={false}
               isSecondNested={false}
               nestedLevel={0}
