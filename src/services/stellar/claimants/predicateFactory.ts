@@ -1,79 +1,83 @@
 import { xdr } from 'stellar-sdk';
 
 interface IUnconditionalPredicate {
-  predicate: 'unconditional';
+  type: 'unconditional';
 }
 
 interface ITimePredicate {
-  predicate: 'time';
+  type: 'time';
   timeType: 'relative' | 'absolute' | undefined;
   value: xdr.Int64 | undefined;
 }
 
 interface IAndPredicate {
-  predicate: 'and';
+  type: 'and';
   firstPredicate: PredicateType;
   secondPredicate: PredicateType;
 }
 
 interface IOrPredicate {
-  predicate: 'or';
+  type: 'or';
   firstPredicate: PredicateType;
   secondPredicate: PredicateType;
 }
 
 interface INotPredicate {
-  predicate: 'not';
+  type: 'not';
   firstPredicate: PredicateType;
 }
 
+interface IUndefinedPredicate {
+  type: undefined;
+}
+
 type PredicateType =
-  | { predicate: undefined }
+  | IUndefinedPredicate
   | IUnconditionalPredicate
   | ITimePredicate
   | IAndPredicate
   | IOrPredicate
   | INotPredicate;
 
-function createPredicate(claimant: PredicateType): xdr.ClaimPredicate {
-  let predicate: xdr.ClaimPredicate;
+function createPredicate(predicate: PredicateType): xdr.ClaimPredicate {
+  let createdPredicate: xdr.ClaimPredicate;
 
-  if (claimant.predicate === undefined) {
+  if (predicate.type === undefined) {
     throw new Error('Predicate is undefined');
   }
 
-  switch (claimant.predicate) {
+  switch (predicate.type) {
     case 'time':
-      if (claimant.timeType === undefined || claimant.value === undefined) {
+      if (predicate.timeType === undefined || predicate.value === undefined) {
         throw new Error('Time type and value are undefined');
       }
-      if (claimant.timeType === 'absolute') {
-        predicate = xdr.ClaimPredicate.claimPredicateBeforeAbsoluteTime(claimant.value);
+      if (predicate.timeType === 'absolute') {
+        createdPredicate = xdr.ClaimPredicate.claimPredicateBeforeAbsoluteTime(predicate.value);
       } else {
-        predicate = xdr.ClaimPredicate.claimPredicateBeforeRelativeTime(claimant.value);
+        createdPredicate = xdr.ClaimPredicate.claimPredicateBeforeRelativeTime(predicate.value);
       }
       break;
     case 'and':
-      predicate = xdr.ClaimPredicate.claimPredicateAnd([
-        createPredicate(claimant.firstPredicate),
-        createPredicate(claimant.secondPredicate)
+      createdPredicate = xdr.ClaimPredicate.claimPredicateAnd([
+        createPredicate(predicate.firstPredicate),
+        createPredicate(predicate.secondPredicate)
       ]);
       break;
     case 'or':
-      predicate = xdr.ClaimPredicate.claimPredicateOr([
-        createPredicate(claimant.firstPredicate),
-        createPredicate(claimant.secondPredicate)
+      createdPredicate = xdr.ClaimPredicate.claimPredicateOr([
+        createPredicate(predicate.firstPredicate),
+        createPredicate(predicate.secondPredicate)
       ]);
       break;
     case 'not':
-      predicate = xdr.ClaimPredicate.claimPredicateNot(createPredicate(claimant.firstPredicate));
+      createdPredicate = xdr.ClaimPredicate.claimPredicateNot(createPredicate(predicate.firstPredicate));
       break;
     default:
-      predicate = xdr.ClaimPredicate.claimPredicateUnconditional();
+      createdPredicate = xdr.ClaimPredicate.claimPredicateUnconditional();
   }
 
-  return predicate;
+  return createdPredicate;
 }
 
-export type { PredicateType, ITimePredicate, IAndPredicate, INotPredicate, IOrPredicate };
+export type { PredicateType, ITimePredicate, IAndPredicate, INotPredicate, IOrPredicate, IUndefinedPredicate };
 export default createPredicate;
