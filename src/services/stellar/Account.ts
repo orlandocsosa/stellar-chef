@@ -3,11 +3,14 @@ import { server } from './utils';
 
 class Account {
   public publicKey: string;
-  public secretKey: string;
+  public secretKey?: string;
 
   constructor(keypair: Keypair) {
     this.publicKey = keypair.publicKey();
-    this.secretKey = keypair.secret();
+
+    if (keypair.canSign()) {
+      this.secretKey = keypair.secret();
+    }
   }
 
   async fundWithFriendBot(): Promise<Account> {
