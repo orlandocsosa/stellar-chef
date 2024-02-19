@@ -3,7 +3,6 @@
   import Button from '../Button.svelte';
   import ClaimantForm from '../claimant/Claimant.svelte';
   import { claimantsStore as claimants } from '../../utils/stores/claimantsStore';
-  import PredicateType from '../../services/stellar/claimants/predicateFactory';
 
   export let sponsorPublicKey: string = '';
   export let sponsoreePublicKey: string = '';
@@ -13,28 +12,19 @@
 
   let assetType: string = 'native';
   let totalClaimants: number = 0;
-  // let claimantPredicate = { predicate: undefined };
 
   function addClaimant() {
     totalClaimants += 1;
-    const newClaimant = {
-      destination: '',
-      predicate: undefined
-    };
-    $claimants.push(newClaimant);
+    $claimants.push({ destination: '', predicate: { type: undefined } });
     $claimants = $claimants;
   }
 
   function removeClaimant() {
     if (totalClaimants > 0) {
       totalClaimants -= 1;
-      $claimants = $claimants.filter((claimant) => claimant.claimantNumber !== totalClaimants + 1);
       $claimants = $claimants;
     }
   }
-
-  // $: claimantsStore.set($claimants);
-  $: console.log($claimants);
 </script>
 
 <div class="flex flex-col items-center">
@@ -120,13 +110,7 @@
               Destination
               <Input type="text" bind:value={claimant.destination} required disabled={isLoading} maxlength={56} />
             </label>
-            <ClaimantForm
-              claimant={claimant.predicate}
-              isFirstNested={false}
-              isSecondNested={false}
-              nestedLevel={0}
-              id={`${i + 1}`}
-            />
+            <ClaimantForm {claimant} isFirstNested={false} isSecondNested={false} nestedLevel={0} id={`${i + 1}`} />
           </div>
         {/each}
       </div>
