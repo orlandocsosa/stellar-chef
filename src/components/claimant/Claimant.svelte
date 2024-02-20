@@ -172,7 +172,7 @@
   </div>
 
   {#if menus.time}
-    <TimeClaimant predicate={claimant.predicate} />
+    <TimeClaimant {claimant} {isFirstNested} {isSecondNested} />
   {/if}
 
   {#if menus.or}
