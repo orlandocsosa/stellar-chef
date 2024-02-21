@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Keypair, Operation } from 'stellar-sdk';
-  import { buildTransaction, submitTransaction, server } from '../../../services/stellar/utils';
+  import { Keypair } from 'stellar-sdk';
+  import { submitTransaction } from '../../../services/stellar/utils';
   import { Account } from '../../../services/stellar/Account';
 
   import { createSandwichTransaction } from '../../../services/stellar/transactions/createSandwichTransaction';
@@ -33,8 +33,8 @@
     sponsoredSecretKey = '';
     accountsStatus = '';
     try {
-      let sponsorAccount = await Account.create();
-      let sponsoredAccount = await Account.create();
+      let sponsorAccount = Account.create();
+      let sponsoredAccount = Account.create();
 
       if (shouldFoundSponsor) {
         accountsStatus = 'Funding sponsor account...';
@@ -65,7 +65,6 @@
       const sponsoredOperation = selectedForm.operation(new FormData(event.target as HTMLFormElement));
       const sponsorKeypair = Keypair.fromSecret(sponsorSecretKey);
       const sponsoredKeypair = Keypair.fromSecret(sponsoredSecretKey);
-
       const transaction = await createSandwichTransaction(sponsoredOperation, sponsoredKeypair, sponsorKeypair);
       const result = await submitTransaction(transaction);
 
