@@ -7,14 +7,10 @@
   export let sponsorPublicKey: string = '';
   export let sponsoredPublicKey: string = '';
   export let isLoading: boolean = false;
-
   export let onSubmit: (event: Event) => void;
-
   let assetType: string = 'native';
-  let totalClaimants: number = 0;
 
   function addClaimant() {
-    totalClaimants += 1;
     $claimants.push({ destination: '', predicate: { type: undefined } });
     $claimants = $claimants;
   }
