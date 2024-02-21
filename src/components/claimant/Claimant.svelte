@@ -1,71 +1,87 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { PredicateType } from '../../services/stellar/claimants/predicateFactory';
   import TimeClaimant from './TimeClaimant.svelte';
-  import { claimantsStore } from '../../utils/stores/claimantsStore';
-  import type { Claimant } from '../../utils/stores/claimantsStore';
+  import { type Claimant } from '../../utils/stores/claimantsStore';
 
-  export let claimant: PredicateType;
+  export let claimant: Claimant;
   export let isFirstNested = false;
   export let isSecondNested = false;
   export let nestedLevel = 0;
   export let id = '';
 
-  let isConditional = false;
-  let isTimeMenuVisible = false;
-  let isAndMenuVisible = false;
-  let isOrMenuVisible = false;
-  let isNotMenuVisible = false;
-  function toggleConditionalMenu() {
-    isConditional = !isConditional;
+  let predicateButtonSelected: 'conditional' | 'unconditional' | undefined = undefined;
+  let menus = {
+    and: false,
+    or: false,
+    not: false,
+    time: false
+  };
+
+  function toggleConditionalMenu(type: 'conditional' | 'unconditional') {
+    predicateButtonSelected = type;
   }
-  function toggleTimeMenu() {
-    isTimeMenuVisible = true;
-  }
-  function toggleAndMenu() {
-    isAndMenuVisible = true;
-  }
-  function toggleOrMenu() {
-    isOrMenuVisible = true;
-  }
-  function toggleNotMenu() {
-    isNotMenuVisible = true;
-  }
-  function setUnconditionalType() {
-    toggleConditionalMenu();
-    claimant.predicate = 'unconditional';
-  }
-  function setTimePredicate() {
-    claimant.predicate = 'time';
-    toggleTimeMenu();
-  }
-  function setAndPredicate() {
-    claimant.predicate = 'and';
-    if (claimant.predicate === 'and') {
-      claimant.firstPredicate = { predicate: undefined };
-      claimant.secondPredicate = { predicate: undefined };
+
+  function togglePredicateMenu(key: string) {
+    for (const menu in menus) {
+      menus[menu as keyof typeof menus] = false;
     }
-    toggleAndMenu();
+
+    menus[key as keyof typeof menus] = true;
   }
-  function setOrPredicate() {
-    claimant.predicate = 'or';
-    if (claimant.predicate === 'or') {
-      claimant.firstPredicate = { predicate: undefined };
-      claimant.secondPredicate = { predicate: undefined };
+
+  function updatePredicate(type: PredicateType['type']): PredicateType {
+    switch (type) {
+      case 'unconditional':
+        return {
+          type
+        };
+
+      case 'and':
+        return {
+          type,
+          firstPredicate: { type: undefined },
+          secondPredicate: { type: undefined }
+        };
+
+      case 'or':
+        return {
+          type,
+          firstPredicate: { type: undefined },
+          secondPredicate: { type: undefined }
+        };
+
+      case 'not':
+        return {
+          type,
+          firstPredicate: { type: undefined }
+        };
+
+      case 'time':
+        return {
+          type,
+          timeType: undefined,
+          value: undefined
+        };
+      default:
+        return {
+          type: undefined
+        };
     }
-    toggleOrMenu();
   }
-  function setNotPredicate() {
-    claimant.predicate = 'not';
-    if (claimant.predicate === 'not') {
-      claimant.firstPredicate = { predicate: undefined };
+
+  function updateClaimant(predicate: PredicateType) {
+    if (isFirstNested && 'firstPredicate' in claimant.predicate) {
+      claimant.predicate.firstPredicate = predicate;
+      return;
     }
-    toggleNotMenu();
+
+    if (isSecondNested && 'secondPredicate' in claimant.predicate) {
+      claimant.predicate.secondPredicate = predicate;
+      return;
+    }
+
+    claimant.predicate = predicate;
   }
-  onMount(() => {
-    if (isFirstNested && 'firstPredicate' in claimant) claimant = claimant.firstPredicate;
-    if (isSecondNested && 'secondPredicate' in claimant) claimant = claimant.secondPredicate;
-  });
 </script>
 
 <div {id} class=" border border-black rounded shadow-lg m-5 flex flex-col items-center justify-center">
@@ -74,63 +90,92 @@
     <div class="flex">
       <button
         type="button"
-        class="m-2 rounded w-32 h-10 flex items-center justify-center {!isConditional
+        class="m-2 rounded w-32 h-10 flex items-center justify-center {predicateButtonSelected === 'unconditional'
           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
           : 'bg-gray-200 hover:bg-gray-300'}"
-        on:click={() => setUnconditionalType()}>Unconditional</button
+        on:click={() => {
+          updateClaimant(updatePredicate('unconditional'));
+          toggleConditionalMenu('unconditional');
+        }}
       >
+        Unconditional
+      </button>
 
       <button
         type="button"
-        class="m-2 rounded w-32 h-10 flex items-center justify-center {isConditional
+        class="m-2 rounded w-32 h-10 flex items-center justify-center {predicateButtonSelected === 'conditional'
           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
           : 'bg-gray-200 hover:bg-gray-300'}"
-        on:click={toggleConditionalMenu}>Conditional</button
+        on:click={() => {
+          toggleConditionalMenu('conditional');
+        }}
       >
+        Conditional
+      </button>
     </div>
-    {#if isConditional}
+    {#if predicateButtonSelected === 'conditional'}
       Predicate Type:
       <div class="flex gap-5">
         <button
           type="button"
-          class="px-4 py-2 rounded {claimant.predicate === 'time'
+          class="px-4 py-2 rounded {menus.time
             ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
             : 'bg-gray-200 hover:bg-gray-300'}"
-          on:click={setTimePredicate}>Time</button
+          on:click={() => {
+            updateClaimant(updatePredicate('time'));
+            togglePredicateMenu('time');
+          }}
         >
+          Time
+        </button>
 
         {#if nestedLevel < 2}
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'and'
+            class="px-4 py-2 rounded {menus.and
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white  '
               : 'bg-gray-200 hover:bg-gray-300'}"
-            on:click={setAndPredicate}>AND</button
+            on:click={() => {
+              updateClaimant(updatePredicate('and'));
+              togglePredicateMenu('and');
+            }}
           >
+            AND
+          </button>
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'or'
+            class="px-4 py-2 rounded {menus.or
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
               : 'bg-gray-200 hover:bg-gray-300'}"
-            on:click={setOrPredicate}>OR</button
+            on:click={() => {
+              updateClaimant(updatePredicate('or'));
+              togglePredicateMenu('or');
+            }}
           >
+            OR
+          </button>
           <button
             type="button"
-            class="px-4 py-2 rounded {claimant.predicate === 'not'
+            class="px-4 py-2 rounded {menus.not
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white '
               : 'bg-gray-200 hover:bg-gray-300'}"
-            on:click={setNotPredicate}>NOT</button
+            on:click={() => {
+              updateClaimant(updatePredicate('not'));
+              togglePredicateMenu('not');
+            }}
           >
+            NOT
+          </button>
         {/if}
       </div>
     {/if}
   </div>
 
-  {#if isTimeMenuVisible && claimant.predicate === 'time'}
-    <TimeClaimant {claimant} />
+  {#if menus.time}
+    <TimeClaimant {claimant} {isFirstNested} {isSecondNested} />
   {/if}
 
-  {#if isAndMenuVisible && claimant.predicate === 'and'}
+  {#if menus.or}
     <div class="flex flex-col">
       <strong class="ml-5">
         {#if nestedLevel > 0} Nested {/if} Predicate 1:</strong
@@ -143,7 +188,7 @@
     </div>
   {/if}
 
-  {#if isOrMenuVisible && claimant.predicate === 'or'}
+  {#if menus.and}
     <div class="flex flex-col">
       <strong class="ml-5">
         {#if nestedLevel > 0} Nested {/if} Predicate 1:</strong
@@ -156,7 +201,7 @@
     </div>
   {/if}
 
-  {#if isNotMenuVisible && claimant.predicate === 'not'}
+  {#if menus.not}
     <div class="flex flex-col">
       <strong class="ml-5">Predicate:</strong>
       <svelte:self {claimant} isFirstNested={true} nestedLevel={nestedLevel + 1} />

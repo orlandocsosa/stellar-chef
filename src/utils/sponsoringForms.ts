@@ -6,7 +6,7 @@ import ManageDataForm from '../components/sponsoringResources/ManageDataForm.sve
 import { buildChangeTrustOperation } from '../services/stellar/operations/changeTrust';
 import { buildCreateAccountOperation } from '../services/stellar/operations/createAccount';
 import { buildManageDataOperation } from '../services/stellar/operations/manageData';
-import { buildCreateClamableBalanceOperation } from '../services/stellar/operations/createClamableBalanceOperation';
+import { buildCreateClaimableBalanceOperation } from '../services/stellar/operations/createClaimableBalanceOperation';
 
 export const sponsoringForms = [
   {
@@ -27,6 +27,6 @@ export const sponsoringForms = [
   {
     type: 'Create-Claimable-Balance',
     component: CreateClaimableBalanceForm,
-    operation: buildCreateClamableBalanceOperation
+    operation: buildCreateClaimableBalanceOperation
   }
 ];

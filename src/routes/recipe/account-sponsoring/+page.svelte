@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Keypair, Operation } from 'stellar-sdk';
-  import { buildTransaction, submitTransaction, server } from '../../../services/stellar/utils';
+  import { Keypair } from 'stellar-sdk';
+  import { submitTransaction } from '../../../services/stellar/utils';
   import { Account } from '../../../services/stellar/Account';
 
   import { createSandwichTransaction } from '../../../services/stellar/transactions/createSandwichTransaction';
@@ -13,14 +13,14 @@
 
   let sponsorPublicKey = '';
   let sponsorSecretKey = '';
-  let sponsoreePublicKey = '';
-  let sponsoreeSecretKey = '';
+  let sponsoredPublicKey = '';
+  let sponsoredSecretKey = '';
   let status = '';
   let transactionHash = '';
   let isTransactionSuccessful = false;
   let isLoading = false;
   let shouldFoundSponsor = true;
-  let shouldFoundSponsoree = true;
+  let shouldFoundSponsored = true;
   let accountsStatus = '';
   let selectedForm = sponsoringForms[0];
 
@@ -28,26 +28,26 @@
     isTransactionSuccessful = false;
     isLoading = true;
     sponsorPublicKey = '';
-    sponsoreePublicKey = '';
+    sponsoredPublicKey = '';
     sponsorSecretKey = '';
-    sponsoreeSecretKey = '';
+    sponsoredSecretKey = '';
     accountsStatus = '';
     try {
-      let sponsorAccount = await Account.create();
-      let sponsoreeAccount = await Account.create();
+      let sponsorAccount = Account.create();
+      let sponsoredAccount = Account.create();
 
       if (shouldFoundSponsor) {
         accountsStatus = 'Funding sponsor account...';
         sponsorAccount = await sponsorAccount.fundWithFriendBot();
       }
 
-      if (shouldFoundSponsoree) {
-        accountsStatus = 'Funding sponsoree account...';
-        sponsoreeAccount = await sponsoreeAccount.fundWithFriendBot();
+      if (shouldFoundSponsored) {
+        accountsStatus = 'Funding sponsored account...';
+        sponsoredAccount = await sponsoredAccount.fundWithFriendBot();
       }
 
       ({ publicKey: sponsorPublicKey, secretKey: sponsorSecretKey } = sponsorAccount);
-      ({ publicKey: sponsoreePublicKey, secretKey: sponsoreeSecretKey } = sponsoreeAccount);
+      ({ publicKey: sponsoredPublicKey, secretKey: sponsoredSecretKey } = sponsoredAccount);
       accountsStatus = 'Accounts created successfully!';
     } catch (error) {
       status = `Error creating accounts: ${error}`;
@@ -64,9 +64,8 @@
     try {
       const sponsoredOperation = selectedForm.operation(new FormData(event.target as HTMLFormElement));
       const sponsorKeypair = Keypair.fromSecret(sponsorSecretKey);
-      const sponsoreeKeypair = Keypair.fromSecret(sponsoreeSecretKey);
-
-      const transaction = await createSandwichTransaction(sponsoredOperation, sponsoreeKeypair, sponsorKeypair);
+      const sponsoredKeypair = Keypair.fromSecret(sponsoredSecretKey);
+      const transaction = await createSandwichTransaction(sponsoredOperation, sponsoredKeypair, sponsorKeypair);
       const result = await submitTransaction(transaction);
 
       isTransactionSuccessful = true;
@@ -97,16 +96,16 @@
         <Input bind:value={sponsorSecretKey} disabled={isLoading} required />
       </div>
       <div>
-        <h2 class="font-bold">Sponsoree Account</h2>
+        <h2 class="font-bold">Sponsored Account</h2>
         <div class="flex justify-between items-center">
-          <span class={shouldFoundSponsoree ? 'text-green-500 font-bold' : ''}>Found Sponsoree</span>
-          <Switch bind:checked={shouldFoundSponsoree} disabled={isLoading} />
+          <span class={shouldFoundSponsored ? 'text-green-500 font-bold' : ''}>Found Sponsored</span>
+          <Switch bind:checked={shouldFoundSponsored} disabled={isLoading} />
         </div>
         Public key
-        <Input bind:value={sponsoreePublicKey} disabled={isLoading} required />
+        <Input bind:value={sponsoredPublicKey} disabled={isLoading} required />
 
         Secret key
-        <Input bind:value={sponsoreeSecretKey} disabled={isLoading} required />
+        <Input bind:value={sponsoredSecretKey} disabled={isLoading} required />
       </div>
       <div class="flex justify-center w-full">
         <Button label="Create Accounts" onClick={createAccounts} disabled={isLoading} />
@@ -122,7 +121,7 @@
     </select>
 
     {#if selectedForm}
-      <svelte:component this={selectedForm.component} {onSubmit} {sponsorPublicKey} {sponsoreePublicKey} {isLoading} />
+      <svelte:component this={selectedForm.component} {onSubmit} {sponsorPublicKey} {sponsoredPublicKey} {isLoading} />
     {/if}
     <div class="flex justify-center w-full">
       <Status {status} {isTransactionSuccessful} {transactionHash} />
