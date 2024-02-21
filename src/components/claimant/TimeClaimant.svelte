@@ -1,6 +1,6 @@
 <script lang="ts">
   import { xdr } from 'stellar-sdk';
-  import { type Claimant } from '../../utils/stores/claimantsStore';
+  import { type Claimant } from '../../utils/stores/claimant';
 
   export let claimant: Claimant;
   export let isFirstNested = false;

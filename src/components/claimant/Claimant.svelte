@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PredicateType } from '../../services/stellar/claimants/predicateFactory';
   import TimeClaimant from './TimeClaimant.svelte';
-  import { type Claimant } from '../../utils/stores/claimantsStore';
+  import { type Claimant } from '../../utils/stores/claimant';
 
   export let claimant: Claimant;
   export let isFirstNested = false;

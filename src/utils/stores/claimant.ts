@@ -6,4 +6,4 @@ export interface Claimant {
   predicate: PredicateType;
 }
 
-export const claimantsStore: Writable<Claimant[]> = writable([]);
+export const claimants: Writable<Claimant[]> = writable([]);

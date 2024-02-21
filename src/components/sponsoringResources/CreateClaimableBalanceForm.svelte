@@ -2,13 +2,13 @@
   import Input from '../Input.svelte';
   import Button from '../Button.svelte';
   import ClaimantForm from '../claimant/Claimant.svelte';
-  import { claimantsStore as claimants } from '../../utils/stores/claimantsStore';
+  import { claimants } from '../../utils/stores/claimant';
 
-  export let sponsorPublicKey: string = '';
-  export let sponsoredPublicKey: string = '';
-  export let isLoading: boolean = false;
+  export let sponsorPublicKey = '';
+  export let sponsoredPublicKey = '';
+  export let isLoading = false;
   export let onSubmit: (event: Event) => void;
-  let assetType: string = 'native';
+  let assetType = 'native';
 
   function addClaimant() {
     $claimants.push({ destination: '', predicate: { type: undefined } });
