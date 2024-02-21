@@ -35,29 +35,4 @@ async function submitTransaction(transaction: Transaction): Promise<Horizon.Hori
   }
 }
 
-async function checkClawbackStatus(issuerAccountId: string): Promise<boolean> {
-  const issuerAccount = await server.loadAccount(issuerAccountId);
-
-  return issuerAccount.flags.auth_clawback_enabled && issuerAccount.flags.auth_revocable;
-}
-
-async function checkAssetFrozen(
-  distributorPublicKey: string,
-  frozenAssetCode: string,
-  issuerPublicKey: string
-): Promise<boolean> {
-  const distributorAccountWithFrozenAsset = await server.loadAccount(distributorPublicKey);
-
-  const trustline = distributorAccountWithFrozenAsset.balances.find(
-    (balance) =>
-      'asset_issuer' in balance && balance.asset_code === frozenAssetCode && balance.asset_issuer === issuerPublicKey
-  );
-
-  if (trustline !== null && trustline !== undefined && 'is_authorized' in trustline && !trustline.is_authorized) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-export { buildTransaction, server, submitTransaction, checkClawbackStatus, checkAssetFrozen };
+export { buildTransaction, server, submitTransaction };
