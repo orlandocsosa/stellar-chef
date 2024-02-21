@@ -19,11 +19,8 @@
     $claimants = $claimants;
   }
 
-  function removeClaimant() {
-    if (totalClaimants > 0) {
-      totalClaimants -= 1;
-      $claimants = $claimants;
-    }
+  function removeClaimant(index: number) {
+    $claimants = $claimants.filter((_claimant, i) => i !== index);
   }
 </script>
 
@@ -72,14 +69,14 @@
     {/if}
 
     <label for="amount" class="block">
-      <strong class="block text-lg mb-1"
-        >Amount: <Input type="number" value="0" name="amount" required disabled={isLoading} />
+      <strong class="block text-lg mb-1">
+        Amount: <Input type="number" value="0" name="amount" required disabled={isLoading} />
       </strong>
     </label>
 
     <label for="$claimants">
       <h2 class="text-xl font-bold mb-5 p-3">
-        <span>$Claimants</span>
+        <span>Claimants</span>
       </h2>
       <div class="flex flex-col">
         <div class="flex flex-row justify-start">
@@ -90,22 +87,14 @@
           >
             Add Claimant
           </button>
-          <button
-            type="button"
-            on:click={() => removeClaimant()}
-            class:disabled={totalClaimants === 0}
-            class="bg-red-500 hover:bg-red-600 text-white py-2 border border-red-500 w-20 mx-2 rounded transition duration-200 ease-in-out mb-4 {totalClaimants ===
-            0
-              ? 'opacity-50 cursor-not-allowed'
-              : ''}"
-            disabled={totalClaimants === 0}
-          >
-            Remove claimant
-          </button>
         </div>
         {#each $claimants as claimant, i}
           <div class="flex flex-col border-4 m-1 p-1 border-black rounded shadow-lg">
-            <strong>Claimant {i + 1}</strong>
+            <div>
+              <strong>Claimant {i + 1}</strong>
+              <button type="button" on:click={() => removeClaimant(i)}>Remove</button>
+            </div>
+
             <label for="destination" class="block">
               Destination
               <Input type="text" bind:value={claimant.destination} required disabled={isLoading} maxlength={56} />
