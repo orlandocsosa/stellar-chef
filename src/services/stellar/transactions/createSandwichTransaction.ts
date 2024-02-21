@@ -4,22 +4,22 @@ import { buildTransaction, server } from '../utils';
 
 export async function createSandwichTransaction(
   sponsoredOperation: xdr.Operation,
-  sponsoreeKeypair: Keypair,
+  sponsoredKeypair: Keypair,
   sponsorKeypair: Keypair
 ): Promise<Transaction> {
   const sponsorAccount = await server.loadAccount(sponsorKeypair.publicKey());
   const startSponsoringOperation = Operation.beginSponsoringFutureReserves({
-    sponsoredId: sponsoreeKeypair.publicKey()
+    sponsoredId: sponsoredKeypair.publicKey()
   });
 
   const endSponsoringOperation = Operation.endSponsoringFutureReserves({
-    source: sponsoreeKeypair.publicKey()
+    source: sponsoredKeypair.publicKey()
   });
 
   const operations = [startSponsoringOperation, sponsoredOperation, endSponsoringOperation];
   const transaction = buildTransaction(sponsorAccount, operations);
   transaction.sign(sponsorKeypair);
-  transaction.sign(sponsoreeKeypair);
+  transaction.sign(sponsoredKeypair);
 
   return transaction;
 }

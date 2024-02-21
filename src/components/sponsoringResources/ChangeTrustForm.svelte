@@ -4,7 +4,7 @@
 
   export let onSubmit: (event: Event) => void;
   export let sponsorPublicKey = '';
-  export let sponsoreePublicKey = '';
+  export let sponsoredPublicKey = '';
   export let isLoading = false;
 </script>
 
@@ -14,9 +14,9 @@
     <Input bind:value={sponsorPublicKey} readonly name="sponsorAccount" required />
   </label>
 
-  <label for="sponsoreeAccount">
-    Sponsoree Account
-    <Input bind:value={sponsoreePublicKey} readonly name="sponsoreeAccount" required />
+  <label for="sponsoredAccount">
+    Sponsored Account
+    <Input bind:value={sponsoredPublicKey} readonly name="sponsoredAccount" required />
   </label>
 
   <label for="assetCode">

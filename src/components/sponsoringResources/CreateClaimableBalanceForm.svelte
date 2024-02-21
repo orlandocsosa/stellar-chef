@@ -5,7 +5,7 @@
   import { claimantsStore as claimants } from '../../utils/stores/claimantsStore';
 
   export let sponsorPublicKey: string = '';
-  export let sponsoreePublicKey: string = '';
+  export let sponsoredPublicKey: string = '';
   export let isLoading: boolean = false;
 
   export let onSubmit: (event: Event) => void;
@@ -31,9 +31,9 @@
       <Input bind:value={sponsorPublicKey} readonly name="sponsorAccount" required />
     </label>
 
-    <label for="sponsoreeAccount">
-      Sponsoree Account
-      <Input bind:value={sponsoreePublicKey} readonly name="sponsoreeAccount" required />
+    <label for="sponsoredAccount">
+      Sponsored Account
+      <Input bind:value={sponsoredPublicKey} readonly name="sponsoredAccount" required />
     </label>
 
     <label for="assetType" class="block">
