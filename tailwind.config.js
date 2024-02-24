@@ -6,6 +6,9 @@ module.exports = {
     extend: {
       height: {
         '600px': '600px'
+      },
+      fontFamily: {
+        lexend: ['Lexend', 'sans-serif']
       }
     }
   },
