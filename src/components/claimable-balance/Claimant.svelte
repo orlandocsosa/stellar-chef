@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { IClaimant } from '../../services/stellar/types';
-  import Button from './Button.svelte';
+  import Button from '../salient/Button.svelte';
   import Predicate from './Predicate.svelte';
 
   export let claimant: IClaimant;
