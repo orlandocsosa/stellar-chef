@@ -1,5 +1,5 @@
 import { xdr } from 'stellar-sdk';
-import type { IClaimant } from './interfaces/IClaimant';
+import type { IClaimant } from './types';
 
 function createPredicate(predicate: IClaimant['predicate']): xdr.ClaimPredicate {
   let createdPredicate: xdr.ClaimPredicate;

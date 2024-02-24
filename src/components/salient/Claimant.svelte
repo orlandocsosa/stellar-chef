@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { IClaimant } from '../../services/stellar/interfaces/IClaimant';
+  import type { IClaimant } from '../../services/stellar/types';
   import Button from './Button.svelte';
   import Predicate from './Predicate.svelte';
 

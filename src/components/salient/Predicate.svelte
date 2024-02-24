@@ -1,7 +1,6 @@
 <script lang="ts">
   import { xdr } from 'stellar-sdk';
-  import type { IPredicate } from '../../services/stellar/interfaces/IClaimant';
-  import { claimants } from '../../store/claimants';
+  import type { IPredicate } from '../../services/stellar/types';
   import RadioOptions from './RadioOptions.svelte';
 
   export let title = '';
