@@ -1,4 +1,12 @@
-import { type Account, TransactionBuilder, BASE_FEE, type xdr, type Transaction, Horizon } from 'stellar-sdk';
+import {
+  type Account,
+  TransactionBuilder,
+  BASE_FEE,
+  type xdr,
+  type Transaction,
+  Horizon,
+  Operation
+} from 'stellar-sdk';
 
 import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
 
@@ -65,4 +73,25 @@ async function findClaimableBalance(claimant: string): Promise<Horizon.ServerApi
   return claimableBalances.records;
 }
 
-export { buildTransaction, server, submitTransaction, checkClawbackStatus, checkAssetFrozen, findClaimableBalance };
+function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: string, source: string): xdr.Operation[] {
+  return [
+    Operation.beginSponsoringFutureReserves({
+      sponsoredId,
+      source
+    }),
+    operation,
+    Operation.endSponsoringFutureReserves({
+      source: sponsoredId
+    })
+  ];
+}
+
+export {
+  buildTransaction,
+  server,
+  submitTransaction,
+  checkClawbackStatus,
+  checkAssetFrozen,
+  findClaimableBalance,
+  getSponsorWrapperOperations
+};

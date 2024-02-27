@@ -3,7 +3,7 @@
   import Button from '../../../components/salient/Button.svelte';
   import Card from '../../../components/salient/Card.svelte';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
-  import { buildTransaction, server } from '../../../services/stellar/utils';
+  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
   import TextArea from '../../../components/salient/TextArea.svelte';
 
   interface IAccount {
@@ -100,19 +100,6 @@
       destination,
       startingBalance
     });
-  }
-
-  function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: string, source: string) {
-    return [
-      Operation.beginSponsoringFutureReserves({
-        sponsoredId,
-        source
-      }),
-      operation,
-      Operation.endSponsoringFutureReserves({
-        source: sponsoredId
-      })
-    ];
   }
 
   function handleGenerateKeypairs() {
