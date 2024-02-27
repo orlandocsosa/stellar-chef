@@ -21,7 +21,7 @@
         parseEntriesValues<IOfferRequest>(formData);
 
       const sourceKeypair = Keypair.fromSecret(source);
-      const sponsorKeypair = Keypair.fromSecret(sponsor);
+      const sponsorKeypair = sponsor ? Keypair.fromSecret(sponsor) : undefined;
 
       const options = {
         price: price,
@@ -46,7 +46,7 @@
         })
       };
 
-      const operations = sponsor
+      const operations = sponsorKeypair
         ? [
             ...getSponsorWrapperOperations(
               offerOperations[offerType],
@@ -58,7 +58,7 @@
 
       const transaction = buildTransaction(await server.loadAccount(sourceKeypair.publicKey()), operations);
       transaction.sign(sourceKeypair);
-      if (sponsor) transaction.sign(sponsorKeypair);
+      if (sponsorKeypair) transaction.sign(sponsorKeypair);
 
       const result = await server.submitTransaction(transaction);
 
