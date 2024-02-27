@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
   const colorVariants: { [key: string]: string } = {
     blue: 'bg-blue-600 active:bg-blue-800 active:text-blue-100 focus-visible:outline-blue-600 text-white',
     white:
@@ -8,6 +11,10 @@
   export let color = 'blue';
   export let className = '';
   export let value: string | number | null;
+
+  $: if (value) {
+    dispatch('selected', value);
+  }
 </script>
 
 <select

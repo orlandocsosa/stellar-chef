@@ -22,10 +22,6 @@ interface ICreateClaimableBalanceRequest {
 }
 
 interface IOfferRequest {
-  buyingCode: string;
-  buyingIssuer: string;
-  sellingCode: string;
-  sellingIssuer: string;
   amount: string;
   price: string;
   offerID: string;
