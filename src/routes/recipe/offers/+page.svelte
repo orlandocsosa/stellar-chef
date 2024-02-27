@@ -5,7 +5,12 @@
   import Card from '../../../components/salient/Card.svelte';
   import RadioOptions from '../../../components/salient/RadioOptions.svelte';
   import { parseEntriesValues, sliceString } from '../../../utils';
-  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
+  import {
+    buildTransaction,
+    getAssetFromUser,
+    getSponsorWrapperOperations,
+    server
+  } from '../../../services/stellar/utils';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
   import type { IOfferRequest, IOfferRecord } from '../../../services/stellar/types';
   import Select from '../../../components/salient/Select.svelte';
@@ -31,8 +36,14 @@
 
       const options = {
         price: price,
-        buying: getAssetFromUser(isBuyingNative, buyingSelectedAsset, { code: buyingCode, issuer: buyingIssuer }),
-        selling: getAssetFromUser(isSellingNative, sellingSelectedAsset, { code: sellingCode, issuer: sellingIssuer }),
+        buying: getAssetFromUser(isBuyingNative, storedAssets, buyingSelectedAsset, {
+          code: buyingCode,
+          issuer: buyingIssuer
+        }),
+        selling: getAssetFromUser(isSellingNative, storedAssets, sellingSelectedAsset, {
+          code: sellingCode,
+          issuer: sellingIssuer
+        }),
         offerId: offerID,
         source: sourceKeypair.publicKey()
       };
@@ -110,23 +121,6 @@
         offersRecords = offersRecords;
       });
     }
-  }
-
-  function getAssetFromUser(isNative: boolean, selectedAsset: number | null, data: Record<string, string>) {
-    if (isNative) {
-      return Asset.native();
-    }
-
-    if (typeof selectedAsset === 'number') {
-      const { code, issuer } = storedAssets[selectedAsset];
-      return new Asset(code, issuer);
-    }
-
-    if ('code' in data && 'issuer' in data) {
-      return new Asset(data.code, data.issuer);
-    }
-
-    throw new Error('Asset not found');
   }
 
   $: if (buyingSelectedAsset !== null) {

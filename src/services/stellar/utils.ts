@@ -5,10 +5,12 @@ import {
   type xdr,
   type Transaction,
   Horizon,
-  Operation
+  Operation,
+  Asset
 } from 'stellar-sdk';
 
 import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
+import type IAsset from '../asset/IAsset';
 
 const server = new Horizon.Server(PUBLIC_STELLAR_NETWORK_URL);
 
@@ -86,9 +88,32 @@ function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: stri
   ];
 }
 
+function getAssetFromUser(
+  isNative: boolean,
+  assets: IAsset[],
+  selectedAsset: number | null,
+  data: Record<string, string>
+): Asset {
+  if (isNative) {
+    return Asset.native();
+  }
+
+  if (typeof selectedAsset === 'number') {
+    const { code, issuer } = assets[selectedAsset];
+    return new Asset(code, issuer);
+  }
+
+  if ('code' in data && 'issuer' in data) {
+    return new Asset(data.code, data.issuer);
+  }
+
+  throw new Error('Asset not found');
+}
+
 export {
-  buildTransaction,
   server,
+  buildTransaction,
+  getAssetFromUser,
   submitTransaction,
   checkClawbackStatus,
   checkAssetFrozen,

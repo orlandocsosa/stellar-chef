@@ -5,7 +5,7 @@
   import Claimant from '../../../components/claimable-balance/Claimant.svelte';
   import createPredicate from '../../../services/stellar/predicateFactory';
   import { claimants } from '../../../store/claimants';
-  import { buildTransaction, findClaimableBalance, server } from '../../../services/stellar/utils';
+  import { buildTransaction, findClaimableBalance, getAssetFromUser, server } from '../../../services/stellar/utils';
   import CheckClaimableBalance from '../../../components/claimable-balance/CheckClaimableBalance.svelte';
   import ClaimBalance from '../../../components/claimable-balance/ClaimBalance.svelte';
   import TextArea from '../../../components/salient/TextArea.svelte';
@@ -67,7 +67,7 @@
 
       const operation = Operation.createClaimableBalance({
         amount,
-        asset: getAssetFromUser({ code, issuer }),
+        asset: getAssetFromUser(isNative, storedAssets, selectedAsset, { code, issuer }),
         claimants: $claimants.map(
           (claimant) => new StellarClaimant(claimant.destination, createPredicate(claimant.predicate))
         )
@@ -82,23 +82,6 @@
       textArea.isError = true;
       textArea.value = `${error}`;
     }
-  }
-
-  function getAssetFromUser(data: Record<string, string>) {
-    if (isNative) {
-      return Asset.native();
-    }
-
-    if (typeof selectedAsset === 'number') {
-      const { code, issuer } = storedAssets[selectedAsset];
-      return new Asset(code, issuer);
-    }
-
-    if ('code' in data && 'issuer' in data) {
-      return new Asset(data.code, data.issuer);
-    }
-
-    throw new Error('Asset not found');
   }
 </script>
 
