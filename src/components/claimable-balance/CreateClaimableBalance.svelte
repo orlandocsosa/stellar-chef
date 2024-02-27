@@ -1,18 +1,27 @@
 <script lang="ts">
-  import type { Horizon } from 'stellar-sdk';
   import Card from '../salient/Card.svelte';
   import Button from '../salient/Button.svelte';
   import { claimants } from '../../store/claimants';
+  import Select from '../salient/Select.svelte';
+  import type IAsset from '../../services/asset/IAsset';
+  import { sliceString } from '../../utils';
 
   export let isNative = false;
+  export let assets: IAsset[];
+  export let selectedAsset: number | null;
 
   function toggleIsNative() {
+    selectedAsset = null;
     isNative = !isNative;
   }
 
   function addClaimant() {
     $claimants.push({ destination: '', predicate: { type: '' } });
     $claimants = $claimants;
+  }
+
+  $: if (selectedAsset !== null) {
+    isNative = false;
   }
 </script>
 
@@ -23,9 +32,14 @@
     <div class="flex flex-row items-center gap-3">
       <h3 class="text-lg">Asset</h3>
       <Button onClick={toggleIsNative} color={isNative ? 'blue' : 'white'} className="h-8">Native</Button>
+      <Select color={selectedAsset !== null ? 'blue' : 'white'} className="h-8" bind:value={selectedAsset}>
+        {#each assets as { code, issuer }, i}
+          <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
+        {/each}
+      </Select>
     </div>
 
-    {#if !isNative}
+    {#if !isNative && selectedAsset === null}
       <label>
         <p class="text-sm font-light text-black/50">Code</p>
         <input name="code" type="text" class="w-full" />
