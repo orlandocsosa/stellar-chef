@@ -1,14 +1,20 @@
 <script lang="ts">
   import { Asset, Keypair, Operation, xdr } from 'stellar-sdk';
+  import AssetService from '../../../services/asset/Asset';
   import Button from '../../../components/salient/Button.svelte';
   import Card from '../../../components/salient/Card.svelte';
   import RadioOptions from '../../../components/salient/RadioOptions.svelte';
-  import { parseEntriesValues } from '../../../utils';
+  import { parseEntriesValues, sliceString } from '../../../utils';
   import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
   import type { IOfferRequest, IOfferRecord } from '../../../services/stellar/types';
+  import Select from '../../../components/salient/Select.svelte';
 
+  const assetsService = new AssetService();
+  const storedAssets = assetsService.getAll();
   let offerType: 'buy' | 'sell' | 'passiveSell' = 'sell';
+  let buyingSelectedAsset: number | null;
+  let sellingSelectedAsset: number | null;
   let isBuyingNative = false;
   let isSellingNative = false;
   let offersRecords: IOfferRecord[] = [];
@@ -25,8 +31,8 @@
 
       const options = {
         price: price,
-        buying: isBuyingNative ? Asset.native() : new Asset(buyingCode, buyingIssuer),
-        selling: isSellingNative ? Asset.native() : new Asset(sellingCode, sellingIssuer),
+        buying: getAssetFromUser(isBuyingNative, buyingSelectedAsset, { code: buyingCode, issuer: buyingIssuer }),
+        selling: getAssetFromUser(isSellingNative, sellingSelectedAsset, { code: sellingCode, issuer: sellingIssuer }),
         offerId: offerID,
         source: sourceKeypair.publicKey()
       };
@@ -105,6 +111,31 @@
       });
     }
   }
+
+  function getAssetFromUser(isNative: boolean, selectedAsset: number | null, data: Record<string, string>) {
+    if (isNative) {
+      return Asset.native();
+    }
+
+    if (typeof selectedAsset === 'number') {
+      const { code, issuer } = storedAssets[selectedAsset];
+      return new Asset(code, issuer);
+    }
+
+    if ('code' in data && 'issuer' in data) {
+      return new Asset(data.code, data.issuer);
+    }
+
+    throw new Error('Asset not found');
+  }
+
+  $: if (buyingSelectedAsset !== null) {
+    isBuyingNative = false;
+  }
+
+  $: if (sellingSelectedAsset !== null) {
+    isSellingNative = false;
+  }
 </script>
 
 <div class="flex flex-row items-start gap-10 justify-center">
@@ -127,13 +158,26 @@
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Buying</h3>
           <Button
-            onClick={() => (isBuyingNative = !isBuyingNative)}
+            onClick={() => {
+              buyingSelectedAsset = null;
+              isBuyingNative = !isBuyingNative;
+            }}
             color={isBuyingNative ? 'blue' : 'white'}
             className="h-8">Native</Button
           >
+
+          <Select
+            className="h-8"
+            color={buyingSelectedAsset !== null ? 'blue' : 'white'}
+            bind:value={buyingSelectedAsset}
+          >
+            {#each storedAssets as { code, issuer }, i}
+              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
+            {/each}
+          </Select>
         </div>
 
-        {#if !isBuyingNative}
+        {#if !isBuyingNative && buyingSelectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
             <input type="text" name="buyingCode" />
@@ -150,13 +194,25 @@
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Selling</h3>
           <Button
-            onClick={() => (isSellingNative = !isSellingNative)}
+            onClick={() => {
+              sellingSelectedAsset = null;
+              isSellingNative = !isSellingNative;
+            }}
             color={isSellingNative ? 'blue' : 'white'}
             className="h-8">Native</Button
           >
+          <Select
+            className="h-8"
+            color={sellingSelectedAsset !== null ? 'blue' : 'white'}
+            bind:value={sellingSelectedAsset}
+          >
+            {#each storedAssets as { code, issuer }, i}
+              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
+            {/each}
+          </Select>
         </div>
 
-        {#if !isSellingNative}
+        {#if !isSellingNative && sellingSelectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
             <input type="text" name="sellingCode" />
