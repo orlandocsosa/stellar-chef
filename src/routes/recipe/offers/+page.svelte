@@ -1,0 +1,240 @@
+<script lang="ts">
+  import { Asset, Keypair, Operation, xdr } from 'stellar-sdk';
+  import Button from '../../../components/salient/Button.svelte';
+  import Card from '../../../components/salient/Card.svelte';
+  import RadioOptions from '../../../components/salient/RadioOptions.svelte';
+  import { parseEntriesValues } from '../../../utils';
+  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
+  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import type { IOfferRequest, IOfferRecord } from '../../../services/stellar/types';
+
+  let offerType: 'buy' | 'sell' | 'passiveSell' = 'sell';
+  let isBuyingNative = false;
+  let isSellingNative = false;
+  let offersRecords: IOfferRecord[] = [];
+  let jsonValue: object;
+
+  async function handleOnSubmit(e: Event) {
+    try {
+      const formData = new FormData(e.currentTarget as HTMLFormElement);
+      const { amount, buyingCode, buyingIssuer, sellingCode, sellingIssuer, offerID, price, source, sponsor } =
+        parseEntriesValues<IOfferRequest>(formData);
+
+      const sourceKeypair = Keypair.fromSecret(source);
+      const sponsorKeypair = Keypair.fromSecret(sponsor);
+
+      const options = {
+        price: price,
+        buying: isBuyingNative ? Asset.native() : new Asset(buyingCode, buyingIssuer),
+        selling: isSellingNative ? Asset.native() : new Asset(sellingCode, sellingIssuer),
+        offerId: offerID,
+        source: sourceKeypair.publicKey()
+      };
+
+      const offerOperations: Record<typeof offerType, xdr.Operation> = {
+        buy: Operation.manageBuyOffer({
+          buyAmount: amount,
+          ...options
+        }),
+        sell: Operation.manageSellOffer({
+          amount: amount,
+          ...options
+        }),
+        passiveSell: Operation.createPassiveSellOffer({
+          amount,
+          ...options
+        })
+      };
+
+      const operations = sponsor
+        ? [
+            ...getSponsorWrapperOperations(
+              offerOperations[offerType],
+              sponsorKeypair.publicKey(),
+              sourceKeypair.publicKey()
+            )
+          ]
+        : [offerOperations[offerType]];
+
+      const transaction = buildTransaction(await server.loadAccount(sourceKeypair.publicKey()), operations);
+      transaction.sign(sourceKeypair);
+      if (sponsor) transaction.sign(sponsorKeypair);
+
+      const result = await server.submitTransaction(transaction);
+
+      if (result.successful) {
+        jsonValue = {
+          envXdr: result.envelope_xdr,
+          resultXdr: result.result_xdr,
+          offerResults: result['offerResults' as keyof typeof result]
+        };
+      } else {
+        jsonValue = result;
+      }
+    } catch (e) {
+      jsonValue = { error: `${e}` };
+    }
+  }
+
+  async function handleOffersSearch(e: Event) {
+    offersRecords = [];
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const publicKey = formData.get('publicKey');
+
+    if (publicKey) {
+      const { records } = await server.offers().forAccount(publicKey.toString()).call();
+
+      records.map(({ amount, buying, selling, id, price, seller }) => {
+        let buyingCode = '';
+        let sellingCode = '';
+
+        if (buying.asset_type === 'native') buyingCode = 'XLM';
+        if (selling.asset_type === 'native') sellingCode = 'XLM';
+        if (buying.asset_code) buyingCode = buying.asset_code;
+        if (selling.asset_code) sellingCode = selling.asset_code;
+
+        offersRecords.push({
+          amount,
+          buying: { code: buyingCode, issuer: buying.asset_issuer || '' },
+          selling: { code: sellingCode, issuer: selling.asset_issuer || '' },
+          id,
+          price,
+          seller
+        });
+        offersRecords = offersRecords;
+      });
+    }
+  }
+</script>
+
+<div class="flex flex-row items-start gap-10 justify-center">
+  <Card className="w-[650px]">
+    <h2 class="text-2xl mb-8">Create Offer</h2>
+
+    <div class="flex flex-row justify-start text-sm mt-5">
+      <RadioOptions
+        options={[
+          { label: 'Buying', value: 'buy', checked: offerType === 'buy' },
+          { label: 'Selling', value: 'sell', checked: offerType === 'sell' },
+          { label: 'Passive Selling', value: 'passiveSell', checked: offerType === 'passiveSell' }
+        ]}
+        bind:group={offerType}
+      />
+    </div>
+
+    <form class="flex flex-col gap-7 mt-8" on:submit|preventDefault={handleOnSubmit}>
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-row gap-3">
+          <h3 class="text-lg">Buying</h3>
+          <Button
+            onClick={() => (isBuyingNative = !isBuyingNative)}
+            color={isBuyingNative ? 'blue' : 'white'}
+            className="h-8">Native</Button
+          >
+        </div>
+
+        {#if !isBuyingNative}
+          <label class="flex flex-col gap-1">
+            <p class="text-sm text-gray-600">Code</p>
+            <input type="text" name="buyingCode" />
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <p class="text-sm text-gray-600">Issuer</p>
+            <input type="text" name="buyingIssuer" />
+          </label>
+        {/if}
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-row gap-3">
+          <h3 class="text-lg">Selling</h3>
+          <Button
+            onClick={() => (isSellingNative = !isSellingNative)}
+            color={isSellingNative ? 'blue' : 'white'}
+            className="h-8">Native</Button
+          >
+        </div>
+
+        {#if !isSellingNative}
+          <label class="flex flex-col gap-1">
+            <p class="text-sm text-gray-600">Code</p>
+            <input type="text" name="sellingCode" />
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <p class="text-sm text-gray-600">Issuer</p>
+            <input type="text" name="sellingIssuer" />
+          </label>
+        {/if}
+      </div>
+
+      <label class="flex flex-col gap-1">
+        Amount you are {offerType === 'buy' ? 'buying' : 'selling'}
+        <input type="text" name="amount" />
+      </label>
+
+      <label class="flex flex-col gap-1">
+        Price of 1 unit of buying in terms of {offerType === 'buy' ? 'selling' : 'buying'}
+        <input type="text" name="price" />
+      </label>
+
+      {#if offerType !== 'passiveSell'}
+        <label class="flex flex-col gap-1">
+          Offer ID
+          <input type="text" name="id" />
+        </label>
+      {/if}
+
+      <label class="flex flex-col gap-1">
+        Source Account
+        <input type="text" name="source" />
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <p>Sponsor <span class="text-sm text-gray-600">(optional)</span></p>
+        <input type="text" name="sponsor" />
+      </label>
+
+      <Button type="submit">Create offer</Button>
+    </form>
+
+    {#if jsonValue}
+      <div class="mt-8">
+        <JsonBlock>{JSON.stringify(jsonValue, null, 2)}</JsonBlock>
+      </div>
+    {/if}
+  </Card>
+
+  <Card className="w-[650px]">
+    <h2 class="text-2xl mb-8">Search Offers</h2>
+
+    <form on:submit|preventDefault={handleOffersSearch}>
+      <label class="flex flex-col gap-1">
+        Public Key
+        <input type="text" name="publicKey" />
+      </label>
+
+      <Button type="submit" className="mt-7">Search</Button>
+    </form>
+
+    {#each offersRecords as { amount, buying, id, price, seller, selling }, i}
+      <div class="flex flex-col gap-2 bg-gray-50 border border-gray-200 rounded-md px-5 py-2 mt-7">
+        <p>ID: <span class="text-sm text-gray-600">{id}</span></p>
+        <p>Amount: <span class="text-sm text-gray-600">{amount}</span></p>
+        <p>Price: <span class="text-sm text-gray-600">{price}</span></p>
+        <p>Seller: <span class="text-sm text-gray-600">{seller}</span></p>
+        <p>
+          Buying Asset: <span class="text-sm text-gray-600"
+            >{buying.code}{buying.issuer ? `|${buying.issuer}` : ''}</span
+          >
+        </p>
+        <p>
+          Selling Asset: <span class="text-sm text-gray-600"
+            >{selling.code}{selling.issuer ? `|${selling.issuer}` : ''}</span
+          >
+        </p>
+      </div>
+    {/each}
+  </Card>
+</div>
