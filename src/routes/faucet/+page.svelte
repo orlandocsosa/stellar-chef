@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Asset, Keypair, Operation } from 'stellar-sdk';
-  import Button from '../../components/Button.svelte';
-  import Card from '../../components/Card.svelte';
+  import Button from '../../components/salient/Button.svelte';
+  import Card from '../../components/salient/Card.svelte';
   import { Account } from '../../services/stellar/Account';
   import { buildTransaction, server } from '../../services/stellar/utils';
   import { parseEntriesValues } from '../../utils';
@@ -15,6 +15,7 @@
     destination: string;
   }
 
+  let isNative: boolean;
   let payment: IFaucet = {
     code: '',
     issuer: '',
@@ -22,6 +23,10 @@
     amount: '',
     destination: ''
   };
+
+  function toggleIsNative() {
+    isNative = !isNative;
+  }
 
   async function handlePayment(e: any) {
     try {
@@ -33,7 +38,7 @@
       const transaction = buildTransaction(await server.loadAccount(sourcePaymentAccount.publicKey), [
         Operation.payment({
           amount: form.amount,
-          asset: new Asset(form.code, form.issuer),
+          asset: isNative ? Asset.native() : new Asset(form.code, form.issuer),
           destination: destinationAccount.publicKey
         })
       ]);
@@ -59,17 +64,26 @@
   });
 </script>
 
-<Card title="Faucet">
+<Card className="max-w-[650px] m-auto">
   <form class="flex flex-col gap-5 items-center" on:submit|preventDefault={handlePayment}>
-    <label class="flex flex-col w-full">
-      Asset Code
-      <input name="code" type="text" bind:value={payment.code} />
-    </label>
+    <div class="w-full">
+      <div class="mb-4">
+        <h3 class="text-lg">Asset</h3>
+        <Button onClick={toggleIsNative} color={isNative ? 'blue' : 'white'} className="h-8">Native</Button>
+      </div>
 
-    <label class="flex flex-col w-full">
-      Asset Issuer
-      <input name="issuer" type="text" bind:value={payment.issuer} />
-    </label>
+      {#if !isNative}
+        <label class="flex flex-col w-full">
+          <p class="text-sm text-gray-600">Code</p>
+          <input name="code" type="text" bind:value={payment.code} />
+        </label>
+
+        <label class="flex flex-col w-full">
+          <p class="text-sm text-gray-600">Issuer</p>
+          <input name="issuer" type="text" bind:value={payment.issuer} />
+        </label>
+      {/if}
+    </div>
 
     <label class="flex flex-col w-full">
       Secret Key
@@ -86,8 +100,8 @@
       <input name="destination" type="text" bind:value={payment.destination} />
     </label>
 
-    <Button label="Faucet" />
+    <Button type="submit" className="w-full">Fond</Button>
   </form>
-</Card>
 
-<button on:click={handleShareLink}>Share Link</button>
+  <Button type="button" onClick={handleShareLink} className="mt-5">Share Link</Button>
+</Card>
