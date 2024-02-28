@@ -14,11 +14,14 @@ interface IClaimant {
   predicate: IPredicate;
 }
 
+interface ICreateClaimableBalanceRequest {
+  code: string;
+  issuer: string;
+  amount: string;
+  secret: string;
+}
+
 interface IOfferRequest {
-  buyingCode: string;
-  buyingIssuer: string;
-  sellingCode: string;
-  sellingIssuer: string;
   amount: string;
   price: string;
   offerID: string;
@@ -35,4 +38,4 @@ interface IOfferRecord {
   price: string;
 }
 
-export type { IClaimant, IPredicate, IOfferRequest, IOfferRecord };
+export type { IClaimant, IPredicate, IOfferRequest, IOfferRecord, ICreateClaimableBalanceRequest };

@@ -1,32 +1,55 @@
 <script lang="ts">
   import { Asset, Keypair, Operation, xdr } from 'stellar-sdk';
+  import AssetService from '../../../services/asset/Asset';
   import Button from '../../../components/salient/Button.svelte';
   import Card from '../../../components/salient/Card.svelte';
   import RadioOptions from '../../../components/salient/RadioOptions.svelte';
-  import { parseEntriesValues } from '../../../utils';
+  import { parseEntriesValues, sliceString } from '../../../utils';
   import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
   import type { IOfferRequest, IOfferRecord } from '../../../services/stellar/types';
+  import Select from '../../../components/salient/Select.svelte';
 
+  const assetsService = new AssetService();
+  const storedAssets = assetsService.getAll();
   let offerType: 'buy' | 'sell' | 'passiveSell' = 'sell';
-  let isBuyingNative = false;
-  let isSellingNative = false;
   let offersRecords: IOfferRecord[] = [];
   let jsonValue: object;
+  let userAssets = {
+    buying: {
+      isNative: false,
+      code: '',
+      issuer: '',
+      selectedAsset: null
+    },
+    selling: {
+      isNative: false,
+      code: '',
+      issuer: '',
+      selectedAsset: null
+    }
+  };
 
   async function handleOnSubmit(e: Event) {
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement);
-      const { amount, buyingCode, buyingIssuer, sellingCode, sellingIssuer, offerID, price, source, sponsor } =
-        parseEntriesValues<IOfferRequest>(formData);
+      const { amount, offerID, price, source, sponsor } = parseEntriesValues<IOfferRequest>(formData);
 
       const sourceKeypair = Keypair.fromSecret(source);
       const sponsorKeypair = sponsor ? Keypair.fromSecret(sponsor) : undefined;
 
+      const buyingAsset = userAssets.buying.isNative
+        ? Asset.native()
+        : new Asset(userAssets.buying.code, userAssets.buying.issuer);
+
+      const sellingAsset = userAssets.selling.isNative
+        ? Asset.native()
+        : new Asset(userAssets.selling.code, userAssets.selling.issuer);
+
       const options = {
         price: price,
-        buying: isBuyingNative ? Asset.native() : new Asset(buyingCode, buyingIssuer),
-        selling: isSellingNative ? Asset.native() : new Asset(sellingCode, sellingIssuer),
+        buying: buyingAsset,
+        selling: sellingAsset,
         offerId: offerID,
         source: sourceKeypair.publicKey()
       };
@@ -105,6 +128,19 @@
       });
     }
   }
+
+  function handleSelectedAsset(value: number | null, type: 'buying' | 'selling') {
+    userAssets[type].code = value !== null ? storedAssets[value].code : '';
+    userAssets[type].issuer = value !== null ? storedAssets[value].issuer : '';
+  }
+
+  $: if (userAssets.buying.selectedAsset !== null) {
+    userAssets.buying.isNative = false;
+  }
+
+  $: if (userAssets.buying.selectedAsset !== null) {
+    userAssets.selling.isNative = false;
+  }
 </script>
 
 <div class="flex flex-row items-start gap-10 justify-center">
@@ -127,21 +163,35 @@
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Buying</h3>
           <Button
-            onClick={() => (isBuyingNative = !isBuyingNative)}
-            color={isBuyingNative ? 'blue' : 'white'}
+            onClick={() => {
+              userAssets.buying.selectedAsset = null;
+              userAssets.buying.isNative = !userAssets.buying.isNative;
+            }}
+            color={userAssets.buying.isNative ? 'blue' : 'white'}
             className="h-8">Native</Button
           >
+
+          <Select
+            on:selected={(e) => handleSelectedAsset(e.detail, 'buying')}
+            className="h-8"
+            color={userAssets.buying.selectedAsset !== null ? 'blue' : 'white'}
+            bind:value={userAssets.buying.selectedAsset}
+          >
+            {#each storedAssets as { code, issuer }, i}
+              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
+            {/each}
+          </Select>
         </div>
 
-        {#if !isBuyingNative}
+        {#if !userAssets.buying.isNative && userAssets.buying.selectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
-            <input type="text" name="buyingCode" />
+            <input type="text" bind:value={userAssets.buying.code} />
           </label>
 
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Issuer</p>
-            <input type="text" name="buyingIssuer" />
+            <input type="text" bind:value={userAssets.buying.issuer} />
           </label>
         {/if}
       </div>
@@ -150,21 +200,34 @@
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Selling</h3>
           <Button
-            onClick={() => (isSellingNative = !isSellingNative)}
-            color={isSellingNative ? 'blue' : 'white'}
+            onClick={() => {
+              userAssets.selling.selectedAsset = null;
+              userAssets.selling.isNative = !userAssets.selling.isNative;
+            }}
+            color={userAssets.selling.isNative ? 'blue' : 'white'}
             className="h-8">Native</Button
           >
+          <Select
+            on:selected={(e) => handleSelectedAsset(e.detail, 'selling')}
+            className="h-8"
+            color={userAssets.selling.selectedAsset !== null ? 'blue' : 'white'}
+            bind:value={userAssets.selling.selectedAsset}
+          >
+            {#each storedAssets as { code, issuer }, i}
+              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
+            {/each}
+          </Select>
         </div>
 
-        {#if !isSellingNative}
+        {#if !userAssets.selling.isNative && userAssets.selling.selectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
-            <input type="text" name="sellingCode" />
+            <input type="text" bind:value={userAssets.selling.code} />
           </label>
 
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Issuer</p>
-            <input type="text" name="sellingIssuer" />
+            <input type="text" bind:value={userAssets.selling.issuer} />
           </label>
         {/if}
       </div>

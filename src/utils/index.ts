@@ -14,4 +14,8 @@ function parseEntriesValues<T>(data: FormData | URLSearchParams): T {
   return newObj as T;
 }
 
-export { allowOnlyAlphanumeric, parseEntriesValues };
+function sliceString(value: string): string {
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+export { allowOnlyAlphanumeric, parseEntriesValues, sliceString };

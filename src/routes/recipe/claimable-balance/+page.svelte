@@ -1,16 +1,22 @@
 <script lang="ts">
   import { Asset, Operation, Claimant as StellarClaimant, Keypair, Horizon } from 'stellar-sdk';
+  import AssetService from '../../../services/asset/Asset';
   import Card from '../../../components/salient/Card.svelte';
   import Claimant from '../../../components/claimable-balance/Claimant.svelte';
   import createPredicate from '../../../services/stellar/predicateFactory';
   import { claimants } from '../../../store/claimants';
-  import { buildTransaction, findClaimableBalance, server } from '../../../services/stellar/utils';
+  import { buildTransaction, findClaimableBalance, getAssetFromUser, server } from '../../../services/stellar/utils';
   import CheckClaimableBalance from '../../../components/claimable-balance/CheckClaimableBalance.svelte';
   import ClaimBalance from '../../../components/claimable-balance/ClaimBalance.svelte';
   import TextArea from '../../../components/salient/TextArea.svelte';
   import ClaimableBalancesRecords from '../../../components/claimable-balance/ClaimableBalancesRecords.svelte';
   import CreateClaimableBalance from '../../../components/claimable-balance/CreateClaimableBalance.svelte';
+  import { parseEntriesValues } from '../../../utils';
+  import type { ICreateClaimableBalanceRequest } from '../../../services/stellar/types';
 
+  const assetsService = new AssetService();
+  const storedAssets = assetsService.getAll();
+  let selectedAsset: number | null;
   let isNative = false;
   let findClaimableBalancePublicKey: string;
   let findClaimableBalanceSecretKey: string;
@@ -56,16 +62,12 @@
 
     try {
       const formData = new FormData(e.currentTarget);
-      let obj: Record<string, string> = {};
+      const { amount, code, issuer, secret } = parseEntriesValues<ICreateClaimableBalanceRequest>(formData);
+      const keypair = Keypair.fromSecret(secret);
 
-      for (const [key, value] of formData.entries()) {
-        obj[key] = value.toString();
-      }
-
-      const keypair = Keypair.fromSecret(obj.secret);
       const operation = Operation.createClaimableBalance({
-        amount: obj.amount,
-        asset: isNative ? Asset.native() : new Asset(obj.code, obj.issuer),
+        amount,
+        asset: getAssetFromUser(isNative, storedAssets, selectedAsset, { code, issuer }),
         claimants: $claimants.map(
           (claimant) => new StellarClaimant(claimant.destination, createPredicate(claimant.predicate))
         )
@@ -86,7 +88,7 @@
 <div class="flex justify-center">
   <div class="grid grid-cols-2 gap-10 max-lg:grid-cols-1">
     <form on:submit|preventDefault={handleCreateClaimableBalance}>
-      <CreateClaimableBalance bind:isNative>
+      <CreateClaimableBalance bind:isNative assets={storedAssets} bind:selectedAsset>
         <div class="w-full mt-8">
           <TextArea isError={textArea.isError} value={textArea.transaction === 'create' ? textArea.value : ''} />
         </div>
