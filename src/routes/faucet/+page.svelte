@@ -55,7 +55,7 @@
   function handleShareLink() {
     const params = new URLSearchParams({ ...payment });
     window.history.pushState({}, '', `?${params.toString()}`);
-    navigator.clipboard.writeText(`?${params.toString()}`);
+    navigator.clipboard.writeText(window.location.href);
   }
 
   onMount(() => {
@@ -100,8 +100,8 @@
       <input name="destination" type="text" bind:value={payment.destination} />
     </label>
 
-    <Button type="submit" className="w-full">Fond</Button>
+    <Button type="submit" className="w-full">Send payment</Button>
   </form>
 
-  <Button type="button" onClick={handleShareLink} className="mt-5">Share Link</Button>
+  <Button type="button" onClick={handleShareLink} className="mt-5">Create shareable link</Button>
 </Card>
