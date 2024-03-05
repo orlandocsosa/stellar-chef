@@ -31,6 +31,11 @@
       title: 'Freeze assets',
       link: 'freeze-assets',
       description: 'Freeze assets'
+    },
+    {
+      title: 'Change trust',
+      link: 'change-trust',
+      description: 'Change trust'
     }
   ];
 </script>
