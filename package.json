@@ -55,6 +55,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@zerodevx/svelte-toast": "^0.9.5",
     "stellar-sdk": "^11.0.1"
   }
 }
