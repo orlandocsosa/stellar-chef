@@ -1,5 +1,6 @@
 <script>
   import '../app.css';
+  import { SvelteToast } from '@zerodevx/svelte-toast';
 </script>
 
 <head>
@@ -10,4 +11,5 @@
   <a class="text-white" href="/stellar-chef/">Recipes</a>
   <a class="text-white" href="/stellar-chef/faucet">Faucet</a>
 </header>
+<SvelteToast />
 <slot />
