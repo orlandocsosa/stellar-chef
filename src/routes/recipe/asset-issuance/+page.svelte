@@ -13,6 +13,7 @@
   import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
   import Link from '../../../components/Link.svelte';
+  import AssetService from '../../../services/asset/Asset';
 
   interface IAssetIssuanceForm {
     code: string;
@@ -37,6 +38,7 @@
   }
 
   const { showToast } = useToast();
+  const assetService = new AssetService();
   let jsonValue: object | null = null;
   let isLoading = false;
   let outputs: IOutputItem[] = [];
@@ -135,7 +137,9 @@
       const result = await server.submitTransaction(transaction);
       jsonValue = result;
 
-      showToast('Asset created', 'success');
+      assetService.set({ code, issuer: issuer.publicKey, issuerSecret: issuer.secretKey! });
+
+      showToast('Asset created and stored in Local Storage', 'success');
 
       outputs.push({
         code,
