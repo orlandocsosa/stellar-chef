@@ -1,256 +1,266 @@
 <script lang="ts">
-  import { Asset, Keypair, Operation } from 'stellar-sdk';
+  import { Asset, AuthClawbackEnabledFlag, AuthRevocableFlag, Keypair, Operation } from 'stellar-sdk';
 
-  import AccountDetails from '../../../components/AccountDetails.svelte';
-  import AssetOutput from '../../../components/AssetOutput.svelte';
-  import Button from '../../../components/Button.svelte';
-  import Card from '../../../components/Card.svelte';
-  import Checkbox from '../../../components/Checkbox.svelte';
-  import CoinInfo from '../../../components/CoinInfo.svelte';
-  import Input from '../../../components/Input.svelte';
-  import Status from '../../../components/Status.svelte';
-
+  import Label from '../../../components/Label.svelte';
+  import Button from '../../../components/salient/Button.svelte';
+  import Card from '../../../components/salient/Card.svelte';
+  import Title from '../../../components/salient/Title.svelte';
   import { Account } from '../../../services/stellar/Account';
-  import AssetStorageService from '../../../services/asset/Asset';
-  import type IAsset from '../../../services/asset/IAsset';
-  import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
-  import { createHolders } from '../../../services/stellar/transactions/createHolders';
-  import { prepareClawbackOperations } from '../../../services/stellar/transactions/prepareClawbackOperations';
-  import { prepareFreezeAssetTransaction } from '../../../services/stellar/transactions/prepareFreezeAssetTransaction';
-  import { submitDisableTrustlineTransactionForFrozenAsset } from '../../../services/stellar/transactions/submitDisableTrustlineTransactionForFrozenAsset';
+  import { parseEntriesValues, sliceString } from '../../../utils';
+  import { buildTransaction, server } from '../../../services/stellar/utils';
+  import useToast from '../../../composables/useToast';
+  import Span from '../../../components/Span.svelte';
+  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
+  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
 
-  let assetCode = '';
-  let accounts: Account[] = [];
-  let assetCodeForCoinInfo = '';
-  let paymentAmount = 1000000;
-  let balancePerHolder = 100;
+  interface IAssetIssuanceForm {
+    code: string;
+    amount: string;
+    clawback?: boolean;
+    frozen?: boolean;
+    'holders-amount'?: string;
+    'holders-balance'?: string;
+  }
+
+  interface IOutputItem {
+    code: string;
+    issuer: {
+      publicKey: string;
+      privateKey: string;
+    };
+    distributor: {
+      publicKey: string;
+      privateKey: string;
+    };
+    holders: { publicKey: string; privateKey: string }[];
+  }
+
+  const { showToast } = useToast();
+  let jsonValue: object | null = null;
   let isLoading = false;
-  let isClawbackEnabled = false;
-  let isFrozenAsset = false;
-  let shouldCreateHolders = false;
-  let numberOfHolders = 1;
-  let status = '';
-  let holdersAccounts: Account[] = [];
-  let showHolders = false;
-  let isTransactionSuccessful = false;
-  let assetService = new AssetStorageService();
-  let transactionHash = '';
+  let outputs: IOutputItem[] = [];
+  let isHolderSectionVisible = false;
 
-  async function prepare() {
-    accounts = [];
-    holdersAccounts = [];
-    status = '';
+  async function handleOnSubmit(e: Event) {
+    jsonValue = null;
     isLoading = true;
-    isTransactionSuccessful = false;
-
-    if (shouldCreateHolders && numberOfHolders * balancePerHolder > paymentAmount) {
-      status = 'Error: Not enough funds for distributor account to create holders.';
-      isLoading = false;
-      return;
-    }
 
     try {
-      const [issuerAccount, distributorAccount] = await Promise.all([
-        Account.create().fundWithFriendBot(),
-        Account.create().fundWithFriendBot()
-      ]);
+      const formData = new FormData(e.target as HTMLFormElement);
+      const {
+        code,
+        amount,
+        'holders-amount': holdersAmount,
+        'holders-balance': holdersBalance,
+        clawback,
+        frozen
+      } = parseEntriesValues<IAssetIssuanceForm>(formData);
 
-      let [issuer, distributor] = await Promise.all([
-        server.loadAccount(issuerAccount.publicKey),
-        server.loadAccount(distributorAccount.publicKey)
-      ]);
+      const issuer = await Account.create().fundWithFriendBot();
+      const distributor = await Account.create().fundWithFriendBot();
 
-      status = 'Accounts created...';
-      accounts = [issuerAccount, distributorAccount];
+      const asset = new Asset(code, issuer.publicKey);
 
-      const asset = new Asset(assetCode, issuer.accountId());
+      const changeDistributorTrustOp = Operation.changeTrust({
+        asset,
+        source: distributor.publicKey
+      });
+      const paymentOp = Operation.payment({
+        destination: distributor.publicKey,
+        asset,
+        amount
+      });
 
       let operations = [];
-      if (isClawbackEnabled) {
-        operations.push(...prepareClawbackOperations(issuerAccount.publicKey));
-      }
-      if (isFrozenAsset && !isClawbackEnabled) {
-        operations.push(...prepareFreezeAssetTransaction(issuerAccount.publicKey));
-      }
+      let holdersOperations = [];
+      let tempHolders = [];
 
-      operations.push(Operation.changeTrust({ asset }));
-      operations.push(
-        Operation.payment({
-          source: issuerAccount.publicKey,
-          destination: distributor.accountId(),
-          asset,
-          amount: paymentAmount.toString()
-        })
-      );
-
-      const transaction = buildTransaction(distributor, operations);
-      transaction.sign(Keypair.fromSecret(distributorAccount.secretKey));
-      transaction.sign(Keypair.fromSecret(issuerAccount.secretKey));
-
-      const result = await submitTransaction(transaction);
-      transactionHash = result.hash;
-      if (isFrozenAsset && !shouldCreateHolders) {
-        await submitDisableTrustlineTransactionForFrozenAsset(
-          assetCode,
-          distributorAccount.publicKey,
-          issuer,
-          issuerAccount.secretKey
-        );
-      }
-
-      if (shouldCreateHolders && numberOfHolders > 0) {
-        status = 'Creating holders...';
-        holdersAccounts = await createHolders(
-          distributorAccount,
-          numberOfHolders,
-          balancePerHolder ? balancePerHolder.toString() : '',
-          asset
+      if (clawback || frozen)
+        operations.push(
+          Operation.setOptions({
+            setFlags: AuthRevocableFlag,
+            source: issuer.publicKey
+          })
         );
 
-        if (isFrozenAsset) {
-          status = 'Holders created...';
-          for (const holderAccount of holdersAccounts) {
-            await submitDisableTrustlineTransactionForFrozenAsset(
-              assetCode,
-              holderAccount.publicKey,
-              issuer,
-              issuerAccount.secretKey
-            );
-          }
+      if (clawback)
+        operations.push(
+          Operation.setOptions({
+            setFlags: AuthClawbackEnabledFlag,
+            source: issuer.publicKey
+          })
+        );
+
+      if (holdersAmount && holdersBalance) {
+        for (let i = 0; i < +holdersAmount; i++) {
+          const account = await Account.create().fundWithFriendBot();
+
+          holdersOperations.push(
+            ...[
+              Operation.changeTrust({
+                asset,
+                source: account.publicKey
+              }),
+              Operation.payment({
+                destination: account.publicKey,
+                asset,
+                amount: holdersBalance,
+                source: issuer.publicKey
+              })
+            ]
+          );
+
+          tempHolders.push({
+            publicKey: account.publicKey,
+            privateKey: account.secretKey!
+          });
         }
       }
 
-      if (typeof result.successful) {
-        assetCodeForCoinInfo = assetCode;
-        isTransactionSuccessful = true;
+      const transaction = buildTransaction(await server.loadAccount(issuer.publicKey), [
+        ...operations,
+        ...holdersOperations,
+        changeDistributorTrustOp,
+        paymentOp
+      ]);
+      transaction.sign(
+        ...[
+          Keypair.fromSecret(issuer.secretKey!),
+          Keypair.fromSecret(distributor.secretKey!),
+          ...tempHolders.map((acc) => Keypair.fromSecret(acc.privateKey))
+        ]
+      );
 
-        distributor = await server.loadAccount(distributorAccount.publicKey);
+      const result = await server.submitTransaction(transaction);
+      jsonValue = result;
 
-        issuer = await server.loadAccount(issuerAccount.publicKey);
+      showToast('Asset created', 'success');
 
-        status = `Transaction successful. Distributor account balance: ${distributor.balances[0].balance} ${assetCode}`;
+      outputs.push({
+        code,
+        issuer: {
+          publicKey: issuer.publicKey,
+          privateKey: issuer.secretKey!
+        },
+        distributor: {
+          publicKey: distributor.publicKey,
+          privateKey: distributor.secretKey!
+        },
+        holders: tempHolders
+      });
 
-        let assetForSave: IAsset = {
-          code: assetCode,
-          issuer: issuerAccount.publicKey,
-          issuerSecret: issuerAccount.secretKey
-        };
-        assetService.set(assetForSave);
-      }
-    } catch (error) {
-      status = `Error: ${error}`;
+      outputs = outputs;
+    } catch (e) {
+      showToast(`Something went wrong: ${e}`, 'danger');
     } finally {
       isLoading = false;
     }
   }
 </script>
 
-<div class="flex justify-center">
-  <form class="flex flex-col" on:submit|preventDefault={prepare}>
-    <Card title="Inputs">
-      <div class="flex flex-col">
-        <label for="asset-code" class="block mb-1"
-          >Asset Code <span class="text-red-500">*</span>
-          <Input dataCy="asset-code-input" bind:value={assetCode} maxlength={12} disabled={isLoading} required />
-        </label>
-        <label for="payment-amount" class="block mb-1"
-          >Payment to distributor account
-          <Input
-            dataCy="distributor-payment-amount-input"
-            type="number"
-            bind:value={paymentAmount}
-            disabled={isLoading}
-            required
-          />
-          <Checkbox
-            dataCy="clawback-enabled"
-            label="Clawback enabled"
-            bind:checked={isClawbackEnabled}
-            disabled={isLoading}
-          />
-          <Checkbox dataCy="frozen-asset" label="Frozen asset" bind:checked={isFrozenAsset} disabled={isLoading} />
-          <Checkbox
-            dataCy="create-holders"
-            label="Create holders"
-            bind:checked={shouldCreateHolders}
-            disabled={isLoading}
-          />
-          <div class="ml-4">
-            <label for="number-of-holders">
-              How many?<Input
-                dataCy="number-of-holders-input"
-                type="number"
-                bind:value={numberOfHolders}
-                disabled={!shouldCreateHolders || isLoading}
-                required={shouldCreateHolders}
-              /></label
-            >
+<div class="flex flex-row gap-10 justify-center items-start">
+  <Card className="w-[650px]">
+    <Title tag="h2">Create an asset</Title>
 
-            <p>Balance per holder:</p>
-            <label for="balance-value" />
-            <Input
-              dataCy="balance-per-holder-input"
-              type="number"
-              bind:value={balancePerHolder}
-              disabled={!shouldCreateHolders || isLoading}
-              required={shouldCreateHolders}
-            />
-          </div>
-          <div class="flex justify-center items-center">
-            <Button dataCy="prepare-button" label={isLoading ? 'Preparing...' : 'Prepare!'} disabled={isLoading} />
-          </div>
-          <Status {status} {isTransactionSuccessful} {transactionHash} />
+    <form class="flex flex-col gap-5" on:submit|preventDefault={handleOnSubmit}>
+      <Label>
+        Asset code
+        <input type="text" name="code" />
+      </Label>
+
+      <Label>
+        Distributor amount
+        <input type="number" name="amount" value="1000000" />
+      </Label>
+
+      <div class="flex flex-col gap-2">
+        <label>
+          <input type="checkbox" value={true} name="clawback" />
+          CLawback
+        </label>
+
+        <label>
+          <input type="checkbox" value={true} name="frozen" />
+          Frozen
+        </label>
+
+        <label>
+          <input type="checkbox" bind:checked={isHolderSectionVisible} />
+          Holders
         </label>
       </div>
-    </Card>
-  </form>
 
-  <Card title="Output">
-    {#if isTransactionSuccessful}
-      <CoinInfo {assetCodeForCoinInfo} issuerPublicKey={accounts[0].publicKey} dataCy="coin-info-link" />
-    {/if}
+      {#if isHolderSectionVisible}
+        <Label>
+          Amount of holders
+          <input type="number" name="holders-amount" />
+        </Label>
 
-    {#each accounts as { publicKey, secretKey }, i (publicKey)}
-      <div class="mt-4" data-cy={i === 0 ? 'issuer-container' : 'distributor-container'}>
-        <h3 class="text-lg mb-2">
-          {i === 0 ? 'Issuer' : 'Distributor'}
-          <AccountDetails dataCy={i === 0 ? 'issuer-info-link' : 'distributor-info-link'} {publicKey} />
-        </h3>
-        <label for={i === 0 ? 'issuerPublicKey' : 'distributorPublicKey'} class="block mb-2"
-          >Public Key
-          <AssetOutput value={publicKey} />
-        </label>
-        <label for={i === 0 ? 'issuerSecretKey' : 'distributorSecretKey'} class="block">
-          Secret Key
-          <AssetOutput value={secretKey} />
-        </label>
+        <Label>
+          Balance per holder
+          <input type="number" name="holders-balance" value="100" />
+        </Label>
+      {/if}
+
+      <Button type="submit" className="mt-8 h-10 w-full">
+        {#if isLoading}
+          <div class="w-8"><LoadingSpinner /></div>
+        {:else}
+          Change trust
+        {/if}
+      </Button>
+    </form>
+
+    {#if jsonValue}
+      <div class="mt-8">
+        <JsonBlock>{JSON.stringify(jsonValue, null, 2)}</JsonBlock>
       </div>
-    {/each}
-
-    {#if holdersAccounts.length > 0}
-      <Button
-        dataCy="toggle-holders-button"
-        label={showHolders ? 'Hide Holders' : 'Show Holders'}
-        onClick={() => {
-          showHolders = !showHolders;
-        }}
-      />
     {/if}
+  </Card>
 
-    {#if showHolders}
-      {#each holdersAccounts as { publicKey, secretKey }, i (publicKey)}
-        <div class="mt-4" data-cy="holder-{i + 1}-container">
-          <h3 class="text-lg mb-2">Holder {i + 1} <AccountDetails dataCy="holder-{i + 1}-info-link" {publicKey} /></h3>
-          <label for="holder-{i + 1}PublicKey" class="block mb-2"
-            >Public Key
-            <AssetOutput value={publicKey} />
-          </label>
-          <label for="holder-{i + 1}SecretKey" class="block">
-            Secret Key
-            <AssetOutput value={secretKey} />
-          </label>
-        </div>
+  <Card className="w-[650px]">
+    <div class="flex flex-row gap-3 items-center">
+      <Title tag="h2">Output</Title>
+      {#if outputs.length}
+        <a href="data:text/json;charset=utf-8, {JSON.stringify(outputs, null, 2)}" download={'accounts.json'}>
+          Download JSON
+        </a>
+      {/if}
+    </div>
+
+    <ul class="flex flex-col gap-5">
+      {#each outputs as { code, issuer, distributor, holders }, i}
+        <li>
+          <div class="flex flex-col gap-3 bg-gray-50 border border-gray-200 p-5 rounded-md">
+            <div>
+              <Title tag="h3">{code}</Title>
+              <a
+                class="text-blue-500 hover:text-blue-800"
+                href="https://stellar.expert/explorer/testnet/asset/{code}-{issuer.publicKey}"
+              >
+                Stellar expert
+              </a>
+            </div>
+
+            <div class="flex flex-col">
+              <p>Issuer: <Span>{sliceString(issuer.publicKey)}</Span></p>
+              <p>
+                Issuer secret: <Span>{sliceString(issuer.privateKey)}</Span>
+              </p>
+            </div>
+            <div class="flex flex-col">
+              <p>Distributor: <Span>{sliceString(distributor.publicKey)}</Span></p>
+              <p>
+                Distributor secret: <Span>{sliceString(distributor.privateKey)}</Span>
+              </p>
+            </div>
+            <p>Holders: <Span>{holders.length}</Span></p>
+            <a href="data:text/json;charset=utf-8, {JSON.stringify(outputs[i], null, 2)}" download={'accounts.json'}>
+              Download JSON
+            </a>
+          </div>
+        </li>
       {/each}
-    {/if}
+    </ul>
   </Card>
 </div>
