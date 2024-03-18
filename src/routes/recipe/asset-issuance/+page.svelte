@@ -12,6 +12,7 @@
   import Span from '../../../components/Span.svelte';
   import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import Link from '../../../components/Link.svelte';
 
   interface IAssetIssuanceForm {
     code: string;
@@ -232,14 +233,12 @@
       {#each outputs as { code, issuer, distributor, holders }, i}
         <li>
           <div class="flex flex-col gap-3 bg-gray-50 border border-gray-200 p-5 rounded-md">
-            <div>
+            <div class="flex flex-row gap-3">
               <Title tag="h3">{code}</Title>
-              <a
-                class="text-blue-500 hover:text-blue-800"
-                href="https://stellar.expert/explorer/testnet/asset/{code}-{issuer.publicKey}"
-              >
-                Stellar expert
-              </a>
+              <Link href="https://stellar.expert/explorer/testnet/asset/{code}-{issuer.publicKey}">Stellar expert</Link>
+              <Link href="/stellar-chef/faucet?code={code}&issuer={issuer.publicKey}&secret={issuer.privateKey}">
+                Faucet
+              </Link>
             </div>
 
             <div class="flex flex-col">
