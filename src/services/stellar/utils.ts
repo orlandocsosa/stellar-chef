@@ -1,6 +1,17 @@
-import { type Account, TransactionBuilder, BASE_FEE, type xdr, type Transaction, Horizon } from 'stellar-sdk';
+import {
+  type Account,
+  TransactionBuilder,
+  BASE_FEE,
+  type xdr,
+  type Transaction,
+  Horizon,
+  Operation,
+  Asset
+} from 'stellar-sdk';
 
 import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
+import type IAsset from '../asset/IAsset';
+import type { AccountResponse } from 'stellar-sdk/lib/horizon';
 
 const server = new Horizon.Server(PUBLIC_STELLAR_NETWORK_URL);
 
@@ -60,4 +71,89 @@ async function checkAssetFrozen(
   }
 }
 
-export { buildTransaction, server, submitTransaction, checkClawbackStatus, checkAssetFrozen };
+async function findClaimableBalance(claimant: string): Promise<Horizon.ServerApi.ClaimableBalanceRecord[]> {
+  const claimableBalances = await server.claimableBalances().claimant(claimant).call();
+  return claimableBalances.records;
+}
+
+function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: string, source: string): xdr.Operation[] {
+  return [
+    Operation.beginSponsoringFutureReserves({
+      sponsoredId,
+      source
+    }),
+    operation,
+    Operation.endSponsoringFutureReserves({
+      source: sponsoredId
+    })
+  ];
+}
+
+async function getAccountBalances(
+  account: AccountResponse,
+  asset?: Asset
+): Promise<
+  | Horizon.HorizonApi.BalanceLineNative
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
+  | Horizon.HorizonApi.BalanceLineLiquidityPool
+  | Array<
+  | Horizon.HorizonApi.BalanceLineNative
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
+  | Horizon.HorizonApi.BalanceLineLiquidityPool
+  >
+  > {
+  const balances = account.balances;
+
+  if (asset instanceof Asset) {
+    for (const balance of balances) {
+      if (
+        'asset_code' in balance &&
+        'asset_issuer' in balance &&
+        balance.asset_code === asset.code &&
+        balance.asset_issuer === asset.issuer
+      ) {
+        return balance;
+      }
+    }
+
+    throw new Error('Asset not found');
+  }
+
+  return balances;
+}
+
+function getAssetFromUser(
+  isNative: boolean,
+  assets: IAsset[],
+  selectedAsset: number | null,
+  data: Record<string, string>
+): Asset {
+  if (isNative) {
+    return Asset.native();
+  }
+
+  if (typeof selectedAsset === 'number') {
+    const { code, issuer } = assets[selectedAsset];
+    return new Asset(code, issuer);
+  }
+
+  if ('code' in data && 'issuer' in data) {
+    return new Asset(data.code, data.issuer);
+  }
+
+  throw new Error('Asset not found');
+}
+
+export {
+  server,
+  buildTransaction,
+  getAssetFromUser,
+  submitTransaction,
+  checkClawbackStatus,
+  checkAssetFrozen,
+  findClaimableBalance,
+  getSponsorWrapperOperations,
+  getAccountBalances
+};

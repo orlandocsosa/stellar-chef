@@ -1,3 +1,21 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type='text'],
+input[type='number'] {
+  @apply appearance-none rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-blue-500 sm:text-sm;
+}
+
+:root {
+  --toastContainerTop: 8rem;
+  --toastContainerRight: auto;
+  --toastContainerBottom: auto;
+  --toastContainerLeft: calc(50vw - 8rem);
+}
+
+@layer base {
+  body {
+    @apply font-lexend;
+  }
+}
