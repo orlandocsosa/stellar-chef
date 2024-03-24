@@ -11,6 +11,7 @@ import {
 
 import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
 import type IAsset from '../asset/IAsset';
+import type { AccountResponse } from 'stellar-sdk/lib/horizon';
 
 const server = new Horizon.Server(PUBLIC_STELLAR_NETWORK_URL);
 
@@ -88,6 +89,41 @@ function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: stri
   ];
 }
 
+async function getAccountBalances(
+  account: AccountResponse,
+  asset?: Asset
+): Promise<
+  | Horizon.HorizonApi.BalanceLineNative
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
+  | Horizon.HorizonApi.BalanceLineLiquidityPool
+  | Array<
+  | Horizon.HorizonApi.BalanceLineNative
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
+  | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
+  | Horizon.HorizonApi.BalanceLineLiquidityPool
+  >
+  > {
+  const balances = account.balances;
+
+  if (asset instanceof Asset) {
+    for (const balance of balances) {
+      if (
+        'asset_code' in balance &&
+        'asset_issuer' in balance &&
+        balance.asset_code === asset.code &&
+        balance.asset_issuer === asset.issuer
+      ) {
+        return balance;
+      }
+    }
+
+    throw new Error('Asset not found');
+  }
+
+  return balances;
+}
+
 function getAssetFromUser(
   isNative: boolean,
   assets: IAsset[],
@@ -118,5 +154,6 @@ export {
   checkClawbackStatus,
   checkAssetFrozen,
   findClaimableBalance,
-  getSponsorWrapperOperations
+  getSponsorWrapperOperations,
+  getAccountBalances
 };
