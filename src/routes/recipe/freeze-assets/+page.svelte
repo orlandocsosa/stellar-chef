@@ -1,29 +1,22 @@
 <script lang="ts">
-  import { Operation, Keypair } from 'stellar-sdk';
-
-  import AssetStorageService from '../../../services/asset/Asset';
+  import Label from '../../../components/Label.svelte';
+  import Span from '../../../components/Span.svelte';
+  import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
+  import Button from '../../../components/salient/Button.svelte';
+  import Card from '../../../components/salient/Card.svelte';
+  import RadioOptions from '../../../components/salient/RadioOptions.svelte';
+  import Title from '../../../components/salient/Title.svelte';
+  import useToast from '../../../composables/useToast';
+  import useUserAsset from '../../../composables/useUserAsset';
+  import AssetService from '../../../services/asset/Asset';
+  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
+  import { parseEntriesValues } from '../../../utils';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
+  import { Keypair, Operation } from 'stellar-sdk';
 
-  import Card from '../../../components/Card.svelte';
-  import Input from '../../../components/Input.svelte';
-  import Button from '../../../components/Button.svelte';
-  import Status from '../../../components/Status.svelte';
-  import Switch from '../../../components/Switch.svelte';
-
-  const assetService = new AssetStorageService();
-  let assetsOnLocalStorage = assetService.getAll();
-  let assetCode = '';
-  let issuerSecretKey = '';
-  let assetHolderPublicKey = '';
-  let isLoading = false;
-  let status = '';
-  let isTransactionSuccessful = false;
-  let transactionHash = '';
-  let shouldFreezeAsset = true;
-
-  $: {
-    const selectedAsset = assetsOnLocalStorage.find((asset) => asset.code === assetCode);
-    issuerSecretKey = selectedAsset ? selectedAsset.issuerSecret : '';
+  interface IFreezeForm {
+    secret: string;
+    holder: string;
   }
 
   const SET_FLAGS = {
@@ -31,116 +24,101 @@
     UNFREEZE: 2
   };
 
-  async function loadAccounts(issuerPublicKey: string, assetHolderPublicKey: string) {
-    try {
-      const sourceAccount = await server.loadAccount(issuerPublicKey);
-      const assetHolder = await server.loadAccount(assetHolderPublicKey);
-      return { sourceAccount, assetHolder };
-    } catch (error) {
-      throw new Error(`Failed to load account: ${String(error)}`);
-    }
-  }
+  const assetService = new AssetService();
+  const assets = assetService.getAll();
+  const { code, getAsset, issuer, selectedAsset } = useUserAsset(assets);
+  const { showToast } = useToast();
+  let radioInputValue = true;
+  let isLoading = false;
 
-  async function performAssetAction() {
+  async function handleOnSubmit(e: Event) {
     isLoading = true;
-    status = '';
-    isTransactionSuccessful = false;
-    transactionHash = '';
 
     try {
-      const issuerKeypair = Keypair.fromSecret(issuerSecretKey);
-      const { sourceAccount } = await loadAccounts(issuerKeypair.publicKey(), assetHolderPublicKey);
+      const formData = new FormData(e.target as HTMLFormElement);
+      const { holder, secret } = parseEntriesValues<IFreezeForm>(formData);
+      const asset = getAsset();
+
+      const account = await server.loadAccount(holder);
+      const issuerAccount = await server.loadAccount(asset.issuer);
 
       const operations = [
         Operation.setOptions({
-          [shouldFreezeAsset ? 'setFlags' : 'clearFlags']: SET_FLAGS.FREEZE
+          [radioInputValue ? 'setFlags' : 'clearFlags']: SET_FLAGS.FREEZE
         }),
         Operation.setOptions({
-          [shouldFreezeAsset ? 'setFlags' : 'clearFlags']: SET_FLAGS.UNFREEZE
+          [radioInputValue ? 'setFlags' : 'clearFlags']: SET_FLAGS.UNFREEZE
         }),
         Operation.allowTrust({
-          trustor: assetHolderPublicKey,
-          assetCode: assetCode,
-          authorize: !shouldFreezeAsset
+          trustor: account.accountId(),
+          assetCode: asset.code,
+          authorize: !radioInputValue
         })
       ];
 
-      status = 'Performing transaction...';
-      let transaction = buildTransaction(sourceAccount, operations);
-      transaction.sign(issuerKeypair);
+      const transaction = buildTransaction(issuerAccount, operations);
+      transaction.sign(Keypair.fromSecret(secret));
 
-      const transactionResult = await submitTransaction(transaction);
-      isTransactionSuccessful = transactionResult.successful;
-
-      status = `Transaction ${isTransactionSuccessful ? 'succeeded' : 'failed'}.`;
-
-      if (isTransactionSuccessful) {
-        transactionHash = transactionResult.hash;
-        status = `Asset ${shouldFreezeAsset ? 'frozen' : 'unfrozen'} successfully! `;
-      }
-    } catch (error) {
-      status = `Error: ${error}`;
-      isTransactionSuccessful = false;
+      await submitTransaction(transaction);
+      showToast(`Asset ${asset.code} has been ${radioInputValue ? 'frozen' : 'unfrozen'}`, 'success');
+    } catch (e) {
+      showToast(`Something went wrong: ${e}`, 'danger');
+      console.error(e);
     } finally {
       isLoading = false;
     }
   }
 </script>
 
-<div class="flex justify-center">
-  <form class="flex flex-col" on:submit|preventDefault={performAssetAction}>
-    <Card title="Freeze Asset">
-      <div class="flex flex-col">
-        <label for="asset-code-select">
-          <select
-            id="asset-code-select"
-            bind:value={assetCode}
-            disabled={isLoading}
-            class="mb-4 border-4 w-full p-2 border-black"
-          >
-            <option disabled selected value={null}>Select an asset</option>
-            {#each assetsOnLocalStorage as asset, i (`${asset.code}-${i}`)}
-              <option value={asset.code}>{asset.code}</option>
-            {/each}
-          </select>
-        </label>
+<Card className="flex flex-col m-auto w-[600px]">
+  <Title>Freeze Assets</Title>
 
-        Asset Code
-        <Input dataCy="asset-code-input" bind:value={assetCode} maxlength={12} required disabled={isLoading} />
+  <form class="flex flex-col gap-5" on:submit|preventDefault={handleOnSubmit}>
+    <div class="flex flex-row gap-3 items-center">
+      <Title tag="h3">Asset</Title>
+      <AssetSelector {assets} bind:value={$selectedAsset} />
+    </div>
 
-        Issuer Secret Key
-        <Input
-          dataCy="issuer-secret-key-input"
-          bind:value={issuerSecretKey}
-          maxlength={56}
-          required
-          disabled={isLoading}
-        />
+    {#if $selectedAsset === null}
+      <div>
+        <Label>
+          <Span>Code</Span>
+          <input type="text" bind:value={$code} />
+        </Label>
 
-        Asset Holder Public Key
-        <Input
-          dataCy="asset-holder-public-key-input"
-          bind:value={assetHolderPublicKey}
-          maxlength={56}
-          required
-          disabled={isLoading}
-        />
+        <Label>
+          <Span>Issuer</Span>
+          <input type="text" bind:value={$issuer} />
+        </Label>
+      </div>
+    {/if}
 
-        <div class="flex flex-col items-center justify-center">
-          <div class="flex items-center m-2">
-            <Switch bind:checked={shouldFreezeAsset} dataCy="freeze-switch" disabled={isLoading} />
-            <p class="ml-3">{shouldFreezeAsset ? 'Freeze' : 'Unfreeze'}</p>
-          </div>
-          <Button
-            dataCy="perform-button"
-            label={isLoading ? (shouldFreezeAsset ? 'Freezing Asset...' : 'Unfreezing Asset...') : 'Perform'}
-            disabled={isLoading}
-            on:click={performAssetAction}
-          />
-        </div>
+    <Label>
+      Issuer Secret
+      <input type="text" name="secret" value={$selectedAsset !== null ? assets[$selectedAsset].issuerSecret : ''} />
+    </Label>
 
-        <Status {status} {isTransactionSuccessful} {transactionHash} />
-      </div></Card
-    >
+    <Label>
+      Holder Account
+      <input type="text" name="holder" />
+    </Label>
+
+    <div>
+      <RadioOptions
+        bind:group={radioInputValue}
+        options={[
+          { label: 'Freeze', value: true, checked: radioInputValue },
+          { label: 'Unfreeze', value: false, checked: !radioInputValue }
+        ]}
+      />
+    </div>
+
+    <Button type="submit" className="mt-8 h-10 w-full">
+      {#if isLoading}
+        <div class="w-8"><LoadingSpinner /></div>
+      {:else}
+        Submit
+      {/if}
+    </Button>
   </form>
-</div>
+</Card>
