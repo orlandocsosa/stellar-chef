@@ -211,7 +211,7 @@
         {#if isLoading}
           <div class="w-8"><LoadingSpinner /></div>
         {:else}
-          Change trust
+          Create asset
         {/if}
       </Button>
     </form>
