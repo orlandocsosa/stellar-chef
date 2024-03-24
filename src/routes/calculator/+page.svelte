@@ -6,7 +6,6 @@
   import Card from '../../components/salient/Card.svelte';
   import { server } from '../../services/stellar/utils';
   import type { OfferRecord } from 'stellar-sdk/lib/horizon/types/offer';
-  import Offer from '../../components/calculator/Offer.svelte';
   import AssetWithLiabilities from '../../components/calculator/AssetWithLiabilities.svelte';
   import Title from '../../components/salient/Title.svelte';
 
