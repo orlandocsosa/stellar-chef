@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AccountResponse, HorizonApi, ServerApi } from 'stellar-sdk/lib/horizon';
+  import type { HorizonApi, ServerApi } from 'stellar-sdk/lib/horizon';
   import Label from '../../components/Label.svelte';
   import Span from '../../components/Span.svelte';
   import Button from '../../components/salient/Button.svelte';
