@@ -2,9 +2,20 @@
   import { Keypair, Operation, xdr } from 'stellar-sdk';
   import Button from '../../../components/salient/Button.svelte';
   import Card from '../../../components/salient/Card.svelte';
+  import CheckBoxButton from '../../../components/salient/CheckBoxButton.svelte';
   import JsonBlock from '../../../components/salient/JsonBlock.svelte';
-  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
+  import {
+    buildTransaction,
+    getSponsorWrapperOperations,
+    server,
+    submitTransaction
+  } from '../../../services/stellar/utils';
   import TextArea from '../../../components/salient/TextArea.svelte';
+  import { signers } from '../../../store/signers';
+  import { thresholds } from '../../../store/thresholds';
+  import Signers from '../../../components/create-account/Signers.svelte';
+  import useToast from '../../../composables/useToast';
+  import Thresholds from '../../../components/create-account/Thresholds.svelte';
 
   interface IAccount {
     publicKey: string;
@@ -13,111 +24,128 @@
     sponsor?: { publicKey: string; secretKey: string };
   }
 
+  const { showToast, toggleLoadingToast } = useToast();
   let accounts: any[] = [];
   let isFundedWithFriendbot = false;
   let accountsAmount: number;
   let funderSecretKey: string;
   let startingBalance: string;
-  let sponsor: string | undefined;
+  let sponsorSecret: string | undefined;
+  let masterWeight: number | undefined = undefined;
+  let isSetOptionsChecked = false;
   let textArea = {
     value: '',
     isError: false
   };
 
-  function toggleFondedWithFriendbot() {
-    isFundedWithFriendbot = !isFundedWithFriendbot;
-  }
-
-  async function handleGenerateAndFund() {
-    textArea.isError = false;
+  async function handleOnSubmit() {
+    textArea.value = '';
+    toggleLoadingToast(true, 'Creating accounts...');
 
     try {
-      const keypairs = generateKeypairs();
-      if (isFundedWithFriendbot) {
-        await fundKeypairsWithFriendBot(keypairs);
-        return;
-      }
-
-      const sourceKeypair = Keypair.fromSecret(funderSecretKey);
-      const uniqueSecrets = new Set<string>();
+      let tempAccounts = [];
       let operations: xdr.Operation[] = [];
-      let sponsorKeypair: Keypair | undefined;
+      let uniqueSecrets = new Set<string>();
 
-      uniqueSecrets.add(sourceKeypair.secret());
-
-      keypairs.map((keypair) => {
-        let account: IAccount = {
-          publicKey: keypair.publicKey(),
-          secretKey: keypair.secret(),
-          funder: {
-            publicKey: sourceKeypair.publicKey(),
-            secretKey: sourceKeypair.secret()
-          }
+      for (let i = 0; i < accountsAmount; i++) {
+        const accountKeypair = Keypair.random();
+        const account = {
+          publicKey: accountKeypair.publicKey(),
+          secretKey: accountKeypair.secret()
         };
-        const operation = getCreateAccountOperation(keypair.publicKey(), startingBalance.toString());
 
-        if (sponsor) {
-          sponsorKeypair = Keypair.fromSecret(sponsor);
-          account.sponsor = {
-            publicKey: sponsorKeypair.publicKey(),
-            secretKey: sponsorKeypair.secret()
-          };
+        let funder: { type: string; publicKey?: string; secretKey?: string } = { type: '' };
+        let sponsor: { publicKey: string; secretKey: string } | undefined = undefined;
 
-          uniqueSecrets.add(sponsorKeypair.secret());
-          uniqueSecrets.add(keypair.secret());
-          operations.push(...getSponsorWrapperOperations(operation, keypair.publicKey(), sponsorKeypair.publicKey()));
+        if (isFundedWithFriendbot) {
+          funder.type = 'friendbot';
+          await server.friendbot(account.publicKey).call();
         } else {
-          operations.push(operation);
+          funder.type = 'account';
+          const funderKeypair = Keypair.fromSecret(funderSecretKey);
+          funder.publicKey = funderKeypair.publicKey();
+          funder.secretKey = funderKeypair.secret();
+          uniqueSecrets.add(funder.secretKey);
+
+          const createAccountOperation = Operation.createAccount({
+            destination: account.publicKey,
+            startingBalance: startingBalance.toString(),
+            source: funder.publicKey
+          });
+
+          if (sponsorSecret || isSetOptionsChecked) uniqueSecrets.add(account.secretKey);
+
+          if (!sponsorSecret) {
+            operations.push(createAccountOperation);
+          } else {
+            const sponsorKeypair = Keypair.fromSecret(sponsorSecret);
+            sponsor = {
+              publicKey: sponsorKeypair.publicKey(),
+              secretKey: sponsorKeypair.secret()
+            };
+            uniqueSecrets.add(sponsor.secretKey);
+
+            operations.push(
+              ...getSponsorWrapperOperations(createAccountOperation, account.publicKey, sponsor.publicKey)
+            );
+          }
         }
 
-        accounts.push(account);
-      });
+        if (isSetOptionsChecked) {
+          operations.push(
+            Operation.setOptions({
+              masterWeight,
+              source: account.publicKey,
+              lowThreshold: $thresholds.low || undefined,
+              medThreshold: $thresholds.med || undefined,
+              highThreshold: $thresholds.high || undefined
+            })
+          );
 
-      const transaction = buildTransaction(await server.loadAccount(sourceKeypair.publicKey()), operations);
-      const uniqueKeypairs = [...uniqueSecrets].map((secret) => Keypair.fromSecret(secret));
+          for (const signer of $signers) {
+            operations.push(
+              Operation.setOptions({
+                signer: {
+                  ed25519PublicKey: signer.publicKey,
+                  weight: signer.weight
+                },
+                source: account.publicKey
+              })
+            );
+          }
+        }
 
-      transaction.sign(...uniqueKeypairs);
-      await server.submitTransaction(transaction);
+        tempAccounts.push({
+          ...account,
+          funder,
+          ...(sponsor && { sponsor }),
+          ...(isSetOptionsChecked && {
+            weight: masterWeight,
+            thresholds: { ...$thresholds },
+            signers: [$signers.map((signer) => ({ ...signer }))]
+          })
+        });
+      }
 
+      if (operations.length) {
+        const transaction = buildTransaction(
+          await server.loadAccount(tempAccounts[0].funder.publicKey || tempAccounts[0].publicKey),
+          operations
+        );
+        transaction.sign(...[...uniqueSecrets].map((secret) => Keypair.fromSecret(secret)));
+        const result = await submitTransaction(transaction);
+        textArea.value = JSON.stringify(result, null, 2);
+      }
+
+      accounts.push(...tempAccounts);
       accounts = accounts;
-      textArea.value = 'Transaction successfully submitted';
+      toggleLoadingToast(false);
+      showToast('Accounts created', 'success');
     } catch (e) {
-      textArea.isError = true;
-      textArea.value = `Transaction failed: ${e}`;
+      toggleLoadingToast(false);
+      showToast('Something went wrong', 'danger');
+      console.error(e);
     }
-  }
-
-  async function fundKeypairsWithFriendBot(keypairs: Keypair[]) {
-    keypairs.map(async (keypair) => {
-      await server.friendbot(keypair.publicKey()).call();
-      accounts.push({ publicKey: keypair.publicKey(), secretKey: keypair.secret(), funder: 'friendbot' });
-      accounts = accounts;
-    });
-  }
-
-  function getCreateAccountOperation(destination: string, startingBalance: string) {
-    return Operation.createAccount({
-      destination,
-      startingBalance
-    });
-  }
-
-  function handleGenerateKeypairs() {
-    const keypairs = generateKeypairs();
-    keypairs.map((keypair) => {
-      accounts.push({ publicKey: keypair.publicKey(), secretKey: keypair.secret() });
-      accounts = accounts;
-    });
-  }
-
-  function generateKeypairs() {
-    let keypairs = [];
-
-    for (let i = 0; i < accountsAmount; i++) {
-      keypairs.push(Keypair.random());
-    }
-
-    return keypairs;
   }
 </script>
 
@@ -134,13 +162,7 @@
       <div class="flex flex-col gap-2">
         <div class="flex flex-row items-center gap-5">
           <p>Funder</p>
-          <Button
-            className="h-8 w-24"
-            color={isFundedWithFriendbot ? 'blue' : 'white'}
-            onClick={toggleFondedWithFriendbot}
-          >
-            Friendbot
-          </Button>
+          <CheckBoxButton bind:checked={isFundedWithFriendbot} text="Friendbot" />
         </div>
 
         {#if !isFundedWithFriendbot}
@@ -165,29 +187,52 @@
         <input
           type="text"
           placeholder="SC5PJDQDA24ISLU4YLJ33FVYZYNLAZI27PU4TBVNTHT5MJMV4GV7WT55"
-          bind:value={sponsor}
+          bind:value={sponsorSecret}
         />
       </label>
+
+      <div class="flex flex-col gap-2">
+        <label class="w-fit">
+          <input type="checkbox" bind:checked={isSetOptionsChecked} />
+          Set options
+        </label>
+
+        {#if isSetOptionsChecked}
+          <label class="flex flex-col gap-2">
+            <p class="text-sm text-gray-600">Master weight</p>
+            <input type="number" placeholder="0 - 255" bind:value={masterWeight} />
+          </label>
+
+          <Thresholds />
+
+          <Signers />
+        {/if}
+      </div>
     </div>
 
     <div class="flex flex-col gap-5 w-52 mt-7">
-      <Button color="white" onClick={handleGenerateKeypairs}>Generate Keypairs</Button>
-      <Button onClick={handleGenerateAndFund}>Generate and Fund</Button>
+      <Button onClick={handleOnSubmit}>Generate and Fund</Button>
     </div>
 
-    <div class="mt-7">
-      <TextArea isError={textArea.isError} value={textArea.value} />
-    </div>
+    {#if textArea.value}
+      <div class="mt-7">
+        <JsonBlock>{textArea.value}</JsonBlock>
+      </div>
+    {/if}
   </Card>
 
   <Card className="w-1/2">
     <h2 class="text-2xl">Result:</h2>
 
-    {#if accounts.length}
-      <div class="mt-5">
-        <a href="data:text/json;charset=utf-8, {JSON.stringify(accounts)}" download={'accounts.json'}>Download JSON</a>
-        <JsonBlock>{JSON.stringify(accounts, null, 2)}</JsonBlock>
+    <div class="mt-5">
+      <div class="mb-5">
+        <a href="data:text/json;charset=utf-8, {JSON.stringify(accounts, null, 2)}" download={'accounts.json'}>
+          Download JSON
+        </a>
+
+        <Button className="h-8" onClick={() => (accounts = [])}>Clear</Button>
       </div>
-    {/if}
+      <JsonBlock>{accounts.length ? JSON.stringify(accounts, null, 2) : ''}</JsonBlock>
+    </div>
   </Card>
 </div>
