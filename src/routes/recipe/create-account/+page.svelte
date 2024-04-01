@@ -10,19 +10,11 @@
     server,
     submitTransaction
   } from '../../../services/stellar/utils';
-  import TextArea from '../../../components/salient/TextArea.svelte';
   import { signers } from '../../../store/signers';
   import { thresholds } from '../../../store/thresholds';
   import Signers from '../../../components/create-account/Signers.svelte';
   import useToast from '../../../composables/useToast';
   import Thresholds from '../../../components/create-account/Thresholds.svelte';
-
-  interface IAccount {
-    publicKey: string;
-    secretKey: string;
-    funder?: { publicKey: string; secretKey: string };
-    sponsor?: { publicKey: string; secretKey: string };
-  }
 
   const { showToast, toggleLoadingToast } = useToast();
   let accounts: any[] = [];
@@ -57,6 +49,8 @@
         let funder: { type: string; publicKey?: string; secretKey?: string } = { type: '' };
         let sponsor: { publicKey: string; secretKey: string } | undefined = undefined;
 
+        if (sponsorSecret || isSetOptionsChecked) uniqueSecrets.add(account.secretKey);
+
         if (isFundedWithFriendbot) {
           funder.type = 'friendbot';
           await server.friendbot(account.publicKey).call();
@@ -72,8 +66,6 @@
             startingBalance: startingBalance.toString(),
             source: funder.publicKey
           });
-
-          if (sponsorSecret || isSetOptionsChecked) uniqueSecrets.add(account.secretKey);
 
           if (!sponsorSecret) {
             operations.push(createAccountOperation);
@@ -179,17 +171,17 @@
             <p class="text-sm text-gray-600">Starting balance</p>
             <input type="number" placeholder="10000" bind:value={startingBalance} />
           </label>
+
+          <label class="flex flex-col gap-2">
+            <p>Sponsor <span class="text-gray-600">(Optional)</span></p>
+            <input
+              type="text"
+              placeholder="SC5PJDQDA24ISLU4YLJ33FVYZYNLAZI27PU4TBVNTHT5MJMV4GV7WT55"
+              bind:value={sponsorSecret}
+            />
+          </label>
         {/if}
       </div>
-
-      <label class="flex flex-col gap-2">
-        <p>Sponsor <span class="text-gray-600">(Optional)</span></p>
-        <input
-          type="text"
-          placeholder="SC5PJDQDA24ISLU4YLJ33FVYZYNLAZI27PU4TBVNTHT5MJMV4GV7WT55"
-          bind:value={sponsorSecret}
-        />
-      </label>
 
       <div class="flex flex-col gap-2">
         <label class="w-fit">
