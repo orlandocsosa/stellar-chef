@@ -14,13 +14,23 @@ const themes = {
 };
 
 type ShowToastFunction = (message: string, theme: keyof typeof themes) => void;
+type LoadingToastFunction = (show: boolean, message?: string) => void;
 
-function useToast(): { showToast: ShowToastFunction } {
+function useToast(): { showToast: ShowToastFunction; toggleLoadingToast: LoadingToastFunction } {
   function showToast(message: string, theme: keyof typeof themes): void {
     toast.push(message, { theme: themes[theme] });
   }
 
-  return { showToast };
+  function toggleLoadingToast(show: boolean, message = ''): void {
+    if (!show) {
+      toast.pop(0);
+      return;
+    }
+
+    toast.push(message, { initial: 0, next: 1, duration: 100000, dismissable: false });
+  }
+
+  return { showToast, toggleLoadingToast };
 }
 
 export default useToast;
