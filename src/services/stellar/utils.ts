@@ -89,20 +89,20 @@ function getSponsorWrapperOperations(operation: xdr.Operation, sponsoredId: stri
   ];
 }
 
-async function getAccountBalances(
+function getAccountBalances(
   account: AccountResponse,
   asset?: Asset
-): Promise<
+):
   | Horizon.HorizonApi.BalanceLineNative
   | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
   | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
   | Horizon.HorizonApi.BalanceLineLiquidityPool
+  | undefined
   | Array<
   | Horizon.HorizonApi.BalanceLineNative
   | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4'>
   | Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum12'>
   | Horizon.HorizonApi.BalanceLineLiquidityPool
-  >
   > {
   const balances = account.balances;
 
@@ -118,7 +118,7 @@ async function getAccountBalances(
       }
     }
 
-    throw new Error('Asset not found');
+    return undefined
   }
 
   return balances;
@@ -146,6 +146,10 @@ function getAssetFromUser(
   throw new Error('Asset not found');
 }
 
+function orderAssets(assetA: Asset, assetB: Asset): Asset[] {
+  return Asset.compare(assetA, assetB) <= 0 ? [assetA, assetB] : [assetA, assetB];
+}
+
 export {
   server,
   buildTransaction,
@@ -155,5 +159,6 @@ export {
   checkAssetFrozen,
   findClaimableBalance,
   getSponsorWrapperOperations,
-  getAccountBalances
+  getAccountBalances,
+  orderAssets
 };
