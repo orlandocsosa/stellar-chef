@@ -12,10 +12,12 @@
   export let className = '';
   export let type: 'button' | 'submit' = 'button';
   export let isLoading = false;
+  export let disabled = false;
 </script>
 
 <button
   {type}
+  {disabled}
   on:click={onClick}
   class="{colorVariants[
     color
