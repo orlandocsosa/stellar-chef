@@ -1,321 +1,190 @@
 <script lang="ts">
-  import {
-    Asset,
-    Keypair,
-    Operation,
-    LiquidityPoolAsset,
-    LiquidityPoolFeeV18,
-    getLiquidityPoolId,
-    xdr,
-    Horizon
-  } from 'stellar-sdk';
-  import { buildTransaction, server } from '../../../services/stellar/utils';
-  import type { AccountResponse } from 'stellar-sdk/lib/horizon';
+  import { Asset, LiquidityPoolAsset, getLiquidityPoolId, LiquidityPoolFeeV18, Operation, Keypair } from 'stellar-sdk';
+  import AssetsForm from '../../../components/liquidity-pool/AssetsForm.svelte';
   import Card from '../../../components/salient/Card.svelte';
   import Title from '../../../components/salient/Title.svelte';
-  import Button from '../../../components/salient/Button.svelte';
-  import Select from '../../../components/salient/Select.svelte';
   import AssetService from '../../../services/asset/Asset';
-  import { parseEntriesValues, sliceString } from '../../../utils';
-  import useUserAsset from '../../../composables/useUserAsset';
   import useToast from '../../../composables/useToast';
-  import Span from '../../../components/Span.svelte';
+  import {
+    buildTransaction,
+    getAccountBalances,
+    orderAssets,
+    server,
+    submitTransaction
+  } from '../../../services/stellar/utils';
+  import SearchForm from '../../../components/liquidity-pool/SearchForm.svelte';
+  import type { ServerApi } from 'stellar-sdk/lib/horizon';
   import LiquidityPool from '../../../components/liquidity-pool/LiquidityPool.svelte';
-  import RadioOptions from '../../../components/salient/RadioOptions.svelte';
-  import FractionInput from '../../../components/liquidity-pool/FractionInput.svelte';
-
-  interface IAddLiquidityForm {
-    secret: string;
-    'max-reserve-a': string;
-    'max-reserve-b': string;
-    numerator: string;
-    denominator: string;
-    amount: string;
-  }
+  import ParticipateRadio from '../../../components/liquidity-pool/ParticipateRadio.svelte';
+  import DepositForm from '../../../components/liquidity-pool/DepositForm.svelte';
+  import WithdrawForm from '../../../components/liquidity-pool/WithdrawForm.svelte';
+  import Label from '../../../components/Label.svelte';
 
   const assetsService = new AssetService();
   const assets = assetsService.getAll();
   const { showToast } = useToast();
-
-  const {
-    isNative: isAssetANative,
-    code: assetACode,
-    issuer: assetAIssuer,
-    selectedAsset: selectedAssetA,
-    ...userAssetA
-  } = useUserAsset(assets);
-
-  const {
-    isNative: isAssetBNative,
-    code: assetBCode,
-    issuer: assetBIssuer,
-    selectedAsset: selectedAssetB,
-    ...userAssetB
-  } = useUserAsset(assets);
-
+  let secretKey = '';
+  let participateAction: 'withdraw' | 'deposit' = 'deposit';
+  let liquidityPool: ServerApi.LiquidityPoolRecord;
+  let liquidityPoolId = '';
   let isLoading = false;
-  let liquidityPool: Horizon.ServerApi.LiquidityPoolRecord;
-  let liquidityPollIdResult: string;
-  let isMinPriceFraction = false;
-  let isMaxPriceFraction = false;
 
-  async function handleOnSubmit(e: Event) {
+  async function handleGetLiquidityPoolId(getAssetA: () => Asset, getAssetB: () => Asset) {
+    try {
+      const [assetA, assetB] = orderAssets(getAssetA(), getAssetB());
+      const poolShareAsset = new LiquidityPoolAsset(assetA, assetB, LiquidityPoolFeeV18);
+      liquidityPoolId = getLiquidityPoolId('constant_product', poolShareAsset.getLiquidityPoolParameters()).toString(
+        'hex'
+      );
+    } catch (e) {
+      showToast((e as Error).message, 'danger');
+    }
+  }
+
+  async function handleGetAssetTrust(getAssetA: () => Asset, getAssetB: () => Asset, secretKey: string) {
     isLoading = true;
 
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      const secret = formData.get('secret') as string;
-      const [assetA, assetB] = orderAssets(userAssetA.getAsset(), userAssetB.getAsset());
+      const [assetA, assetB] = orderAssets(getAssetA(), getAssetB());
       const poolShareAsset = new LiquidityPoolAsset(assetA, assetB, LiquidityPoolFeeV18);
-      const poolId = getLiquidityPoolId('constant_product', poolShareAsset.getLiquidityPoolParameters()).toString(
-        'hex'
-      );
+      const keypair = Keypair.fromSecret(secretKey);
+      const account = await server.loadAccount(keypair.publicKey());
+      let operations = [];
 
-      const accountKeypair = Keypair.fromSecret(secret);
-      const account = await server.loadAccount(accountKeypair.publicKey());
-
-      const operations: xdr.Operation[] = [];
-
-      for (const asset of [assetA, assetB]) {
-        if (asset.isNative()) continue;
-
+      if (!getAccountBalances(account, assetA) && !assetA.isNative()) {
         operations.push(
           Operation.changeTrust({
-            asset
+            asset: assetA
           })
         );
       }
 
-      if (operations.length) {
-        const transaction = buildTransaction(account, operations);
-        transaction.sign(accountKeypair);
-        await server.submitTransaction(transaction);
+      if (!getAccountBalances(account, assetB) && !assetB.isNative()) {
+        operations.push(
+          Operation.changeTrust({
+            asset: assetB
+          })
+        );
       }
 
-      await establishPoolTrustline(account, accountKeypair, poolShareAsset);
+      const transaction = buildTransaction(account, [
+        ...operations,
+        Operation.changeTrust({
+          asset: poolShareAsset
+        })
+      ]);
 
-      alert(poolId);
-
-      console.log('poolId', poolId);
+      transaction.sign(keypair);
+      await submitTransaction(transaction);
+      showToast('Asset trustline established', 'success');
     } catch (e) {
-      alert('error');
+      showToast((e as Error).message, 'danger');
     } finally {
       isLoading = false;
     }
   }
 
-  function handleGetLiquidityPoolID() {
-    const [assetA, assetB] = orderAssets(userAssetA.getAsset(), userAssetB.getAsset());
-    const poolShareAsset = new LiquidityPoolAsset(assetA, assetB, LiquidityPoolFeeV18);
-    liquidityPollIdResult = getLiquidityPoolId(
-      'constant_product',
-      poolShareAsset.getLiquidityPoolParameters()
-    ).toString('hex');
+  async function handleSearchLiquidityPool(id: string) {
+    isLoading = true;
+
+    try {
+      liquidityPool = await server.liquidityPools().liquidityPoolId(id).call();
+    } catch (e) {
+      showToast((e as Error).message, 'danger');
+    } finally {
+      isLoading = false;
+    }
   }
 
-  async function establishPoolTrustline(account: AccountResponse, keypair: Keypair, poolAsset: LiquidityPoolAsset) {
-    const transaction = buildTransaction(account, [
-      Operation.changeTrust({
-        asset: poolAsset
-      })
-    ]);
+  async function handleOnDeposit(depositA: string, depositB: string, minSlippage: string, maxSlippage: string) {
+    isLoading = true;
 
-    transaction.sign(keypair);
-    await server.submitTransaction(transaction);
+    try {
+      const accountKeypair = Keypair.fromSecret(secretKey);
+      const account = await server.loadAccount(accountKeypair.publicKey());
+
+      const exactPrice = +depositA / +depositB;
+      const minPrice = exactPrice - exactPrice * +minSlippage;
+      const maxPrice = exactPrice + exactPrice * +maxSlippage;
+
+      const transaction = buildTransaction(account, [
+        Operation.liquidityPoolDeposit({
+          liquidityPoolId: liquidityPool.id,
+          maxAmountA: depositA,
+          maxAmountB: depositB,
+          minPrice: minPrice.toFixed(7),
+          maxPrice: maxPrice.toFixed(7)
+        })
+      ]);
+
+      transaction.sign(accountKeypair);
+      await server.submitTransaction(transaction);
+      showToast('Deposit successful', 'success');
+    } catch (e) {
+      showToast((e as Error).message, 'danger');
+    } finally {
+      isLoading = false;
+    }
   }
 
-  function orderAssets(assetA: Asset, assetB: Asset) {
-    return Asset.compare(assetA, assetB) <= 0 ? [assetA, assetB] : [assetA, assetB];
-  }
+  async function handleWithdraw(sharesAmount: string) {
+    isLoading = true;
 
-  async function handleSearchLiquidityPool(e: Event) {
-    const formData = new FormData(e.target as HTMLFormElement);
-    const poolId = formData.get('id');
+    try {
+      const accountKeypair = Keypair.fromSecret(secretKey);
+      const account = await server.loadAccount(accountKeypair.publicKey());
+      const totalShares = liquidityPool.total_shares;
 
-    if (!poolId) showToast('Liquidity pool ID is required', 'danger');
+      let minReserveA = (+sharesAmount / +totalShares) * +liquidityPool.reserves[0].amount * 0.95;
+      let minReserveB = (+sharesAmount / +totalShares) * +liquidityPool.reserves[1].amount * 0.95;
 
-    liquidityPool = await server
-      .liquidityPools()
-      .liquidityPoolId(poolId as string)
-      .call();
-  }
+      const transaction = buildTransaction(account, [
+        Operation.liquidityPoolWithdraw({
+          liquidityPoolId: liquidityPool.id,
+          amount: sharesAmount,
+          minAmountA: minReserveA.toFixed(7),
+          minAmountB: minReserveB.toFixed(7)
+        })
+      ]);
 
-  async function handleAddLiquidity(e: Event) {
-    const formData = new FormData(e.target as HTMLFormElement);
-    const {
-      'max-reserve-a': maxReserveA,
-      'max-reserve-b': maxReserveB,
-      secret,
-      denominator,
-      numerator,
-      amount
-    } = parseEntriesValues<IAddLiquidityForm>(formData);
-
-    const accountKeypair = Keypair.fromSecret(secret);
-    const account = await server.loadAccount(accountKeypair.publicKey());
-
-    const exactPrice = +maxReserveA / +maxReserveB;
-    const minPrice = exactPrice - exactPrice * 0.1;
-    const maxPrice = exactPrice + exactPrice * 0.1;
-
-    const transaction = buildTransaction(account, [
-      Operation.liquidityPoolDeposit({
-        liquidityPoolId: liquidityPool.id,
-        maxAmountA: maxReserveA,
-        maxAmountB: maxReserveB,
-        minPrice: minPrice.toFixed(7),
-        maxPrice: maxPrice.toFixed(7)
-      })
-    ]);
-
-    transaction.sign(accountKeypair);
-    await server.submitTransaction(transaction);
+      transaction.sign(accountKeypair);
+      await server.submitTransaction(transaction);
+      showToast('Withdraw successful', 'success');
+    } catch (e) {
+      showToast((e as Error).message, 'danger');
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
 <div class="flex flex-row gap-10 justify-center items-start">
-  <Card className="w-[650px]">
-    <Title tag="h2">Create liquidity pool</Title>
+  <Card className="w-[650px] flex flex-col gap-10">
+    <Title tag="h2">Get Liquidity Pool ID</Title>
+    <AssetsForm onGetId={handleGetLiquidityPoolId} onGetAssetTrust={handleGetAssetTrust} {assets} {isLoading} />
 
-    <form class="flex flex-col gap-5" on:submit|preventDefault={handleOnSubmit}>
-      <div class="flex flex-row items-center gap-3">
-        <h3 class="text-lg">Asset A</h3>
-        <Button onClick={userAssetA.toggleIsNative} color={$isAssetANative ? 'blue' : 'white'} className="h-8">
-          Native
-        </Button>
-        <Select color={$selectedAssetA !== null ? 'blue' : 'white'} className="h-8" bind:value={$selectedAssetA}>
-          {#each assets as { code, issuer }, i}
-            <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-          {/each}
-        </Select>
-      </div>
-
-      {#if !$isAssetANative && $selectedAssetA === null}
-        <label class="flex flex-col gap-1">
-          <p class="text-sm text-gray-600">Code</p>
-          <input type="text" bind:value={$assetACode} />
-        </label>
-
-        <label class="flex flex-col gap-1">
-          <p class="text-sm text-gray-600">Issuer</p>
-          <input type="text" bind:value={$assetAIssuer} />
-        </label>
-      {/if}
-
-      <div class="flex flex-row items-center gap-3">
-        <h3 class="text-lg">Asset B</h3>
-        <Button onClick={userAssetB.toggleIsNative} color={$isAssetBNative ? 'blue' : 'white'} className="h-8">
-          Native
-        </Button>
-        <Select color={$selectedAssetB !== null ? 'blue' : 'white'} className="h-8" bind:value={$selectedAssetB}>
-          {#each assets as { code, issuer }, i}
-            <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-          {/each}
-        </Select>
-      </div>
-
-      {#if !$isAssetBNative && $selectedAssetB === null}
-        <label class="flex flex-col gap-1">
-          <p class="text-sm text-gray-600">Code</p>
-          <input type="text" bind:value={$assetBCode} />
-        </label>
-
-        <label class="flex flex-col gap-1">
-          <p class="text-sm text-gray-600">Issuer</p>
-          <input type="text" bind:value={$assetBIssuer} />
-        </label>
-      {/if}
-
-      <div>
-        <Title>Account</Title>
-
-        <label class="flex flex-col gap-1">
-          <p class="text-sm text-gray-600">Secret Key</p>
-          <input type="text" name="secret" />
-        </label>
-      </div>
-
-      <Button type="submit" className="h-10 mt-8" {isLoading}>GET Liquidity Pool asset trust</Button>
-    </form>
-
-    <form class="flex flex-col gap-5" on:submit|preventDefault={handleGetLiquidityPoolID}>
-      <Button type="submit" className="h-10 mt-8" {isLoading}>GET liquidity pool ID</Button>
-    </form>
-
-    {#if liquidityPollIdResult}
-      <p>ID: <Span>{liquidityPollIdResult}</Span></p>
+    {#if liquidityPoolId}
+      <p>Result: {liquidityPoolId}</p>
     {/if}
   </Card>
 
-  <Card className="w-[650px]">
-    <Title tag="h2">Liquidity pool</Title>
-
-    <form on:submit|preventDefault={handleSearchLiquidityPool}>
-      <label class="flex flex-col gap-1">
-        <p class="text-sm text-gray-600">ID</p>
-        <input type="text" name="id" />
-      </label>
-
-      <Button type="submit" className="mt-7">Search</Button>
-    </form>
+  <Card className="w-[650px] flex flex-col gap-5">
+    <SearchForm onSearchLiquidityPool={handleSearchLiquidityPool} {isLoading} />
 
     {#if liquidityPool}
-      <div class="flex flex-col gap-10">
-        <LiquidityPool {liquidityPool} />
+      <LiquidityPool {liquidityPool} />
+      <ParticipateRadio bind:group={participateAction} />
 
-        <form on:submit|preventDefault={handleAddLiquidity} class="flex flex-col gap-5">
-          <Title tag="h3">Add liquidity</Title>
+      <Label>
+        Secret Key
+        <input type="text" bind:value={secretKey} />
+      </Label>
 
-          <label class="flex flex-col gap-1">
-            <p class="text-sm text-gray-600">Max reserve A</p>
-            <input type="text" name="max-reserve-a" />
-          </label>
-
-          <label class="flex flex-col gap-1">
-            <p class="text-sm text-gray-600">Max reserve B</p>
-            <input type="text" name="max-reserve-b" />
-          </label>
-
-          <label class="flex flex-col gap-1">
-            <p class="text-sm text-gray-600">User secret</p>
-            <input type="text" name="secret" />
-          </label>
-
-          <div class="flex flex-col gap-5">
-            <Title tag="h3">Min price</Title>
-
-            <div class="flex flex-row justify-start text-sm mt-2">
-              <RadioOptions
-                options={[
-                  { label: 'Number', value: false, checked: !isMinPriceFraction },
-                  { label: 'Fraction', value: true, checked: isMinPriceFraction }
-                ]}
-                bind:group={isMinPriceFraction}
-              />
-            </div>
-
-            <FractionInput bind:isFraction={isMinPriceFraction} />
-          </div>
-
-          <div class="flex flex-col gap-5">
-            <Title tag="h3">Max price</Title>
-
-            <div class="flex flex-row justify-start text-sm mt-2">
-              <RadioOptions
-                options={[
-                  { label: 'Number', value: false, checked: !isMaxPriceFraction },
-                  { label: 'Fraction', value: true, checked: isMaxPriceFraction }
-                ]}
-                bind:group={isMaxPriceFraction}
-              />
-            </div>
-
-            <FractionInput bind:isFraction={isMaxPriceFraction} />
-          </div>
-
-          <Button type="submit" className="mt-7">Add liquidity</Button>
-        </form>
-      </div>
+      {#if participateAction === 'deposit'}
+        <DepositForm onDeposit={handleOnDeposit} {isLoading} />
+      {:else}
+        <WithdrawForm onWithdraw={handleWithdraw} {isLoading} />
+      {/if}
     {/if}
   </Card>
 </div>
