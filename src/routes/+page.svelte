@@ -13,6 +13,11 @@
       description: 'Create and manage offers'
     },
     {
+      title: 'Liquidity pools',
+      link: 'liquidity-pools',
+      description: 'Create liquidity pools'
+    },
+    {
       title: 'Claimable balance',
       link: 'claimable-balance',
       description: 'Claim, search, and, create claimable balances'
