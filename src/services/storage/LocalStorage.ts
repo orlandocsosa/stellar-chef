@@ -5,9 +5,8 @@ export default class LocalStorage {
     return value;
   }
 
-  set(key: string, value: object[]): void {
-    const stringValue = JSON.stringify(value);
-    localStorage.setItem(key, stringValue);
+  set(key: string, value: string): void {
+    localStorage.setItem(key, value);
   }
 
   remove(key: string): void {
