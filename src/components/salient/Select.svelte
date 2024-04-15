@@ -11,6 +11,7 @@
   export let color = 'blue';
   export let className = '';
   export let value: string | number | null;
+  export let emptyOptionText = '';
 
   $: if (value) {
     dispatch('selected', value);
@@ -23,6 +24,8 @@
     color
   ]} {className} text-sm font-light group inline-flex items-center justify-center rounded-full py-1 px-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
 >
-  <option class="bg-white text-black" value={null}>Select a stored asset</option>
+  {#if emptyOptionText}
+    <option class="bg-white text-black" value={null}>{emptyOptionText}</option>
+  {/if}
   <slot />
 </select>
