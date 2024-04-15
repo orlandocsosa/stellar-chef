@@ -1,6 +1,7 @@
 <script>
   import '../app.css';
   import { SvelteToast } from '@zerodevx/svelte-toast';
+  import { network } from '../store/network';
 </script>
 
 <head>
@@ -11,6 +12,7 @@
   <a class="text-white" href="/stellar-chef/">Recipes</a>
   <a class="text-white" href="/stellar-chef/faucet">Faucet</a>
   <a class="text-white" href="/stellar-chef/calculator">Calculators</a>
+  <a class="text-white" href="/stellar-chef/network">Network ({$network.name})</a>
 </header>
 <SvelteToast />
 <slot />
