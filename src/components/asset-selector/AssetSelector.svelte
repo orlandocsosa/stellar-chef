@@ -7,7 +7,7 @@
   export let assets: IAsset[];
 </script>
 
-<Select className="h-8" color={value !== null ? 'blue' : 'white'} bind:value>
+<Select className="h-8" color={value !== null ? 'blue' : 'white'} emptyOptionText="Select a stored asset" bind:value>
   {#each assets as { code, issuer }, i}
     <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
   {/each}

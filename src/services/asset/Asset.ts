@@ -25,7 +25,7 @@ export default class Asset {
 
     assets.push(asset);
 
-    this.storage.set('assets', assets);
+    this.storage.set('assets', JSON.stringify(assets));
 
     return assets;
   }

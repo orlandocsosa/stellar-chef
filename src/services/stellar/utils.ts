@@ -9,16 +9,19 @@ import {
   Asset
 } from 'stellar-sdk';
 
-import { PUBLIC_STELLAR_NETWORK_URL, PUBLIC_STELLAR_NETWORK_PASSPHRASE } from '$env/static/public';
 import type IAsset from '../asset/IAsset';
 import type { AccountResponse } from 'stellar-sdk/lib/horizon';
+import { network } from '../../store/network';
+import { get } from 'svelte/store';
 
-const server = new Horizon.Server(PUBLIC_STELLAR_NETWORK_URL);
+const networkUrl = get(network).url;
+const networkPassphrase = get(network).passphrase;
+const server = new Horizon.Server(networkUrl);
 
 function buildTransaction(sourceAccount: Account, operations: xdr.Operation[]): Transaction {
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: PUBLIC_STELLAR_NETWORK_PASSPHRASE
+    networkPassphrase
   });
 
   try {
@@ -118,7 +121,7 @@ function getAccountBalances(
       }
     }
 
-    return undefined
+    return undefined;
   }
 
   return balances;
