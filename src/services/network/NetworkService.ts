@@ -3,6 +3,19 @@ import type INetwork from './INetwork';
 
 export default class NetworkService {
   private readonly storage: LocalStorage;
+  public defaultNetworks = [
+    { name: 'Testnet', url: 'https://horizon-testnet.stellar.org', passphrase: 'Test SDF Network ; September 2015' },
+    {
+      name: 'Public',
+      url: 'https://horizon.stellar.org',
+      passphrase: 'Public Global Stellar Network ; September 2015'
+    },
+    {
+      name: 'Futurenet',
+      url: 'https://horizon-futurenet.stellar.org',
+      passphrase: 'Test SDF Future Network ; October 2022'
+    }
+  ];
 
   constructor() {
     this.storage = new LocalStorage();

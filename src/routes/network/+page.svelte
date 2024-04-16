@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import Label from '../../components/Label.svelte';
   import Button from '../../components/salient/Button.svelte';
   import Card from '../../components/salient/Card.svelte';
@@ -14,19 +13,6 @@
 
   const { showToast } = useToast();
   const networkService = new NetworkService();
-  const defaultNetworks = [
-    { name: 'Testnet', url: 'https://horizon-testnet.stellar.org', passphrase: 'Test SDF Network ; September 2015' },
-    {
-      name: 'Public',
-      url: 'https://horizon.stellar.org',
-      passphrase: 'Public Global Stellar Network ; September 2015'
-    },
-    {
-      name: 'Futurenet',
-      url: 'https://horizon-futurenet.stellar.org',
-      passphrase: 'Test SDF Future Network ; October 2022'
-    }
-  ];
 
   let selectedNetwork = networkService.getSelectedNetwork();
   let networks = networkService.getAll();
@@ -45,16 +31,6 @@
 
     showToast(`Network ${network.name} added`, 'success');
   }
-
-  onMount(() => {
-    if (!networks.length) {
-      defaultNetworks.map((network) => {
-        networkService.set(network);
-        networks = networkService.getAll();
-        networks = networks;
-      });
-    }
-  });
 </script>
 
 <Card className="w-[600px] m-auto flex flex-col gap-3">

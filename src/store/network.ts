@@ -7,7 +7,14 @@ const network = writable<INetwork>();
 
 function refreshNetwork(): void {
   const networks = networkService.getAll();
-  network.set(networks[networkService.getSelectedNetwork()]);
+
+  if (networks.length === 0) {
+    networkService.defaultNetworks.map((network) => networkService.set(network));
+    networkService.setSelectedNetwork(0);
+    network.set(networkService.defaultNetworks[0]);
+  } else {
+    network.set(networks[networkService.getSelectedNetwork()]);
+  }
 }
 
 refreshNetwork();
