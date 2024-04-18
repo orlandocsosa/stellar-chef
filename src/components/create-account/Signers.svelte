@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { signers, addSigner, removeSigner } from '../../store/signers';
   import Span from '../Span.svelte';
-  import Button from '../salient/Button.svelte';
+  import Button from '../base/Button.svelte';
 
   onMount(() => {
     $signers = [];

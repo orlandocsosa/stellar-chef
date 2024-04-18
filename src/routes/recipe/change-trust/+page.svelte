@@ -1,20 +1,16 @@
 <script lang="ts">
-  import Button from '../../../components/salient/Button.svelte';
-  import Select from '../../../components/salient/Select.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import Title from '../../../components/salient/Title.svelte';
+  import Button from '../../../components/base/Button.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import Title from '../../../components/base/Title.svelte';
   import AssetService from '../../../services/asset/Asset';
-  import { parseEntriesValues, sliceString } from '../../../utils';
+  import { parseEntriesValues } from '../../../utils';
   import { Horizon, Keypair, Operation } from 'stellar-sdk';
-  import {
-    buildTransaction,
-    getAssetFromUser,
-    getSponsorWrapperOperations,
-    server
-  } from '../../../services/stellar/utils';
+  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
   import useToast from '../../../composables/useToast';
   import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
-  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import JsonBlock from '../../../components/base/JsonBlock.svelte';
+  import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
+  import useUserAsset from '../../../composables/useUserAsset';
 
   interface IChangeTrustForm {
     code: string;
@@ -24,11 +20,12 @@
     sponsor: string;
   }
 
-  const { showToast } = useToast();
   const assetsService = new AssetService();
-  const storedAssets = assetsService.getAll();
+  const assets = assetsService.getAll();
+  const { showToast } = useToast();
+  const { code, getAsset, issuer, selectedAsset } = useUserAsset(assets);
+
   let transactionResult: Horizon.HorizonApi.SubmitTransactionResponse | null = null;
-  let selectedAsset: number | null = null;
   let isLoading = false;
 
   async function handleOnSubmit(e: Event) {
@@ -37,16 +34,12 @@
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const { code, issuer, limit, source, sponsor } = parseEntriesValues<IChangeTrustForm>(formData);
+      const { limit, source, sponsor } = parseEntriesValues<IChangeTrustForm>(formData);
       const sourceKeypair = Keypair.fromSecret(source);
       const sponsorKeypair = sponsor ? Keypair.fromSecret(sponsor) : null;
-      const asset = getAssetFromUser(false, storedAssets, selectedAsset, {
-        code,
-        issuer
-      });
 
       const operation = Operation.changeTrust({
-        asset,
+        asset: getAsset(),
         limit: limit || undefined
       });
 
@@ -72,7 +65,7 @@
 </script>
 
 <svelte:head>
-  <title>Recipe Change Trust</title>
+  <title>Change Trust</title>
 </svelte:head>
 
 <Card className="w-[650px] m-auto">
@@ -82,22 +75,18 @@
     <div class="flex flex-row gap-3">
       <Title tag="h3">Asset</Title>
 
-      <Select className="h-8" color={selectedAsset !== null ? 'blue' : 'white'} bind:value={selectedAsset}>
-        {#each storedAssets as { code, issuer }, i}
-          <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-        {/each}
-      </Select>
+      <AssetSelector {assets} bind:value={$selectedAsset} />
     </div>
 
-    {#if selectedAsset === null}
+    {#if $selectedAsset === null}
       <label class="flex flex-col gap-1">
         <p class="text-sm text-gray-600">Code</p>
-        <input type="text" name="code" />
+        <input type="text" bind:value={$code} />
       </label>
 
       <label class="flex flex-col gap-1 mt-4">
         <p class="text-sm text-gray-600">Issuer</p>
-        <input type="text" name="issuer" />
+        <input type="text" bind:value={$issuer} />
       </label>
     {/if}
 

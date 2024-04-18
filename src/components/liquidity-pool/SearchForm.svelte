@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '../salient/Button.svelte';
-  import Label from '../Label.svelte';
+  import Button from '../base/Button.svelte';
+  import Label from '../base/Label.svelte';
 
   export let onSearchLiquidityPool: (id: string) => {};
   export let isLoading = false;

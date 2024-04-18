@@ -1,7 +1,7 @@
 <script lang="ts">
   import { parseEntriesValues } from '../../utils';
-  import Label from '../Label.svelte';
-  import Button from '../salient/Button.svelte';
+  import Label from '../base/Label.svelte';
+  import Button from '../base/Button.svelte';
 
   interface IDepositForm {
     depositA: string;

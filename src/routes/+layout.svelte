@@ -16,3 +16,4 @@
 </header>
 <SvelteToast />
 <slot />
+<footer class="mt-10" />

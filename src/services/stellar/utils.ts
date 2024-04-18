@@ -9,7 +9,6 @@ import {
   Asset
 } from 'stellar-sdk';
 
-import type IAsset from '../asset/IAsset';
 import type { AccountResponse } from 'stellar-sdk/lib/horizon';
 import { network } from '../../store/network';
 import { get } from 'svelte/store';
@@ -127,28 +126,6 @@ function getAccountBalances(
   return balances;
 }
 
-function getAssetFromUser(
-  isNative: boolean,
-  assets: IAsset[],
-  selectedAsset: number | null,
-  data: Record<string, string>
-): Asset {
-  if (isNative) {
-    return Asset.native();
-  }
-
-  if (typeof selectedAsset === 'number') {
-    const { code, issuer } = assets[selectedAsset];
-    return new Asset(code, issuer);
-  }
-
-  if ('code' in data && 'issuer' in data) {
-    return new Asset(data.code, data.issuer);
-  }
-
-  throw new Error('Asset not found');
-}
-
 function orderAssets(assetA: Asset, assetB: Asset): Asset[] {
   return Asset.compare(assetA, assetB) <= 0 ? [assetA, assetB] : [assetA, assetB];
 }
@@ -156,7 +133,6 @@ function orderAssets(assetA: Asset, assetB: Asset): Asset[] {
 export {
   server,
   buildTransaction,
-  getAssetFromUser,
   submitTransaction,
   checkClawbackStatus,
   checkAssetFrozen,

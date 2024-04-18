@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Horizon } from 'stellar-sdk';
   import Span from '../Span.svelte';
-  import Title from '../salient/Title.svelte';
+  import Title from '../base/Title.svelte';
 
   export let liquidityPool: Horizon.ServerApi.LiquidityPoolRecord;
 </script>

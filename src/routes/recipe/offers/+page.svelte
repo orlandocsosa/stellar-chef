@@ -1,36 +1,49 @@
 <script lang="ts">
   import { Asset, Keypair, Operation, xdr } from 'stellar-sdk';
   import AssetService from '../../../services/asset/Asset';
-  import Button from '../../../components/salient/Button.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import RadioOptions from '../../../components/salient/RadioOptions.svelte';
-  import { parseEntriesValues, sliceString } from '../../../utils';
-  import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
-  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import Button from '../../../components/base/Button.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import RadioOptions from '../../../components/base/RadioOptions.svelte';
+  import { parseEntriesValues } from '../../../utils';
+  import {
+    buildTransaction,
+    getSponsorWrapperOperations,
+    server,
+    submitTransaction
+  } from '../../../services/stellar/utils';
+  import JsonBlock from '../../../components/base/JsonBlock.svelte';
   import type { IOfferRequest, IOfferRecord } from '../../../services/stellar/types';
-  import Select from '../../../components/salient/Select.svelte';
+  import NativeAssetCheckbox from '../../../components/asset-selector/NativeAssetCheckbox.svelte';
+  import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
+  import useUserAsset from '../../../composables/useUserAsset';
+  import useToast from '../../../composables/useToast';
 
+  const { showToast, toggleLoadingToast } = useToast();
   const assetsService = new AssetService();
-  const storedAssets = assetsService.getAll();
+  const assets = assetsService.getAll();
+  const {
+    code: buyingAssetCode,
+    issuer: buyingAssetIssuer,
+    selectedAsset: buyingSelectedAsset,
+    isNative: isBuyingAssetNative,
+    getAsset: getBuyingAsset
+  } = useUserAsset(assets);
+
+  const {
+    code: sellingAssetCode,
+    issuer: sellingAssetIssuer,
+    selectedAsset: sellingSelectedAsset,
+    isNative: isSellingAssetNative,
+    getAsset: getSellingAsset
+  } = useUserAsset(assets);
+
   let offerType: 'buy' | 'sell' | 'passiveSell' = 'sell';
   let offersRecords: IOfferRecord[] = [];
   let jsonValue: object;
-  let userAssets = {
-    buying: {
-      isNative: false,
-      code: '',
-      issuer: '',
-      selectedAsset: null
-    },
-    selling: {
-      isNative: false,
-      code: '',
-      issuer: '',
-      selectedAsset: null
-    }
-  };
 
   async function handleOnSubmit(e: Event) {
+    toggleLoadingToast(true, 'Submitting offer...');
+
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement);
       const { amount, offerID, price, source, sponsor } = parseEntriesValues<IOfferRequest>(formData);
@@ -38,18 +51,10 @@
       const sourceKeypair = Keypair.fromSecret(source);
       const sponsorKeypair = sponsor ? Keypair.fromSecret(sponsor) : undefined;
 
-      const buyingAsset = userAssets.buying.isNative
-        ? Asset.native()
-        : new Asset(userAssets.buying.code, userAssets.buying.issuer);
-
-      const sellingAsset = userAssets.selling.isNative
-        ? Asset.native()
-        : new Asset(userAssets.selling.code, userAssets.selling.issuer);
-
       const options = {
         price: price,
-        buying: buyingAsset,
-        selling: sellingAsset,
+        buying: getBuyingAsset(),
+        selling: getSellingAsset(),
         offerId: offerID,
         source: sourceKeypair.publicKey()
       };
@@ -83,7 +88,7 @@
       transaction.sign(sourceKeypair);
       if (sponsorKeypair) transaction.sign(sponsorKeypair);
 
-      const result = await server.submitTransaction(transaction);
+      const result = await submitTransaction(transaction);
 
       if (result.successful) {
         jsonValue = {
@@ -94,8 +99,13 @@
       } else {
         jsonValue = result;
       }
+
+      toggleLoadingToast(false);
+      showToast('Offer submitted', 'success');
     } catch (e) {
       jsonValue = { error: `${e}` };
+      toggleLoadingToast(false);
+      showToast(`Error: ${e}`, 'danger');
     }
   }
 
@@ -128,20 +138,11 @@
       });
     }
   }
-
-  function handleSelectedAsset(value: number | null, type: 'buying' | 'selling') {
-    userAssets[type].code = value !== null ? storedAssets[value].code : '';
-    userAssets[type].issuer = value !== null ? storedAssets[value].issuer : '';
-  }
-
-  $: if (userAssets.buying.selectedAsset !== null) {
-    userAssets.buying.isNative = false;
-  }
-
-  $: if (userAssets.buying.selectedAsset !== null) {
-    userAssets.selling.isNative = false;
-  }
 </script>
+
+<svelte:head>
+  <title>Offers</title>
+</svelte:head>
 
 <div class="flex flex-row items-start gap-10 justify-center">
   <Card className="w-[650px]">
@@ -162,36 +163,19 @@
       <div class="flex flex-col gap-2">
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Buying</h3>
-          <Button
-            onClick={() => {
-              userAssets.buying.selectedAsset = null;
-              userAssets.buying.isNative = !userAssets.buying.isNative;
-            }}
-            color={userAssets.buying.isNative ? 'blue' : 'white'}
-            className="h-8">Native</Button
-          >
-
-          <Select
-            on:selected={(e) => handleSelectedAsset(e.detail, 'buying')}
-            className="h-8"
-            color={userAssets.buying.selectedAsset !== null ? 'blue' : 'white'}
-            bind:value={userAssets.buying.selectedAsset}
-          >
-            {#each storedAssets as { code, issuer }, i}
-              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-            {/each}
-          </Select>
+          <NativeAssetCheckbox bind:checked={$isBuyingAssetNative} />
+          <AssetSelector {assets} bind:value={$buyingSelectedAsset} />
         </div>
 
-        {#if !userAssets.buying.isNative && userAssets.buying.selectedAsset === null}
+        {#if !$isBuyingAssetNative && $buyingSelectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
-            <input type="text" bind:value={userAssets.buying.code} />
+            <input type="text" bind:value={$buyingAssetCode} />
           </label>
 
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Issuer</p>
-            <input type="text" bind:value={userAssets.buying.issuer} />
+            <input type="text" bind:value={$buyingAssetIssuer} />
           </label>
         {/if}
       </div>
@@ -199,35 +183,19 @@
       <div class="flex flex-col gap-2">
         <div class="flex flex-row gap-3">
           <h3 class="text-lg">Selling</h3>
-          <Button
-            onClick={() => {
-              userAssets.selling.selectedAsset = null;
-              userAssets.selling.isNative = !userAssets.selling.isNative;
-            }}
-            color={userAssets.selling.isNative ? 'blue' : 'white'}
-            className="h-8">Native</Button
-          >
-          <Select
-            on:selected={(e) => handleSelectedAsset(e.detail, 'selling')}
-            className="h-8"
-            color={userAssets.selling.selectedAsset !== null ? 'blue' : 'white'}
-            bind:value={userAssets.selling.selectedAsset}
-          >
-            {#each storedAssets as { code, issuer }, i}
-              <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-            {/each}
-          </Select>
+          <NativeAssetCheckbox bind:checked={$isSellingAssetNative} />
+          <AssetSelector {assets} bind:value={$sellingSelectedAsset} />
         </div>
 
-        {#if !userAssets.selling.isNative && userAssets.selling.selectedAsset === null}
+        {#if !$isSellingAssetNative && $sellingSelectedAsset === null}
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Code</p>
-            <input type="text" bind:value={userAssets.selling.code} />
+            <input type="text" bind:value={$sellingAssetCode} />
           </label>
 
           <label class="flex flex-col gap-1">
             <p class="text-sm text-gray-600">Issuer</p>
-            <input type="text" bind:value={userAssets.selling.issuer} />
+            <input type="text" bind:value={$sellingAssetIssuer} />
           </label>
         {/if}
       </div>

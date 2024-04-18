@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Keypair, Operation, xdr } from 'stellar-sdk';
-  import Button from '../../../components/salient/Button.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import CheckBoxButton from '../../../components/salient/CheckBoxButton.svelte';
-  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import Button from '../../../components/base/Button.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import CheckBoxButton from '../../../components/base/CheckBoxButton.svelte';
+  import JsonBlock from '../../../components/base/JsonBlock.svelte';
   import {
     buildTransaction,
     getSponsorWrapperOperations,
@@ -140,6 +140,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Create Account</title>
+</svelte:head>
 
 <div class="flex flex-row w-full justify-center items-start gap-10 px-28">
   <Card className="w-1/2">

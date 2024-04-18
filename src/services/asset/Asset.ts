@@ -1,7 +1,7 @@
 import LocalStorage from '../storage/LocalStorage';
 import type IAsset from './IAsset';
 
-export default class Asset {
+export default class AssetService {
   private readonly storage: LocalStorage;
 
   constructor() {

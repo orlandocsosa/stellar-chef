@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Label from '../Label.svelte';
-  import Button from '../salient/Button.svelte';
+  import Label from '../base/Label.svelte';
+  import Button from '../base/Button.svelte';
 
   export let onWithdraw: (sharesAmount: string) => Promise<void>;
   export let isLoading = false;
