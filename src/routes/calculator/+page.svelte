@@ -1,16 +1,16 @@
 <script lang="ts">
   import type { HorizonApi, ServerApi } from 'stellar-sdk/lib/horizon';
-  import Label from '../../components/Label.svelte';
+  import Label from '../../components/base/Label.svelte';
   import Span from '../../components/Span.svelte';
-  import Button from '../../components/salient/Button.svelte';
-  import Card from '../../components/salient/Card.svelte';
+  import Button from '../../components/base/Button.svelte';
+  import Card from '../../components/base/Card.svelte';
   import { server } from '../../services/stellar/utils';
   import type { OfferRecord } from 'stellar-sdk/lib/horizon/types/offer';
   import AssetWithLiabilities from '../../components/calculator/AssetWithLiabilities.svelte';
-  import Title from '../../components/salient/Title.svelte';
+  import Title from '../../components/base/Title.svelte';
 
   let isLoading = false;
-  let publicKey: string = 'GDFY5KM3FWNDLXLAEA2UQEVC5OOSYPGINGCX5EMC2NBK2BGE2EIGFMZ4';
+  let publicKey: string;
   let reserves: number;
   let account: ServerApi.AccountRecord;
   let offers: OfferRecord[] = [];
@@ -55,6 +55,10 @@
     isLoading = false;
   }
 </script>
+
+<svelte:head>
+  <title>Calculator</title>
+</svelte:head>
 
 <Card className="w-[600px] m-auto">
   <form class="flex flex-col gap-5 mb-5" on:submit|preventDefault={handleSubmit}>

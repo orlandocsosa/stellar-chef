@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Label from '../../components/Label.svelte';
-  import Button from '../../components/salient/Button.svelte';
-  import Card from '../../components/salient/Card.svelte';
-  import Select from '../../components/salient/Select.svelte';
-  import Title from '../../components/salient/Title.svelte';
+  import Label from '../../components/base/Label.svelte';
+  import Button from '../../components/base/Button.svelte';
+  import Card from '../../components/base/Card.svelte';
+  import Select from '../../components/base/Select.svelte';
+  import Title from '../../components/base/Title.svelte';
   import NetworkService from '../../services/network/NetworkService';
   import Span from '../../components/Span.svelte';
   import { parseEntriesValues } from '../../utils';
@@ -32,6 +32,10 @@
     showToast(`Network ${network.name} added`, 'success');
   }
 </script>
+
+<svelte:head>
+  <title>Network</title>
+</svelte:head>
 
 <Card className="w-[600px] m-auto flex flex-col gap-3">
   <Title>Network Selector</Title>

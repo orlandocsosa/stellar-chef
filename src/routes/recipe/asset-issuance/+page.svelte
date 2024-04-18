@@ -1,17 +1,17 @@
 <script lang="ts">
   import { Asset, AuthClawbackEnabledFlag, AuthRevocableFlag, Keypair, Operation } from 'stellar-sdk';
 
-  import Label from '../../../components/Label.svelte';
-  import Button from '../../../components/salient/Button.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import Title from '../../../components/salient/Title.svelte';
+  import Label from '../../../components/base/Label.svelte';
+  import Button from '../../../components/base/Button.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import Title from '../../../components/base/Title.svelte';
   import { Account } from '../../../services/stellar/Account';
   import { parseEntriesValues, sliceString } from '../../../utils';
   import { buildTransaction, server } from '../../../services/stellar/utils';
   import useToast from '../../../composables/useToast';
   import Span from '../../../components/Span.svelte';
   import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
-  import JsonBlock from '../../../components/salient/JsonBlock.svelte';
+  import JsonBlock from '../../../components/base/JsonBlock.svelte';
   import Link from '../../../components/Link.svelte';
   import AssetService from '../../../services/asset/Asset';
 
@@ -162,6 +162,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Asset Issuance</title>
+</svelte:head>
 
 <div class="flex flex-row gap-10 justify-center items-start">
   <Card className="w-[650px]">

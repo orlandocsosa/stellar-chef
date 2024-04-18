@@ -1,7 +1,7 @@
 <script lang="ts">
   import { xdr } from 'stellar-sdk';
   import type { IPredicate } from '../../services/stellar/types';
-  import RadioOptions from '../salient/RadioOptions.svelte';
+  import RadioOptions from '../base/RadioOptions.svelte';
 
   export let title = '';
   export let previousPredicate = '';

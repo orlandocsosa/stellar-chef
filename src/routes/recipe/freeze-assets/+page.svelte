@@ -1,11 +1,11 @@
 <script lang="ts">
-  import Label from '../../../components/Label.svelte';
+  import Label from '../../../components/base/Label.svelte';
   import Span from '../../../components/Span.svelte';
   import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
-  import Button from '../../../components/salient/Button.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import RadioOptions from '../../../components/salient/RadioOptions.svelte';
-  import Title from '../../../components/salient/Title.svelte';
+  import Button from '../../../components/base/Button.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import RadioOptions from '../../../components/base/RadioOptions.svelte';
+  import Title from '../../../components/base/Title.svelte';
   import useToast from '../../../composables/useToast';
   import useUserAsset from '../../../composables/useUserAsset';
   import AssetService from '../../../services/asset/Asset';
@@ -69,6 +69,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Freeze Asset</title>
+</svelte:head>
 
 <Card className="flex flex-col m-auto w-[600px]">
   <Title>Freeze Assets</Title>

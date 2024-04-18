@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '../salient/Button.svelte';
-  import Card from '../salient/Card.svelte';
+  import Button from '../base/Button.svelte';
+  import Card from '../base/Card.svelte';
 
   export let publicKey: string;
   export let onClick: () => void;

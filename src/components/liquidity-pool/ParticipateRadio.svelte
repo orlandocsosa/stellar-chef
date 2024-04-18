@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RadioOptions from '../salient/RadioOptions.svelte';
+  import RadioOptions from '../base/RadioOptions.svelte';
 
   export let group: 'deposit' | 'withdraw' = 'deposit';
 </script>

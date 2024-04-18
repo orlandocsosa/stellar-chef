@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Horizon } from 'stellar-sdk';
-  import Card from '../salient/Card.svelte';
+  import Card from '../base/Card.svelte';
 
   export let claimableBalances: Horizon.ServerApi.ClaimableBalanceRecord[];
 </script>

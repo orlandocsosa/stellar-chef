@@ -1,5 +1,5 @@
 <script>
-  import RecipeCard from '../components/salient/RecipeCard.svelte';
+  import RecipeCard from '../components/base/RecipeCard.svelte';
 
   const recipes = [
     {

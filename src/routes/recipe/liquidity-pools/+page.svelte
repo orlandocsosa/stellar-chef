@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Asset, LiquidityPoolAsset, getLiquidityPoolId, LiquidityPoolFeeV18, Operation, Keypair } from 'stellar-sdk';
   import AssetsForm from '../../../components/liquidity-pool/AssetsForm.svelte';
-  import Card from '../../../components/salient/Card.svelte';
-  import Title from '../../../components/salient/Title.svelte';
+  import Card from '../../../components/base/Card.svelte';
+  import Title from '../../../components/base/Title.svelte';
   import AssetService from '../../../services/asset/Asset';
   import useToast from '../../../composables/useToast';
   import {
@@ -18,7 +18,7 @@
   import ParticipateRadio from '../../../components/liquidity-pool/ParticipateRadio.svelte';
   import DepositForm from '../../../components/liquidity-pool/DepositForm.svelte';
   import WithdrawForm from '../../../components/liquidity-pool/WithdrawForm.svelte';
-  import Label from '../../../components/Label.svelte';
+  import Label from '../../../components/base/Label.svelte';
 
   const assetsService = new AssetService();
   const assets = assetsService.getAll();
@@ -157,6 +157,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Liquidity Pool</title>
+</svelte:head>
 
 <div class="flex flex-row gap-10 justify-center items-start">
   <Card className="w-[650px] flex flex-col gap-10">

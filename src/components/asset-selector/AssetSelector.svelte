@@ -1,7 +1,7 @@
 <script lang="ts">
   import type IAsset from '../../services/asset/IAsset';
   import { sliceString } from '../../utils';
-  import Select from '../salient/Select.svelte';
+  import Select from '../base/Select.svelte';
 
   export let value: number | null = null;
   export let assets: IAsset[];

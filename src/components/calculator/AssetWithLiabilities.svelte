@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { OfferRecord } from 'stellar-sdk/lib/horizon/types/offer';
-  import Title from '../salient/Title.svelte';
+  import Title from '../base/Title.svelte';
   import Span from '../Span.svelte';
   import type { HorizonApi } from 'stellar-sdk/lib/horizon';
 

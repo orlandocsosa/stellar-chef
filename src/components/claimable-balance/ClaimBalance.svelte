@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '../salient/Button.svelte';
-  import Card from '../salient/Card.svelte';
+  import Button from '../base/Button.svelte';
+  import Card from '../base/Card.svelte';
 
   export let balanceId: string;
   export let secretKey: string;
@@ -23,6 +23,4 @@
   </div>
 
   <Button className="h-10 text-lg mt-7" {onClick}>Claim</Button>
-
-  <slot />
 </Card>

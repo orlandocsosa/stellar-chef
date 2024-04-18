@@ -1,13 +1,15 @@
 <script lang="ts">
-  import Card from '../salient/Card.svelte';
-  import Button from '../salient/Button.svelte';
+  import Card from '../base/Card.svelte';
+  import Button from '../base/Button.svelte';
   import { claimants } from '../../store/claimants';
-  import Select from '../salient/Select.svelte';
   import type IAsset from '../../services/asset/IAsset';
-  import { sliceString } from '../../utils';
+  import NativeAssetCheckbox from '../asset-selector/NativeAssetCheckbox.svelte';
+  import AssetSelector from '../asset-selector/AssetSelector.svelte';
 
   export let isNative = false;
   export let assets: IAsset[];
+  export let issuer: string;
+  export let code: string;
   export let selectedAsset: number | null;
 
   function toggleIsNative() {
@@ -31,23 +33,19 @@
   <div class="flex flex-col gap-3 mt-8">
     <div class="flex flex-row items-center gap-3">
       <h3 class="text-lg">Asset</h3>
-      <Button onClick={toggleIsNative} color={isNative ? 'blue' : 'white'} className="h-8">Native</Button>
-      <Select color={selectedAsset !== null ? 'blue' : 'white'} className="h-8" bind:value={selectedAsset}>
-        {#each assets as { code, issuer }, i}
-          <option class="bg-white text-black" value={i}>{`${code}|${sliceString(issuer)}`}</option>
-        {/each}
-      </Select>
+      <NativeAssetCheckbox bind:checked={isNative} />
+      <AssetSelector {assets} bind:value={selectedAsset} />
     </div>
 
     {#if !isNative && selectedAsset === null}
       <label>
         <p class="text-sm font-light text-black/50">Code</p>
-        <input name="code" type="text" class="w-full" />
+        <input name="code" type="text" class="w-full" bind:value={code} />
       </label>
 
       <label>
         <p class="text-sm font-light text-black/50">Issuer</p>
-        <input name="issuer" type="text" class="w-full" />
+        <input name="issuer" type="text" class="w-full" bind:value={issuer} />
       </label>
     {/if}
   </div>
@@ -75,6 +73,4 @@
   </div>
 
   <Button type="submit" className="h-10 w-full text-lg mt-8">Prepare!</Button>
-
-  <slot />
 </Card>

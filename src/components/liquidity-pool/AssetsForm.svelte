@@ -2,12 +2,12 @@
   import { Asset } from 'stellar-sdk';
   import useUserAsset from '../../composables/useUserAsset';
   import type IAsset from '../../services/asset/IAsset';
-  import Label from '../Label.svelte';
+  import Label from '../base/Label.svelte';
   import Span from '../Span.svelte';
   import AssetSelector from '../asset-selector/AssetSelector.svelte';
   import NativeAssetCheckbox from '../asset-selector/NativeAssetCheckbox.svelte';
-  import Button from '../salient/Button.svelte';
-  import Title from '../salient/Title.svelte';
+  import Button from '../base/Button.svelte';
+  import Title from '../base/Title.svelte';
 
   export let onGetId: (getAssetA: () => Asset, getAssetB: () => Asset) => Promise<void>;
   export let onGetAssetTrust: (getAssetA: () => Asset, getAssetB: () => Asset, secretKey: string) => Promise<void>;
