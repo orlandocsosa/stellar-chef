@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { signers, addSigner, removeSigner } from '../../store/signers';
-  import Span from '../Span.svelte';
+  import Span from '../base/Span.svelte';
   import Button from '../base/Button.svelte';
 
   onMount(() => {

@@ -3,7 +3,7 @@
   import useUserAsset from '../../composables/useUserAsset';
   import type IAsset from '../../services/asset/IAsset';
   import Label from '../base/Label.svelte';
-  import Span from '../Span.svelte';
+  import Span from '../base/Span.svelte';
   import AssetSelector from '../asset-selector/AssetSelector.svelte';
   import NativeAssetCheckbox from '../asset-selector/NativeAssetCheckbox.svelte';
   import Button from '../base/Button.svelte';

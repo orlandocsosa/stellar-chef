@@ -5,7 +5,7 @@
   import Select from '../../components/base/Select.svelte';
   import Title from '../../components/base/Title.svelte';
   import NetworkService from '../../services/network/NetworkService';
-  import Span from '../../components/Span.svelte';
+  import Span from '../../components/base/Span.svelte';
   import { parseEntriesValues } from '../../utils';
   import type INetwork from '../../services/network/INetwork';
   import useToast from '../../composables/useToast';

@@ -7,7 +7,7 @@
   import { Horizon, Keypair, Operation } from 'stellar-sdk';
   import { buildTransaction, getSponsorWrapperOperations, server } from '../../../services/stellar/utils';
   import useToast from '../../../composables/useToast';
-  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
+  import LoadingSpinner from '../../../components/base/LoadingSpinner.svelte';
   import JsonBlock from '../../../components/base/JsonBlock.svelte';
   import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
   import useUserAsset from '../../../composables/useUserAsset';

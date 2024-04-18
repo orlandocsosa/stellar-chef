@@ -9,10 +9,10 @@
   import { parseEntriesValues, sliceString } from '../../../utils';
   import { buildTransaction, server } from '../../../services/stellar/utils';
   import useToast from '../../../composables/useToast';
-  import Span from '../../../components/Span.svelte';
-  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
+  import Span from '../../../components/base/Span.svelte';
+  import LoadingSpinner from '../../../components/base/LoadingSpinner.svelte';
   import JsonBlock from '../../../components/base/JsonBlock.svelte';
-  import Link from '../../../components/Link.svelte';
+  import Link from '../../../components/base/Link.svelte';
   import AssetService from '../../../services/asset/Asset';
 
   interface IAssetIssuanceForm {
