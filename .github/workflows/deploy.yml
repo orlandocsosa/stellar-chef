@@ -40,9 +40,6 @@ jobs:
 
       - name: Build site
         run: npm run build
-        env:
-          PUBLIC_STELLAR_NETWORK_URL: ${{ secrets.PUBLIC_STELLAR_NETWORK_URL }}
-          PUBLIC_STELLAR_NETWORK_PASSPHRASE: ${{ secrets.PUBLIC_STELLAR_NETWORK_PASSPHRASE }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
