@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HorizonApi, ServerApi } from 'stellar-sdk/lib/horizon';
   import Label from '../../components/base/Label.svelte';
-  import Span from '../../components/Span.svelte';
+  import Span from '../../components/base/Span.svelte';
   import Button from '../../components/base/Button.svelte';
   import Card from '../../components/base/Card.svelte';
   import { server } from '../../services/stellar/utils';

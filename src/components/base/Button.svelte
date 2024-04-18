@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingSpinner from '../LoadingSpinner.svelte';
+  import LoadingSpinner from '../base/LoadingSpinner.svelte';
 
   const colorVariants: { [key: string]: string } = {
     blue: 'bg-blue-600 hover:bg-blue-500 active:bg-blue-800 active:text-blue-100 focus-visible:outline-blue-600 hover:text-slate-100 text-white',

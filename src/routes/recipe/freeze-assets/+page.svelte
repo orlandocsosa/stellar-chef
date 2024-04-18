@@ -1,6 +1,6 @@
 <script lang="ts">
   import Label from '../../../components/base/Label.svelte';
-  import Span from '../../../components/Span.svelte';
+  import Span from '../../../components/base/Span.svelte';
   import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
   import Button from '../../../components/base/Button.svelte';
   import Card from '../../../components/base/Card.svelte';
@@ -9,7 +9,7 @@
   import useToast from '../../../composables/useToast';
   import useUserAsset from '../../../composables/useUserAsset';
   import AssetService from '../../../services/asset/Asset';
-  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
+  import LoadingSpinner from '../../../components/base/LoadingSpinner.svelte';
   import { parseEntriesValues } from '../../../utils';
   import { buildTransaction, server, submitTransaction } from '../../../services/stellar/utils';
   import { Keypair, Operation } from 'stellar-sdk';

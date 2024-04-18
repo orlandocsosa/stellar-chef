@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { thresholds } from '../../store/thresholds';
   import Label from '../base/Label.svelte';
-  import Span from '../Span.svelte';
+  import Span from '../base/Span.svelte';
   import Title from '../base/Title.svelte';
 
   onMount(() => {

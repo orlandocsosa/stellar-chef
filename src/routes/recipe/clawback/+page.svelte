@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Keypair, Operation } from 'stellar-sdk';
   import Label from '../../../components/base/Label.svelte';
-  import LoadingSpinner from '../../../components/LoadingSpinner.svelte';
-  import Span from '../../../components/Span.svelte';
+  import LoadingSpinner from '../../../components/base/LoadingSpinner.svelte';
+  import Span from '../../../components/base/Span.svelte';
   import AssetSelector from '../../../components/asset-selector/AssetSelector.svelte';
   import Button from '../../../components/base/Button.svelte';
   import Card from '../../../components/base/Card.svelte';
